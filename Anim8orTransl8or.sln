@@ -11,6 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anim8orTransl8or.Dll", "Dll
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anim8orTransl8or.Gui", "Gui\Anim8orTransl8or.Gui.csproj", "{E162958C-9954-4D50-9B78-C162674EE5C2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BE2C387D-917B-4448-8F84-79744E564875}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		common\Anim8orTransl8or.projitems*{3f2a2f20-40d9-40af-b0d9-80405519810c}*SharedItemsImports = 4

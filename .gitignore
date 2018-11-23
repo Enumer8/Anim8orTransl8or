@@ -5,4 +5,5 @@
 **/.vs/
 **/bin/
 **/obj/
+*.csproj.user
 *.ini

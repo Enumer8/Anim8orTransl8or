@@ -57,30 +57,47 @@ namespace Anim8orTransl8or.An8.V100
       public scene[] scene;
    }
 
-   #region header
-   public class header
+   #region common
+   public class empty
    {
-      public version version;
-      public build build;
    }
 
-   public class version
+   public class @int
+   {
+      public Int64 text;
+   }
+
+   public class @float
+   {
+      public Double text;
+   }
+
+   public class @string
+   {
+      public String text;
+   }
+
+   public class @wstring
+   {
+      public String text;
+   }
+   #endregion
+
+   #region header
+   public class header
    {
       /// <summary>
       /// The version string has the form <major> "." <minor> such as "0.85".
       /// It can have additional information at the end as well such as
       /// "0.85beta"
       /// </summary>
-      public String @string;
-   }
+      public @string version;
 
-   public class build
-   {
       /// <summary>
       /// The build string is used to identify the build number of the Anim8or
       /// executable that created the.an8 file.
       /// </summary>
-      public String @string;
+      public @string build;
    }
    #endregion
 
@@ -95,7 +112,7 @@ namespace Anim8orTransl8or.An8.V100
       ///
       /// Anim8or truncates descriptions to 4096 characters when reading them.
       /// </summary>
-      public String[] @string;
+      public String[] text;
    }
    #endregion
 
@@ -116,13 +133,13 @@ namespace Anim8orTransl8or.An8.V100
       /// Sets the Scene and Sequence playback frame rate.  Ignored unless the
       /// <limitplayback> chunk also appears.
       /// </summary>
-      public framerate framerate;
+      public @int framerate;
 
       /// <summary>
       /// Limits the playback frame rate to the value in <framerate>, or to a
       /// default value if no <framerate> chunk is present.
       /// </summary>
-      public limitplayback limitplayback;
+      public empty limitplayback;
 
       /// <summary>
       /// TODO: This was undocumented at the time of writing
@@ -155,55 +172,55 @@ namespace Anim8orTransl8or.An8.V100
       public Double groundfloorgridsize;
    }
 
-   #region lighting
    public class lighting
    {
-      public intensity intensity;
-      public ambientintensity ambientintensity;
-   }
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing
+      /// </summary>
+      public @float intensity;
 
-   public class intensity
-   {
-      public Double @float;
-   }
-
-   public class ambientintensity
-   {
-      public Double @float;
-   }
-   #endregion
-
-   public class framerate
-   {
-      public Int64 @int;
-   }
-
-   public class limitplayback
-   {
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing
+      /// </summary>
+      public @float ambientintensity;
    }
 
    #region film
    public class film
    {
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing
+      /// </summary>
       public size size;
+
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing
+      /// </summary>
       public ratio ratio;
    }
 
    public class size
    {
-      public Int64 width;
-      public Int64 height;
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing
+      /// </summary>
+      public Int64 x;
+
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing
+      /// </summary>
+      public Int64 y;
    }
 
    public class ratio
    {
       /// <summary>
-      /// TODO: Is this the right name? Is it an integer instead?
+      /// TODO: This was undocumented at the time of writing
       /// </summary>
       public Double numerator;
 
       /// <summary>
-      /// TODO: Is this the right name? Is it an integer instead?
+      /// TODO: This was undocumented at the time of writing
       /// </summary>
       public Double denominator;
    }
@@ -223,33 +240,20 @@ namespace Anim8orTransl8or.An8.V100
       /// <invert> is an optional empty chunk. If present then the image(s)
       /// for this texture are inverted top to bottem before they are used.
       /// </summary>
-      public invert invert;
+      public empty invert;
 
       /// <summary>
       /// <cubemap> is an optional empty chunk. It indicates that this texture
       /// is a cube map.
       /// </summary>
-      public cubemap cubemap;
+      public empty cubemap;
 
       /// <summary>
       /// The <file> chunks contain a single string for the name of the files
       /// that hold the texture image. Only one <file> chunk is used for normal
       /// textures and six <file> chunks are used for cube map textures.
       /// </summary>
-      public file[] file;
-   }
-
-   public class invert
-   {
-   }
-
-   public class cubemap
-   {
-   }
-
-   public class file
-   {
-      public String @string;
+      public @string[] file;
    }
    #endregion
 
@@ -286,7 +290,7 @@ namespace Anim8orTransl8or.An8.V100
       /// TODO: This was undocumented at the time of writing. Is it the same as
       /// lockambdiff?
       /// </summary>
-      public lockambientdiffuse lockambientdiffuse;
+      public empty lockambientdiffuse;
 
       /// <summary>
       /// <ambiant>, <diffuse>, <specular> and <emissive> chunks describe the
@@ -325,17 +329,17 @@ namespace Anim8orTransl8or.An8.V100
       /// the material. 255 is opaque and 0 is completely transparent. Values
       /// are clamped to this range.
       /// </summary>
-      public alpha alpha;
+      public @int alpha;
 
       /// <summary>
       /// <brilliance> is a float chunk that sets the brilliance factor.
       /// </summary>
-      public brilliance brilliance;
+      public @float brilliance;
 
       /// <summary>
       /// <phongsize> is a float chunk that sets the phong roughness factor.
       /// </summary>
-      public phongsize phongsize;
+      public @float phongsize;
 
       /// <summary>
       /// <map>* is one of multiple chunks that describe a texture map used for
@@ -349,35 +353,31 @@ namespace Anim8orTransl8or.An8.V100
       /// <lockambdiff> is an empty chunk that, if present, uses the diffuse
       /// values for both the diffuse and ambient color properties.
       /// </summary>
-      public lockambdiff lockambdiff;
+      public empty lockambdiff;
    }
 
    public class rgb
    {
       /// <summary>
-      /// Three integer values representing the red, green and blue components
-      /// of a color. They are clamped to 0 to 255, then scaled so to the range
-      /// 0.0 to 1.0 representing the darkest and brightest values.
+      /// The integer values representing the red component of a color. It is
+      /// clamped to 0 to 255, then scaled so to the range 0.0 to 1.0
+      /// representing the darkest and brightest values.
       /// </summary>
       public Int64 red;
 
       /// <summary>
-      /// Three integer values representing the red, green and blue components
-      /// of a color. They are clamped to 0 to 255, then scaled so to the range
-      /// 0.0 to 1.0 representing the darkest and brightest values.
+      /// The integer values representing the green component of a color. It is
+      /// clamped to 0 to 255, then scaled so to the range 0.0 to 1.0
+      /// representing the darkest and brightest values.
       /// </summary>
       public Int64 green;
 
       /// <summary>
-      /// Three integer values representing the red, green and blue components
-      /// of a color. They are clamped to 0 to 255, then scaled so to the range
-      /// 0.0 to 1.0 representing the darkest and brightest values.
+      /// The integer values representing the blue component of a color. It is
+      /// clamped to 0 to 255, then scaled so to the range 0.0 to 1.0
+      /// representing the darkest and brightest values.
       /// </summary>
       public Int64 blue;
-   }
-
-   public class lockambientdiffuse
-   {
    }
 
    #region ambiant
@@ -391,29 +391,19 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// <factor> is a float chunk with the ambient weighting factor.
       /// </summary>
-      public factor factor;
+      public @float factor;
 
       /// <summary>
       /// <texturename> is a string containing the name of the texture used in
       /// the diffuse color. This is not the file name but the internal name.
       /// </summary>
-      public texturename texturename;
+      public @string texturename;
 
       /// <summary>
       /// <textureparams> describe how the texture is blended with the base
       /// color.
       /// </summary>
       public textureparams textureparams;
-   }
-
-   public class factor
-   {
-      public Double @float;
-   }
-
-   public class texturename
-   {
-      public String @string;
    }
 
    #region textureparams
@@ -423,13 +413,13 @@ namespace Anim8orTransl8or.An8.V100
       /// <blendmode> and <alphamode> specifies how that a texture will be
       /// combined with the base color.
       /// </summary>
-      blendmode blendmode;
+      public blendmode blendmode;
 
       /// <summary>
       /// <blendmode> and <alphamode> specifies how that a texture will be
       /// combined with the base color.
       /// </summary>
-      alphamode alphamode;
+      public alphamode alphamode;
 
       /// <summary>
       /// <percent> holds a single signed integer pecentage that is used to
@@ -439,7 +429,7 @@ namespace Anim8orTransl8or.An8.V100
       /// <percent> is the strength of the bumps and can go from -100 to 100
       /// perxent.
       /// </summary>
-      percent percent;
+      public @int percent;
    }
 
    #region blendmode
@@ -448,7 +438,7 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// The blendmode chunk hold a single identifier from the list above.
       /// </summary>
-      public blendmodeenum @enum;
+      public blendmodeenum text;
    }
 
    public enum blendmodeenum
@@ -479,7 +469,7 @@ namespace Anim8orTransl8or.An8.V100
       /// only applies to the diffuse color and is overridden by the
       /// transparency texture if it is present.
       /// </summary>
-      public alphamodeenum @enum;
+      public alphamodeenum text;
    }
 
    public enum alphamodeenum
@@ -502,66 +492,30 @@ namespace Anim8orTransl8or.An8.V100
       final,
    }
    #endregion
-
-   public class percent
-   {
-      public Int64 @int;
-   }
    #endregion
    #endregion
 
-   public class alpha
-   {
-      public Int64 @int;
-   }
-
-   public class brilliance
-   {
-      public Double @float;
-   }
-
-   public class phongsize
-   {
-      public Double @float;
-   }
-
-   #region map
    public class map
    {
       /// <summary>
-      /// The <map> chunk defines a texture image usage that is used for things
-      /// other than a simple color, such as in the ambient, diffuse, specular,
-      /// or emissive attributes. The <kind> chunk says how it will be used.
+      /// The <kind> chunk says how it will be used. The <$string> parameter
+      /// can be "transparency", "bumpmap" or "environment", or it can be one
+      /// of the four color textures "ambiant", "diffuse", "specular", and
+      /// "emissive". Other values are ignored. If a color texture is specified
+      /// in both a color component such as the <diffuse> chunk and in a <map>
+      /// component the last one in the file will be used.
       /// </summary>
-      public kind kind;
+      public @string kind;
 
       /// <summary>
       /// The <texturename> chunk names which texture it is.
       /// </summary>
-      public texturename texturename;
+      public @string texturename;
 
       /// <summary>
       /// The <textureparams> specify the strength, etc.
       /// </summary>
       public textureparams textureparams;
-   }
-
-   public class kind
-   {
-      /// <summary>
-      /// The <$string> parameter can be "transparency", "bumpmap" or
-      /// "environment", or it can be one of the four color textures "ambiant",
-      /// "diffuse", "specular", and "emissive". Other values are ignored. If a
-      /// color texture is specified in both a color component such as the
-      /// <diffuse> chunk and in a <map> component the last one in the file
-      /// will be used.
-      /// </summary>
-      public String @string;
-   }
-   #endregion
-
-   public class lockambdiff
-   {
    }
    #endregion
    #endregion
@@ -595,15 +549,18 @@ namespace Anim8orTransl8or.An8.V100
       public subdivision[] subdivision;
       public path[] path;
       public textcom[] textcom;
-      public modifier[] modifier;
+      public modifier2[] modifier;
       public image[] image;
-      public group[] group;
+      public group2[] group;
    }
 
    #region mesh
    public class mesh
    {
-      public name name;
+      /// <summary>
+      /// The mesh's name is given by <name>.
+      /// </summary>
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -629,18 +586,53 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public material material;
 
-      public smoothangle smoothangle;
-      public materiallist materiallist;
-      public points points;
-      public normals normals;
-      public edges edges;
-      public texcoords texcoords;
-      public faces faces;
-   }
+      /// <summary>
+      /// This is the threshold angle in degrees that determines if an edge is
+      /// as a crease or is smooth. Angles larger than the threshold are shown
+      /// as creases or corners; those equal or smaller are shown as smooth.
+      /// The default value is 45 degrees.
+      /// </summary>
+      public @float smoothangle;
 
-   public class name
-   {
-      public String @string;
+      /// <summary>
+      /// This is a list of material in a Mesh. They are numbered from 0.
+      /// Material 0 is the default material.
+      /// </summary>
+      public materiallist materiallist;
+
+      /// <summary>
+      /// These points are the basic vertices used to form the Mesh. They are
+      /// numbered from 0.
+      /// </summary>
+      public points points;
+
+      /// <summary>
+      /// The normals are stored as unit length vectors. This chunk is not
+      /// usually present and is ignored by Anim8or. It will be output if the
+      /// Options->Debug->OutputNormals flag has been set for use by other
+      /// applications.
+      /// </summary>
+      public normals normals;
+
+      /// <summary>
+      /// A list of edges. Edges are not normally output by Anim8or as this
+      /// information is already present in the <facedata> chunk. When an edge
+      /// either 1) isn't used in any face, or 2) has some special properties
+      /// set by the user, it will be listed here. Optionally, all edges can be
+      /// output with the Options->Debug->OutputEdges flag.
+      /// </summary>
+      public edges edges;
+
+      /// <summary>
+      /// The UV values used for texture coordinates. These are indexed
+      /// starting at zero.
+      /// </summary>
+      public texcoords texcoords;
+
+      /// <summary>
+      /// One set of <facedata> data is listed for each face.
+      /// </summary>
+      public faces faces;
    }
 
    #region base
@@ -672,9 +664,9 @@ namespace Anim8orTransl8or.An8.V100
 
    public class point
    {
-      public Double x = 0;
-      public Double y = 0;
-      public Double z = 0;
+      public Double x;
+      public Double y;
+      public Double z;
    }
    #endregion
 
@@ -686,10 +678,10 @@ namespace Anim8orTransl8or.An8.V100
 
    public class quaternion
    {
-      public Double x = 0;
-      public Double y = 0;
-      public Double z = 0;
-      public Double w = 1;
+      public Double x;
+      public Double y;
+      public Double z;
+      public Double w;
    }
    #endregion
    #endregion
@@ -700,67 +692,28 @@ namespace Anim8orTransl8or.An8.V100
       public orientation orientation;
    }
 
-   public class smoothangle
-   {
-      /// <summary>
-      /// This is the threshold angle in degrees that determines if an edge is
-      /// as a crease or is smooth. Angles larger than the threshold are shown
-      /// as creases or corners; those equal or smaller are shown as smooth.
-      /// The default value is 45 degrees.
-      /// </summary>
-      public Double @float = 45;
-   }
-
-   #region materiallist
    public class materiallist
-   {
-      /// <summary>
-      /// This is a list of material in a Mesh. They are numbered from 0.
-      /// Material 0 is the default material.
-      /// </summary>
-      public materialname[] materialname;
-   }
-
-   public class materialname
    {
       /// <summary>
       /// The value of <$string> is a material name. It should be defined
       /// either as a global material or as a material local to this Object.
       /// </summary>
-      public String @string;
+      public @string[] materialname;
    }
-   #endregion
 
    public class points
    {
-      /// <summary>
-      /// These points are the basic vertices used to form the Mesh. They are
-      /// numbered from 0.
-      /// </summary>
       public point[] point;
    }
 
    public class normals
    {
-      /// <summary>
-      /// The normals are stored as unit length vectors. This chunk is not
-      /// usually present and is ignored by Anim8or. It will be output if the
-      /// Options->Debug->OutputNormals flag has been set for use by other
-      /// applications.
-      /// </summary>
       public point[] point;
    }
 
    #region edges
    public class edges
    {
-      /// <summary>
-      /// A list of edges. Edges are not normally output by Anim8or as this
-      /// information is already present in the <facedata> chunk. When an edge
-      /// either 1) isn't used in any face, or 2) has some special properties
-      /// set by the user, it will be listed here. Optionally, all edges can be
-      /// output with the Options->Debug->OutputEdges flag.
-      /// </summary>
       public edge[] edge;
    }
 
@@ -778,7 +731,7 @@ namespace Anim8orTransl8or.An8.V100
       /// the ends of the edge. The index of the first point is always less
       /// than that of the second.
       /// </summary>
-      /// public Int64 endpointindex;
+      public Int64 endpointindex;
 
       /// <summary>
       /// The third value, if present, is the user set sharpness value. If this
@@ -794,11 +747,7 @@ namespace Anim8orTransl8or.An8.V100
    #region texcoords
    public class texcoords
    {
-      /// <summary>
-      /// The UV values used for texture coordinates. These are indexed
-      /// starting at zero.
-      /// </summary>
-      public texcoords[] texcoord;
+      public texcoord[] texcoord;
    }
 
    public class texcoord
@@ -818,9 +767,6 @@ namespace Anim8orTransl8or.An8.V100
    #region faces
    public class faces
    {
-      /// <summary>
-      /// One set of <facedata> data is listed for each face.
-      /// </summary>
       public facedata[] facedata;
    }
 
@@ -832,27 +778,27 @@ namespace Anim8orTransl8or.An8.V100
       /// It must be at least 3. Each face can have a different number of
       /// sides.
       /// </summary>
-      Int64 numpoints;
+      public Int64 numpoints;
 
       /// <summary>
       /// FLAGS is an <int-const> with each bit as a flag describing what kinds
       /// of data this face has, and other properties of the face.
       /// </summary>
-      facedataenum flags;
+      public facedataenum flags;
 
       /// <summary>
       /// MATNO is an <int-const> for which material to use on this face. It is
-      /// an index into the materials listed in the<materiallist> chuck for
+      /// an index into the materials listed in the <materiallist> chuck for
       /// this Mesh.
       /// </summary>
-      Int64 matno;
+      public Int64 matno;
 
       /// <summary>
       /// FLATNORMALNO - The index of the faces normal in the normal array for
       /// this Mesh. This value is normally set to -1 indicating that there is
       /// no face normal stored in the file.
       /// </summary>
-      Int64 flatnormalno;
+      public Int64 flatnormalno;
 
       /// <summary>
       /// POINTDATA - This is one or more <int-const>s, depending on the value
@@ -870,7 +816,7 @@ namespace Anim8orTransl8or.An8.V100
       /// first face uses material number 0 and the other two use material
       /// number 2.
       /// </summary>
-      public pointdata pointdata;
+      public pointdata[] pointdata;
    }
 
    [Flags]
@@ -879,17 +825,17 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// 1 - SF_SHOW_BACK - Don't backface cull this face.
       /// </summary>
-      showback,
+      showback = 1,
 
       /// <summary>
       /// 2 - SF_HAS_NORMALS - This face has normal data in this file.
       /// </summary>
-      hasnormals,
+      hasnormals = 2,
 
       /// <summary>
       /// 4 - SF_HAS_TEXTURE - This face has texture coordinates.
       /// <summary>
-      hastexture,
+      hastexture = 4,
    }
 
    public class pointdata
@@ -921,7 +867,10 @@ namespace Anim8orTransl8or.An8.V100
    #region sphere
    public class sphere
    {
-      public name name;
+      /// <summary>
+      /// The sphere's name is given by <name>.
+      /// </summary>
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -959,7 +908,7 @@ namespace Anim8orTransl8or.An8.V100
       /// edges and the faces are split accordingly into smaller triangles. The
       /// vertices are then projected onto a Shpere.
       /// </summary>
-      public geodesic geodesic;
+      public @int geodesic;
    }
 
    public class longlat
@@ -967,17 +916,14 @@ namespace Anim8orTransl8or.An8.V100
       Int64 longitude;
       Int64 latitude;
    }
-
-   public class geodesic
-   {
-      Int64 @int;
-   }
    #endregion
 
-   #region cylinder
    public class cylinder
    {
-      public name name;
+      /// <summary>
+      /// The cylinder's name is given by <name>.
+      /// </summary>
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1006,7 +952,7 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// This is the length of the cylinder.
       /// </summary>
-      public length length;
+      public @float length;
 
       /// <summary>
       /// This is the diameter of the start of the cylinder. It is also the
@@ -1014,45 +960,37 @@ namespace Anim8orTransl8or.An8.V100
       /// of thee values is 0 then that end of the cylinder is collapsed into a
       /// single point resulting is a Cone.
       /// </summary>
-      public diameter diameter;
+      public @float diameter;
 
       /// <summary>
       /// The diameter of the end of the cylinder.
       /// </summary>
-      public diameter topdiameter;
+      public @float topdiameter;
 
+      /// <summary>
+      /// The two integers are the number of divisions used to make the
+      /// Cylinder in the vertical and horizontal directions.
+      /// </summary>
       public longlat longlat;
 
       /// <summary>
       /// Cap the start of the cylinder if this chunk is present.
       /// </summary>
-      public cap capstart;
+      public empty capstart;
 
       /// <summary>
       /// Cap the end of the cylinder if this chunk is present.
       /// </summary>
-      public cap capend;
+      public empty capend;
    }
-
-   public class length
-   {
-      public Double @float;
-   }
-
-   public class diameter
-   {
-      public Double @float;
-   }
-
-   public class cap
-   {
-   }
-   #endregion
 
    #region cube
    public class cube
    {
-      public name name;
+      /// <summary>
+      /// The cube's name is given by <name>.
+      /// </summary>
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1107,7 +1045,10 @@ namespace Anim8orTransl8or.An8.V100
    #region subdivision
    public class subdivision
    {
-      public name name;
+      /// <summary>
+      /// The subdivision's name is given by <name>.
+      /// </summary>
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1133,43 +1074,75 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public material material;
 
-      public smoothangle smoothangle;
+      /// <summary>
+      /// This is the threshold angle in degrees that determines if an edge is
+      /// as a crease or is smooth. Angles larger than the threshold are shown
+      /// as creases or corners; those equal or smaller are shown as smooth.
+      /// The default value is 45 degrees.
+      /// </summary>
+      public @float smoothangle;
 
       /// <summary>
       /// The number of times a that this component will be subdivided in the
       /// working views.
       /// </summary>
-      public working working;
+      public @int working;
 
       /// <summary>
       /// The number of times a that this component will be subdivided in the
       /// rendered views. This value is currently not used by Anim8or.
       /// </summary>
-      public divisions2 divisions;
+      public @int divisions;
 
+      /// <summary>
+      /// This is a list of material in a subdivision. They are numbered from
+      /// 0. Material 0 is the default material.
+      /// </summary>
       public materiallist materiallist;
+
+      /// <summary>
+      /// These points are the basic vertices used to form the subdivision.
+      /// They are numbered from 0.
+      /// </summary>
       public points points;
+
+      /// <summary>
+      /// The normals are stored as unit length vectors. This chunk is not
+      /// usually present and is ignored by Anim8or. It will be output if the
+      /// Options->Debug->OutputNormals flag has been set for use by other
+      /// applications.
+      /// </summary>
       public normals normals;
+
+      /// <summary>
+      /// A list of edges. Edges are not normally output by Anim8or as this
+      /// information is already present in the <facedata> chunk. When an edge
+      /// either 1) isn't used in any face, or 2) has some special properties
+      /// set by the user, it will be listed here. Optionally, all edges can be
+      /// output with the Options->Debug->OutputEdges flag.
+      /// </summary>
       public edges edges;
+
+      /// <summary>
+      /// The UV values used for texture coordinates. These are indexed
+      /// starting at zero.
+      /// </summary>
       public texcoords texcoords;
+
+      /// <summary>
+      /// One set of <facedata> data is listed for each face.
+      /// </summary>
       public faces faces;
-   }
-
-   public class working
-   {
-      public Int64 @int;
-   }
-
-   public class divisions2
-   {
-      public Int64 @int;
    }
    #endregion
 
    #region path
    public class path
    {
-      public name name;
+      /// <summary>
+      /// The path's name is given by <name>.
+      /// </summary>
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1186,17 +1159,16 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public pivot pivot;
 
-      public extendable extendable;
+      /// <summary>
+      /// TODO: What does this mean?
+      /// </summary>
+      public empty extendable;
 
       /// <summary>
       /// A <path> is built from one or more Bezier splines. Multiple splines
       /// can be used to cut holes or to define separate, unconnected regions.
       /// </summary>
       public bezier bezier;
-   }
-
-   public class extendable
-   {
    }
 
    #region bezier
@@ -1206,16 +1178,17 @@ namespace Anim8orTransl8or.An8.V100
       /// If this chunk is present the first and last knots in the spline are
       /// connected to form a closed loop. Otherwise they are not.
       /// </summary>
-      public closed closed;
+      public empty closed;
 
+      /// <summary>
+      /// The first <point> is the location of the knot. The next two are the
+      /// forward and reverse direction vectors. If present the <$int> value is
+      /// the number of segments in the segment that begins with this knot. If
+      /// not then the number is automatically determined when it is used.
+      /// </summary>
       public knot[] knot;
    }
 
-   public class closed
-   {
-   }
-
-   #region knot
    public class knot
    {
       /// <summary>
@@ -1246,23 +1219,17 @@ namespace Anim8orTransl8or.An8.V100
       /// of the forward and reverse direction vectors should be the negation
       /// of each other.
       /// </summary>
-      public corner corner;
-   }
-
-   public class corner
-   {
+      public empty corner;
    }
    #endregion
    #endregion
-   #endregion
 
-   #region textcom
    public class textcom
    {
       /// <summary>
       /// A <texcom> is a True-Type string represented by one or more splines.
       /// </summary>
-      public name name;
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1279,15 +1246,6 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public pivot pivot;
 
-      public @string @string;
-      public typeface typeface;
-      public size size;
-      public bold bold;
-      public italic italic;
-   }
-
-   public class @string
-   {
       /// <summary>
       /// This is a Unicode string. Values outside of the 7 bit printable ASCII
       /// character set are escaped by a backslash "\" and are written as
@@ -1307,33 +1265,37 @@ namespace Anim8orTransl8or.An8.V100
       /// Note: Unicode symbols are not supported in Win95, Win98, WinSE or
       /// WinME
       /// </summary>
-      public String @lstring;
-   }
+      public @wstring @string;
 
-   public class typeface
-   {
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: What does this mean? Is it the font name?
       /// </summary>
-   }
+      public @string typeface;
 
-   public class bold
-   {
-   }
+      /// <summary>
+      /// TODO: What does this mean? Is it the font size? Is it float or int?
+      /// </summary>
+      public @float size;
 
-   public class italic
-   {
+      /// <summary>
+      /// TODO: What does this mean? Does it mean the font is bold?
+      /// </summary>
+      public empty bold;
+
+      /// <summary>
+      /// TODO: What does this mean? Does it mean the font is italicized?
+      /// </summary>
+      public empty italic;
    }
-   #endregion
 
    #region modifier
-   public class modifier
+   public class modifier2
    {
       /// <summary>
       /// A <modifier> chunk defines the size, location and kind of a modifier
       /// and any <component> that it is bound to.
       /// </summary>
-      public name name;
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1350,13 +1312,20 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public pivot pivot;
 
-      public length length;
-      public diameter diameter;
+      /// <summary>
+      /// TODO: What does this mean?
+      /// </summary>
+      public @float length;
+
+      /// <summary>
+      /// TODO: What does this mean?
+      /// </summary>
+      public @float diameter;
 
       /// <summary>
       /// The number of vertical segments that the modifier is divided into.
       /// </summary>
-      public segments segments;
+      public @int segments;
 
       /// <summary>
       /// The kind of modifier. For example a taper modifier with
@@ -1377,14 +1346,9 @@ namespace Anim8orTransl8or.An8.V100
       public subdivision subdivision;
       public path path;
       public textcom textcom;
-      public modifier modifier2;
+      public modifier2 modifier;
       public image image;
-      public group group;
-   }
-
-   public class segments
-   {
-      public Int64 @int;
+      public group2 group;
    }
 
    #region method
@@ -1422,7 +1386,7 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// A reference image.
       /// </summary>
-      public name name;
+      public @string name;
 
       /// <summary>
       /// The <$string> value is the name of the file with
@@ -1445,15 +1409,18 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public pivot pivot;
 
+      /// <summary>
+      /// The int values are the size of the image in x and y dimensions.
+      /// </summary>
       public size size;
    }
 
-   public class group
+   public class group2
    {
       /// <summary>
       /// A <group> is a collection of zero of more <components>.
       /// </summary>
-      public name name;
+      public @string name;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1477,9 +1444,9 @@ namespace Anim8orTransl8or.An8.V100
       public subdivision[] subdivision;
       public path[] path;
       public textcom[] textcom;
-      public modifier[] modifier;
+      public modifier2[] modifier;
       public image[] image;
-      public group[] group2;
+      public group2[] group;
    }
    #endregion
 
@@ -1499,30 +1466,39 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// <bone> is the root bone, which contains all other bones.
       /// </summary>
-      public bone bone;
+      public bone2 bone;
    }
 
-   public class bone
+   public class bone2
    {
       public String name;
 
       /// <summary>
       /// <length> is the length of the bone.
       /// </summary>
-      public length length;
+      public @float length;
 
       /// <summary>
       /// <diameter> is the relative diameter of the bone when it is shown in
       /// the working views.
       /// </summary>
-      public diameter diameter;
+      public @float diameter;
 
+      /// <summary>
+      /// This chunk holds the orientation of the bone as a quaternion. If not
+      /// present the it is unrotated, with the X coordinate pointing to the
+      /// right, the Y pointing up, and the Z pointing out of the screen in a
+      /// front view of an object.
+      ///
+      /// For a description of the wonders of quaternions, see a good graphics
+      /// text, or the original paper by Ken Shoemaker.
+      /// </summary>
       public orientation orientation;
 
       /// <summary>
       /// If this chunk is present then the bone joint cannot be edited.
       /// </summary>
-      public locked locked;
+      public empty locked;
 
       /// <summary>
       /// This chunk defines a degree of freedom for this done. There can be up
@@ -1557,9 +1533,9 @@ namespace Anim8orTransl8or.An8.V100
       public subdivision[] subdivision;
       public path[] path;
       public textcom[] textcom;
-      public modifier[] modifier;
+      public modifier2[] modifier;
       public image[] image;
-      public group[] group;
+      public group2[] group;
 
       /// <summary>
       /// A <namedobject> is a reference to an <object> from within another
@@ -1567,14 +1543,9 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public namedobject[] namedobject;
 
-      public bone[] bone2;
+      public bone2[] bone;
    }
 
-   public class locked
-   {
-   }
-
-   #region dof
    public class dof
    {
       /// <summary>
@@ -1601,19 +1572,14 @@ namespace Anim8orTransl8or.An8.V100
       /// If the <locked> chunk is present then this axis of rotation cannot be
       /// edited.
       /// </summary>
-      public locked locked;
+      public empty locked;
 
       /// <summary>
       /// If the <unlimited> chunk is present then there are no limits to this
       /// axis's rotation angle.
       /// </summary>
-      public unlimited unlimited;
+      public empty unlimited;
    }
-
-   public class unlimited
-   {
-   }
-   #endregion
 
    public class influence
    {
@@ -1650,13 +1616,18 @@ namespace Anim8orTransl8or.An8.V100
       public Double outRadius1;
    }
 
-   #region namedobject
    public class namedobject
    {
-      public String namedobjectname;
+      /// <summary>
+      /// TODO: What does this mean?
+      /// </summary>
+      public String objectname;
 
-      public name name;
-
+      /// <summary>
+      /// TODO: Is this a string chunk or string? What does this mean?
+      /// </summary>
+      public @string name;
+       
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
       /// both. This chunk gives the location and orientation of the component
@@ -1682,14 +1653,8 @@ namespace Anim8orTransl8or.An8.V100
       /// This object's shape is determined partially by the bone <$string>'s
       /// position in this figure.
       /// </summary>
-      public weightedby[] weightedby;
+      public @string[] weightedby;
    }
-
-   public class weightedby
-   {
-      public String @string;
-   }
-   #endregion
    #endregion
 
    #region sequence
@@ -1704,12 +1669,12 @@ namespace Anim8orTransl8or.An8.V100
       /// The name of the figure that this sequence applies to is defined by
       /// <$string>.
       /// </summary>
-      public figure2 figure;
+      public @string figure;
 
       /// <summary>
       /// This chunk is the length of the sequence in frames.
       /// </summary>
-      public frames frames;
+      public @int frames;
 
       /// <summary>
       /// The two strings give the names of the bone that it applies to, and
@@ -1718,29 +1683,17 @@ namespace Anim8orTransl8or.An8.V100
       public jointangle[] jointangle;
    }
 
-   public class figure2
-   {
-      public String @string;
-   }
-
-   public class frames
-   {
-      public Int64 @int;
-   }
-
    #region jointangle
    public class jointangle
    {
       public String bone;
       public String axis;
-
-      /// <summary>
-      /// These four items are all called "track" in the file
-      /// </summary>
       public floattrack track;
-      public pointtrack track2;
-      public qtrack track3;
-      public booleantrack track4;
+
+      // TODO: Are these part of jointangle?
+      //public pointtrack track;
+      //public qtrack track;
+      //public booleantrack track;
    }
 
    #region floattrack
@@ -1881,19 +1834,19 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// The number of frames.  Must be greater than zero.
       /// </summary>
-      public frames frames;
+      public @int frames;
 
       /// <summary>
       /// If the value of <$int> is one the ground grid is drawn. If it is
       /// zero then it isn't
       /// </summary>
-      public groundgrid groundgrid;
+      public @int groundgrid;
 
       /// <summary>
       /// The value used for shadow bias when drawing shadows. The nominal
       /// value is 0.001.
       /// </summary>
-      public shadowbias shadowbias;
+      public @float shadowbias;
 
       /// <summary>
       /// The color used for the background. The three values are the red,
@@ -1901,7 +1854,7 @@ namespace Anim8orTransl8or.An8.V100
       /// represents black. If not present the default color of 102, 102, 153
       /// is used.
       /// </summary>
-      public background background;
+      public rgb background;
 
       /// <summary>
       /// The name of a file used for the background image. If the panorama
@@ -1921,10 +1874,19 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public fog fog;
 
-      public znear znear;
+      /// <summary>
+      /// If present, this sets the distance of the near clip planes.
+      /// </summary>
+      public @float znear;
 
-      public zfar zfar;
+      /// <summary>
+      /// If present, this sets the distance of the far clip planes.
+      /// </summary>
+      public @float zfar;
 
+      /// <summary>
+      /// Cameras that are in a scene are defined by a <camera> chunk.
+      /// </summary>
       public camera[] camera;
 
       /// <summary>
@@ -1937,6 +1899,9 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public objectelement[] objectelement;
 
+      /// <summary>
+      /// Lights that are in a scene are defined by a <light> chunk.
+      /// </summary>
       public light[] light;
 
       /// <summary>
@@ -1948,26 +1913,12 @@ namespace Anim8orTransl8or.An8.V100
       public @null[] @null;
    }
 
-   public class groundgrid
-   {
-      public Int64 @int;
-   }
-
-   public class shadowbias
-   {
-      public Double @float = 0.001;
-   }
-
-   public class background
-   {
-      public Int64 red = 102;
-      public Int64 green = 102;
-      public Int64 blue = 153;
-   }
-
    #region image
    public class image2
    {
+      /// <summary>
+      /// The name of a file used for the background image.
+      /// </summary>
       public String file;
 
       /// <summary>
@@ -1981,9 +1932,24 @@ namespace Anim8orTransl8or.An8.V100
 
    public class panorama
    {
+      /// <summary>
+      /// The left longitude angle.
+      /// </summary>
       public Double leftlongitude;
+
+      /// <summary>
+      /// The right longitude angle.
+      /// </summary>
       public Double rightlongitude;
+
+      /// <summary>
+      /// The bottom latitude angle.
+      /// </summary>
       public Double bottomlatitude;
+
+      /// <summary>
+      /// The top latitude angle.
+      /// </summary>
       public Double toplatitude;
    }
    #endregion
@@ -1994,70 +1960,34 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// The <color> chunk is the color of the fog in 3 ints, from 0 to 255.
       /// </summary>
-      public color color;
+      public rgb color;
 
       /// <summary>
       /// <fogstart> is a float chunk giving the starting distance from the
       /// camera of the fog transition zone.
       /// </summary>
-      public fogstart fogstart;
+      public @float fogstart;
 
       /// <summary>
       /// <<fogend> is a float chunk giving the ending distance from the camera
       /// of the fog transition zone.
       /// </summary>
-      public fogend fogend;
+      public @float fogend;
 
       /// <summary>
       /// <fogpercent> is an int chunk for the maximum fog level, if it is
       /// less that 100.
       /// </summary>
-      public fogpercent fogpercent;
+      public @int fogpercent;
 
       /// <summary>
       /// <radial> is an empty chunk. If present then the fog distance is
       /// computed as the radial distance from the camera, otherwise it is the
       /// distance from the z = 0 plane.
       /// </summary>
-      public radial radial;
-   }
-
-   public class color
-   {
-      public Int64 red;
-      public Int64 green;
-      public Int64 blue;
-   }
-
-   public class fogstart
-   {
-      public Double @float;
-   }
-
-   public class fogend
-   {
-      public Double @float;
-   }
-
-   public class fogpercent
-   {
-      public Int64 @int;
-   }
-
-   public class radial
-   {
+      public empty radial;
    }
    #endregion
-
-   public class znear
-   {
-      public Double @float;
-   }
-
-   public class zfar
-   {
-      public Double @float;
-   }
 
    #region camera
    public class camera
@@ -2082,39 +2012,39 @@ namespace Anim8orTransl8or.An8.V100
       /// [ <roll> ] - An int chunk with a value of 1 if the element's
       /// orientation can "roll" off the vertical, and 0 if it can't.
       /// </summary>
-      public roll roll;
+      public @int roll;
 
       /// <summary>
       /// [ <facespath> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction of it's path of
       /// motion.
       /// </summary>
-      public facespath facespath;
+      public empty facespath;
 
       /// <summary>
       /// [ <facestarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction to another
       /// element.
       /// </summary>
-      public facestarget facestarget;
+      public empty facestarget;
 
       /// <summary>
       /// [ <orienttarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the same orientation as another
       /// element.
       /// </summary>
-      public orienttarget orienttarget;
+      public empty orienttarget;
 
       /// <summary>
       /// [ <boundtarget> ] - The name of the other element that this one is
       /// oriented to, if it has the facestarget or orientedtarget chunk.
       /// </summary>
-      public boundtarget boundtarget;
+      public empty boundtarget;
 
       /// <summary>
       /// The field of view in degrees of the camera's view from left to right.
       /// </summary>
-      public fov fov;
+      public @float fov;
 
       /// <summary>
       /// [ <scale> ] - A scale factor applied to the object before rendering.
@@ -2125,7 +2055,7 @@ namespace Anim8orTransl8or.An8.V100
       /// <locked> - An int chunk with the value of 1 if this element is
       /// "locked" from being edited, and a value of 0 otherwise.
       /// </summary>
-      public locked2 locked;
+      public @int locked;
 
       /// <summary>
       /// <controller>* - Zero or more <controller> chunks.
@@ -2144,41 +2074,16 @@ namespace Anim8orTransl8or.An8.V100
       public point point;
    }
 
-   public class roll
-   {
-      public Int64 @int;
-   }
-
-   public class facespath
-   {
-   }
-
-   public class facestarget
-   {
-   }
-
-   public class orienttarget
-   {
-   }
-
-   public class boundtarget
-   {
-   }
-
-   public class fov
-   {
-      public Double @float;
-   }
-
-   public class locked2
-   {
-      public Int64 @int;
-   }
-
+   /// <summary>
+   /// TODO: What does this mean?
+   /// </summary>
    public class controller
    {
    }
 
+   /// <summary>
+   /// TODO: What does this mean?
+   /// </summary>
    public class element
    {
    }
@@ -2212,34 +2117,34 @@ namespace Anim8orTransl8or.An8.V100
       /// [ <roll> ] - An int chunk with a value of 1 if the element's
       /// orientation can "roll" off the vertical, and 0 if it can't.
       /// </summary>
-      public roll roll;
+      public @int roll;
 
       /// <summary>
       /// [ <facespath> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction of it's path of
       /// motion.
       /// </summary>
-      public facespath facespath;
+      public empty facespath;
 
       /// <summary>
       /// [ <facestarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction to another
       /// element.
       /// </summary>
-      public facestarget facestarget;
+      public empty facestarget;
 
       /// <summary>
       /// [ <orienttarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the same orientation as another
       /// element.
       /// </summary>
-      public orienttarget orienttarget;
+      public empty orienttarget;
 
       /// <summary>
       /// [ <boundtarget> ] - The name of the other element that this one is
       /// oriented to, if it has the facestarget or orientedtarget chunk.
       /// </summary>
-      public boundtarget boundtarget;
+      public empty boundtarget;
 
       /// <summary>
       /// [ <scale> ] - A scale factor applied to the object before rendering.
@@ -2250,24 +2155,24 @@ namespace Anim8orTransl8or.An8.V100
       /// This chunk has a value of 1 of the element is visible, and a value of
       /// zero if it is hidden. The default value is 1.
       /// </summary>
-      public visibility visibility;
+      public @int visibility;
 
       /// <summary>
       /// If present this object casts a shadow.
       /// </summary>
-      public castshadow castshadow;
+      public empty castshadow;
 
       /// <summary>
       /// If present this object shows shadows on its surface from lights that
       /// cast them.
       /// </summary>
-      public receiveshadow receiveshadow;
+      public empty receiveshadow;
 
       /// <summary>
       /// <locked> - An int chunk with the value of 1 if this element is
       /// "locked" from being edited, and a value of 0 otherwise.
       /// </summary>
-      public locked2 locked;
+      public @int locked;
 
       /// <summary>
       /// This chunk specifies the name and starting frame of a sequence that
@@ -2294,7 +2199,6 @@ namespace Anim8orTransl8or.An8.V100
    }
    #endregion
 
-   #region objectelement
    public class objectelement
    {
       /// <summary>
@@ -2322,34 +2226,34 @@ namespace Anim8orTransl8or.An8.V100
       /// [ <roll> ] - An int chunk with a value of 1 if the element's
       /// orientation can "roll" off the vertical, and 0 if it can't.
       /// </summary>
-      public roll roll;
+      public @int roll;
 
       /// <summary>
       /// [ <facespath> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction of it's path of
       /// motion.
       /// </summary>
-      public facespath facespath;
+      public empty facespath;
 
       /// <summary>
       /// [ <facestarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction to another
       /// element.
       /// </summary>
-      public facestarget facestarget;
+      public empty facestarget;
 
       /// <summary>
       /// [ <orienttarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the same orientation as another
       /// element.
       /// </summary>
-      public orienttarget orienttarget;
+      public empty orienttarget;
 
       /// <summary>
       /// [ <boundtarget> ] - The name of the other element that this one is
       /// oriented to, if it has the facestarget or orientedtarget chunk.
       /// </summary>
-      public boundtarget boundtarget;
+      public empty boundtarget;
 
       /// <summary>
       /// [ <scale> ] - A scale factor applied to the object before rendering.
@@ -2360,24 +2264,24 @@ namespace Anim8orTransl8or.An8.V100
       /// This chunk has a value of 1 of the element is visible, and a value of
       /// zero if it is hidden. The default value is 1.
       /// </summary>
-      public visibility visibility;
+      public @int visibility;
 
       /// <summary>
       /// If present this object casts a shadow.
       /// </summary>
-      public castshadow castshadow;
+      public empty castshadow;
 
       /// <summary>
       /// If present this object shows shadows on its surface from lights that
       /// cast them.
       /// </summary>
-      public receiveshadow receiveshadow;
+      public empty receiveshadow;
 
       /// <summary>
       /// <locked> - An int chunk with the value of 1 if this element is
       /// "locked" from being edited, and a value of 0 otherwise.
       /// </summary>
-      public locked2 locked;
+      public @int locked;
 
       /// <summary>
       /// <controller>* - Zero or more <controller> chunks.
@@ -2390,16 +2294,6 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public element[] element;
    }
-
-   public class visibility
-   {
-      public Int64 @int = 1;
-   }
-
-   public class receiveshadow
-   {
-   }
-   #endregion
 
    #region light
    public class light
@@ -2424,34 +2318,34 @@ namespace Anim8orTransl8or.An8.V100
       /// [ <roll> ] - An int chunk with a value of 1 if the element's
       /// orientation can "roll" off the vertical, and 0 if it can't.
       /// </summary>
-      public roll roll;
+      public @int roll;
 
       /// <summary>
       /// [ <facespath> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction of it's path of
       /// motion.
       /// </summary>
-      public facespath facespath;
+      public empty facespath;
 
       /// <summary>
       /// [ <facestarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction to another
       /// element.
       /// </summary>
-      public facestarget facestarget;
+      public empty facestarget;
 
       /// <summary>
       /// [ <orienttarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the same orientation as another
       /// element.
       /// </summary>
-      public orienttarget orienttarget;
+      public empty orienttarget;
 
       /// <summary>
       /// [ <boundtarget> ] - The name of the other element that this one is
       /// oriented to, if it has the facestarget or orientedtarget chunk.
       /// </summary>
-      public boundtarget boundtarget;
+      public empty boundtarget;
 
       /// <summary>
       /// [ <scale> ] - A scale factor applied to the object before rendering.
@@ -2463,25 +2357,25 @@ namespace Anim8orTransl8or.An8.V100
       /// components of the light's color. A value of 1.0 is maximum and 0.0 is
       /// minimum.
       /// </summary>
-      public color2 color;
+      public color color;
 
       /// <summary>
       /// One of these three empty chunks must be present.  They define the
       /// kind of light.
       /// </summary>
-      public infinite infinite;
+      public empty infinite;
 
       /// <summary>
       /// One of these three empty chunks must be present.  They define the
       /// kind of light.
       /// </summary>
-      public local local;
+      public empty local;
 
       /// <summary>
       /// One of these three empty chunks must be present.  They define the
       /// kind of light.
       /// </summary>
-      public spotlight spotlight;
+      public empty spotlight;
 
       /// <summary>
       /// Note: From the spec, it is not clear where this belongs
@@ -2491,7 +2385,7 @@ namespace Anim8orTransl8or.An8.V100
       /// from full intensity at a distance of <inradius> to zero at a distance
       /// of <outradius>.
       /// </summary>
-      public inradius inradius;
+      public @float inradius;
 
       /// <summary>
       /// Note: From the spec, it is not clear where this belongs
@@ -2501,7 +2395,7 @@ namespace Anim8orTransl8or.An8.V100
       /// from full intensity at a distance of <inradius> to zero at a distance
       /// of <outradius>.
       /// </summary>
-      public outradius outradius;
+      public @float outradius;
 
       /// <summary>
       /// Note: From the spec, it is not clear where this belongs
@@ -2510,7 +2404,7 @@ namespace Anim8orTransl8or.An8.V100
       /// Between <inangle> and <outangle> it drops off linearly to zero.
       /// Outside this range it is zero.
       /// </summary>
-      public inangle inangle;
+      public @float inangle;
 
       /// <summary>
       /// Note: From the spec, it is not clear where this belongs
@@ -2519,25 +2413,28 @@ namespace Anim8orTransl8or.An8.V100
       /// Between <inangle> and <outangle> it drops off linearly to zero.
       /// Outside this range it is zero.
       /// </summary>
-      public outangle outangle;
+      public @float outangle;
 
       /// <summary>
       /// If present this light casts a shadow.
       /// </summary>
-      public castshadow castshadow;
+      public empty castshadow;
 
-      public percentshadow percentshadow;
+      /// <summary>
+      /// TODO: What does this mean?
+      /// </summary>
+      public empty percentshadow;
 
       /// <summary>
       ///  This chunk enables ray tracing of shadows for this light.
       /// </summary>
-      public raytraceshadow raytraceshadow;
+      public empty raytraceshadow;
 
       /// <summary>
       /// If <soft> is present and the light casts a ray traced shadow the the
       /// shadow is rendered with soft edges.
       /// </summary>
-      public soft soft;
+      public empty soft;
 
       /// <summary>
       /// TODO: From the spec, it is not clear where this belongs
@@ -2546,7 +2443,7 @@ namespace Anim8orTransl8or.An8.V100
       /// it represents the apparent diameter of the light as viewed by an
       /// illuminated surface.
       /// </summary>
-      public softsize softsize;
+      public @float softsize;
 
       /// <summary>
       /// TODO: From the spec, it is not clear where this belongs
@@ -2554,7 +2451,7 @@ namespace Anim8orTransl8or.An8.V100
       /// adaptive algorithm is used to speed up rendering when not in a "soft"
       /// region of the shadow.
       /// </summary>
-      public minsamples minsamples;
+      public @int minsamples;
 
       /// <summary>
       /// TODO: From the spec, it is not clear where this belongs
@@ -2562,20 +2459,20 @@ namespace Anim8orTransl8or.An8.V100
       /// adaptive algorithm is used to speed up rendering when not in a "soft"
       /// region of the shadow.
       /// </summary>
-      public maxsamples maxsamples;
+      public @int maxsamples;
 
       /// <summary>
       /// TODO: From the spec, it is not clear where this belongs
       /// Use true Monte Carlo sampling instead of pseudo-Monte Carlo sampling.
       /// This results in a grainer look in the shadows transition region.
       /// </summary>
-      public montecarlo montecarlo;
+      public empty montecarlo;
 
       /// <summary>
       /// <locked> - An int chunk with the value of 1 if this element is
       /// "locked" from being edited, and a value of 0 otherwise.
       /// </summary>
-      public locked2 locked;
+      public @int locked;
 
       /// <summary>
       /// <controller>* - Zero or more <controller> chunks.
@@ -2589,78 +2486,11 @@ namespace Anim8orTransl8or.An8.V100
       public element[] element;
    }
 
-   public class color2
+   public class color
    {
       public Double red;
       public Double green;
       public Double blue;
-   }
-
-   public class infinite
-   {
-   }
-
-   public class local
-   {
-   }
-
-   public class spotlight
-   {
-   }
-
-   public class inradius
-   {
-      public Double @float;
-   }
-
-   public class outradius
-   {
-      public Double @float;
-   }
-
-   public class inangle
-   {
-      public Double @float;
-   }
-
-   public class outangle
-   {
-      public Double @float;
-   }
-
-   public class castshadow
-   {
-   }
-
-   public class percentshadow
-   {
-   }
-
-   public class raytraceshadow
-   {
-   }
-
-   public class soft
-   {
-   }
-
-   public class softsize
-   {
-      public Double @float;
-   }
-
-   public class minsamples
-   {
-      public Int64 @int;
-   }
-
-   public class maxsamples
-   {
-      public Int64 @int;
-   }
-
-   public class montecarlo
-   {
    }
    #endregion
 
@@ -2686,34 +2516,34 @@ namespace Anim8orTransl8or.An8.V100
       /// [ <roll> ] - An int chunk with a value of 1 if the element's
       /// orientation can "roll" off the vertical, and 0 if it can't.
       /// </summary>
-      public roll roll;
+      public @int roll;
 
       /// <summary>
       /// [ <facespath> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction of it's path of
       /// motion.
       /// </summary>
-      public facespath facespath;
+      public empty facespath;
 
       /// <summary>
       /// [ <facestarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the direction to another
       /// element.
       /// </summary>
-      public facestarget facestarget;
+      public empty facestarget;
 
       /// <summary>
       /// [ <orienttarget> ] - An optional chunk that controls whether the
       /// element's orientation is relative to the same orientation as another
       /// element.
       /// </summary>
-      public orienttarget orienttarget;
+      public empty orienttarget;
 
       /// <summary>
       /// [ <boundtarget> ] - The name of the other element that this one is
       /// oriented to, if it has the facestarget or orientedtarget chunk.
       /// </summary>
-      public boundtarget boundtarget;
+      public empty boundtarget;
 
       /// <summary>
       /// [ <scale> ] - A scale factor applied to the object before rendering.
@@ -2724,7 +2554,7 @@ namespace Anim8orTransl8or.An8.V100
       /// <locked> - An int chunk with the value of 1 if this element is
       /// "locked" from being edited, and a value of 0 otherwise.
       /// </summary>
-      public locked2 locked;
+      public @int locked;
 
       /// <summary>
       /// <controller>* - Zero or more <controller> chunks.

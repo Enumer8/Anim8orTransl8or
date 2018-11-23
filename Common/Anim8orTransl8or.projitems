@@ -9,7 +9,10 @@
     <Import_RootNamespace>Anim8orTransl8or</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)An8\V100\An8Loader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)An8\V100\ANIM8OR.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Dae\V141\DaeLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Dae\V141\COLLADA.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converter.cs" />
   </ItemGroup>
 </Project>
