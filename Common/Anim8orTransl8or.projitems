@@ -9,10 +9,18 @@
     <Import_RootNamespace>Anim8orTransl8or</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)An8\V100\An8Loader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)An8\An8Serializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)An8\V100\ANIM8OR.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Dae\V141\DaeLoader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Dae\V141\COLLADA.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Converter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FormatConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cube.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cylinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Image.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Math.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8PathCom.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Sphere.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Subdivision.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8TextCom.cs" />
   </ItemGroup>
 </Project>

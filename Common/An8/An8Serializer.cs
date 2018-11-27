@@ -4,24 +4,8 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace Anim8orTransl8or.An8.V100
+namespace Anim8orTransl8or.An8
 {
-   public class An8Loader
-   {
-      public ANIM8OR Load(Stream inStream)
-      {
-         An8Serializer deserializer = new An8Serializer(typeof(ANIM8OR));
-         return (ANIM8OR)deserializer.Deserialize(inStream);
-      }
-
-      public void Save(Stream outStream, ANIM8OR an8)
-      {
-         An8Serializer serializer = new An8Serializer(typeof(ANIM8OR));
-         serializer.Serialize(outStream, an8);
-      }
-   }
-
-   #region An8Serializer
    public class An8Serializer
    {
       Type mType;
@@ -60,9 +44,10 @@ namespace Anim8orTransl8or.An8.V100
                         if ( fi.GetValue(o) is Array oldArray )
                         {
                            // Add to the array
+                           // TODO: Why does this crash with long instead of int?
                            newArray = Activator.CreateInstance(
                               fi.FieldType,
-                              oldArray.LongLength + 1) as Array;
+                              (Int32)oldArray.LongLength + 1) as Array;
 
                            Array.Copy(oldArray, newArray, oldArray.LongLength);
                         }
@@ -348,9 +333,9 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// Reads an An8 point, e.g. "(1.0 2.0 3.0)".
       /// </summary>
-      static point ParsePoint(StreamReader sr)
+      static V100.point ParsePoint(StreamReader sr)
       {
-         point point = new point();
+         V100.point point = new V100.point();
          AssertChar(sr, (Char c) => IsPointStart(sr));
 
          ParseWhiteSpace(sr);
@@ -376,9 +361,10 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// Reads an An8 quaternion, e.g. "(1.0 2.0 3.0 4.0)".
       /// </summary>
-      static quaternion ParseQuaternion(StreamReader sr)
+      static V100.quaternion ParseQuaternion(
+         StreamReader sr)
       {
-         quaternion quaternion = new quaternion();
+         V100.quaternion quaternion = new V100.quaternion();
          AssertChar(sr, (Char c) => IsQuaternionStart(sr));
 
          ParseWhiteSpace(sr);
@@ -407,9 +393,9 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// Reads an An8 texcoord, e.g. "(1.0 2.0)".
       /// </summary>
-      static texcoord ParseTexCoord(StreamReader sr)
+      static V100.texcoord ParseTexCoord(StreamReader sr)
       {
-         texcoord texcoord = new texcoord();
+         V100.texcoord texcoord = new V100.texcoord();
          AssertChar(sr, (Char c) => IsTexCoordStart(sr));
 
          ParseWhiteSpace(sr);
@@ -432,15 +418,14 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// Reads an An8 facedata, e.g. "3 4 0 -1 ( (17 2) (85 1) (4087 0) )".
       /// </summary>
-      static facedata ParseFaceData(StreamReader sr)
+      static V100.facedata ParseFaceData(StreamReader sr)
       {
-         facedata facedata = new facedata();
-
+         V100.facedata facedata = new V100.facedata();
          facedata.numpoints = ParseInt(sr);
          ParseWhiteSpace(sr);
 
-         facedata.flags = (facedataenum)Enum.ToObject(
-            typeof(facedataenum),
+         facedata.flags = (V100.facedataenum)Enum.ToObject(
+            typeof(V100.facedataenum),
             ParseInt(sr));
 
          ParseWhiteSpace(sr);
@@ -451,26 +436,26 @@ namespace Anim8orTransl8or.An8.V100
          facedata.flatnormalno = ParseInt(sr);
          ParseWhiteSpace(sr);
 
-         List<pointdata> pointdatas = new List<pointdata>();
+         List<V100.pointdata> pointdatas = new List<V100.pointdata>();
          AssertChar(sr, (Char c) => c == '(');
          ParseWhiteSpace(sr);
 
          while ( sr.Peek() != ')' )
          {
-            pointdata pointdata = new pointdata();
+            V100.pointdata pointdata = new V100.pointdata();
             AssertChar(sr, (Char c) => c == '(');
             ParseWhiteSpace(sr);
 
             pointdata.pointindex = ParseInt(sr);
             ParseWhiteSpace(sr);
 
-            if ( facedata.flags.HasFlag(facedataenum.hasnormals) )
+            if ( facedata.flags.HasFlag(V100.facedataenum.hasnormals) )
             {
                pointdata.normalindex = ParseInt(sr);
                ParseWhiteSpace(sr);
             }
 
-            if ( facedata.flags.HasFlag(facedataenum.hastexture) )
+            if ( facedata.flags.HasFlag(V100.facedataenum.hastexture) )
             {
                pointdata.texcoordindex = ParseInt(sr);
                ParseWhiteSpace(sr);
@@ -540,6 +525,12 @@ namespace Anim8orTransl8or.An8.V100
             }
             else if ( fi.FieldType == typeof(String) )
             {
+               // TODO: Do we need to parse L-prefixed strings differently?
+               if ( sr.Peek() == 'L' )
+               {
+                  sr.Read();
+               }
+
                fi.SetValue(o, ParseString(sr));
                ParseWhiteSpace(sr);
             }
@@ -576,14 +567,14 @@ namespace Anim8orTransl8or.An8.V100
                }
             }
             #region Special Case - parsing a point
-            else if ( fi.FieldType == typeof(point) )
+            else if ( fi.FieldType == typeof(V100.point) )
             {
                fi.SetValue(o, ParsePoint(sr));
                ParseWhiteSpace(sr);
             }
-            else if ( fi.FieldType == typeof(point[]) )
+            else if ( fi.FieldType == typeof(V100.point[]) )
             {
-               List<point> points = new List<point>();
+               List<V100.point> points = new List<V100.point>();
 
                while ( IsPointStart(sr) )
                {
@@ -595,14 +586,14 @@ namespace Anim8orTransl8or.An8.V100
             }
             #endregion
             #region Special Case - parsing a quaternion
-            else if ( fi.FieldType == typeof(quaternion) )
+            else if ( fi.FieldType == typeof(V100.quaternion) )
             {
                fi.SetValue(o, ParseQuaternion(sr));
                ParseWhiteSpace(sr);
             }
-            else if ( fi.FieldType == typeof(quaternion[]) )
+            else if ( fi.FieldType == typeof(V100.quaternion[]) )
             {
-               List<quaternion> quaternions = new List<quaternion>();
+               List<V100.quaternion> quaternions = new List<V100.quaternion>();
 
                while ( IsQuaternionStart(sr) )
                {
@@ -614,14 +605,14 @@ namespace Anim8orTransl8or.An8.V100
             }
             #endregion
             #region Special Case - parsing a texcoord
-            else if ( fi.FieldType == typeof(texcoord) )
+            else if ( fi.FieldType == typeof(V100.texcoord) )
             {
                fi.SetValue(o, ParseTexCoord(sr));
                ParseWhiteSpace(sr);
             }
-            else if ( fi.FieldType == typeof(texcoord[]) )
+            else if ( fi.FieldType == typeof(V100.texcoord[]) )
             {
-               List<texcoord> texcoords = new List<texcoord>();
+               List<V100.texcoord> texcoords = new List<V100.texcoord>();
 
                while ( IsTexCoordStart(sr) )
                {
@@ -633,14 +624,14 @@ namespace Anim8orTransl8or.An8.V100
             }
             #endregion
             #region Special Case - parsing a facedata
-            else if ( fi.FieldType == typeof(facedata) )
+            else if ( fi.FieldType == typeof(V100.facedata) )
             {
                fi.SetValue(o, ParseFaceData(sr));
                ParseWhiteSpace(sr);
             }
-            else if ( fi.FieldType == typeof(facedata[]) )
+            else if ( fi.FieldType == typeof(V100.facedata[]) )
             {
-               List<facedata> facedatas = new List<facedata>();
+               List<V100.facedata> facedatas = new List<V100.facedata>();
 
                while ( IsFaceDataStart(sr) )
                {
@@ -686,7 +677,7 @@ namespace Anim8orTransl8or.An8.V100
                         // TODO: Why does this crash with long instead of int?
                         newArray = Activator.CreateInstance(
                            fi.FieldType,
-                           (int)oldArray.LongLength + 1) as Array;
+                           (Int32)oldArray.LongLength + 1) as Array;
 
                         Array.Copy(oldArray, newArray, oldArray.LongLength);
                      }
@@ -778,5 +769,4 @@ namespace Anim8orTransl8or.An8.V100
       }
       #endregion
    }
-   #endregion
 }

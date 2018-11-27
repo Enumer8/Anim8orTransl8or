@@ -125,7 +125,7 @@ namespace Anim8orTransl8or.An8.V100
       public grid grid;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public lighting lighting;
 
@@ -142,7 +142,7 @@ namespace Anim8orTransl8or.An8.V100
       public empty limitplayback;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public film film;
    }
@@ -175,12 +175,12 @@ namespace Anim8orTransl8or.An8.V100
    public class lighting
    {
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public @float intensity;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public @float ambientintensity;
    }
@@ -189,12 +189,12 @@ namespace Anim8orTransl8or.An8.V100
    public class film
    {
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public size size;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public ratio ratio;
    }
@@ -202,12 +202,12 @@ namespace Anim8orTransl8or.An8.V100
    public class size
    {
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public Int64 x;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public Int64 y;
    }
@@ -215,12 +215,12 @@ namespace Anim8orTransl8or.An8.V100
    public class ratio
    {
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public Double numerator;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public Double denominator;
    }
@@ -287,12 +287,6 @@ namespace Anim8orTransl8or.An8.V100
       public rgb rgb;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing. Is it the same as
-      /// lockambdiff?
-      /// </summary>
-      public empty lockambientdiffuse;
-
-      /// <summary>
       /// <ambiant>, <diffuse>, <specular> and <emissive> chunks describe the
       /// respective colors and constant weights, and if there is a
       /// corresponding texture what it is. Yes, I know <ambiant> is
@@ -350,10 +344,11 @@ namespace Anim8orTransl8or.An8.V100
       public map[] map;
 
       /// <summary>
+      /// TODO: I think the spec incorrectly calls this "lockambdiff".
       /// <lockambdiff> is an empty chunk that, if present, uses the diffuse
       /// values for both the diffuse and ambient color properties.
       /// </summary>
-      public empty lockambdiff;
+      public empty lockambientdiffuse;
    }
 
    public class rgb
@@ -547,11 +542,13 @@ namespace Anim8orTransl8or.An8.V100
       public cylinder[] cylinder;
       public cube[] cube;
       public subdivision[] subdivision;
-      public path[] path;
+      // TODO: I think the spec incorrectly calls this "path".
+      public pathcom[] pathcom;
       public textcom[] textcom;
       public modifier2[] modifier;
       public image[] image;
       public group2[] group;
+      // TODO: morphtarget?
    }
 
    #region mesh
@@ -897,6 +894,11 @@ namespace Anim8orTransl8or.An8.V100
       public material material;
 
       /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public @float diameter;
+
+      /// <summary>
       /// The two integers are the number of divisions used to make the Sphere
       /// in the vertical and horizontal directions.
       /// </summary>
@@ -913,8 +915,8 @@ namespace Anim8orTransl8or.An8.V100
 
    public class longlat
    {
-      Int64 longitude;
-      Int64 latitude;
+      public Int64 longitude;
+      public Int64 latitude;
    }
    #endregion
 
@@ -1136,8 +1138,8 @@ namespace Anim8orTransl8or.An8.V100
    }
    #endregion
 
-   #region path
-   public class path
+   #region pathcom
+   public class pathcom
    {
       /// <summary>
       /// The path's name is given by <name>.
@@ -1207,11 +1209,12 @@ namespace Anim8orTransl8or.An8.V100
       public point reversedirectionvector;
 
       /// <summary>
+      /// TODO: Will this ever appear?
       /// If present the <$int> value is the number of segments in the segment
       /// that begins with this knot. If not then the number is automatically
       /// determined when it is used.
       /// </summary>
-      public Int64 numberofsegments;
+      //public Int64 numberofsegments;
 
       /// <summary>
       /// If this is present the knot is a corner knot and can have a
@@ -1268,22 +1271,22 @@ namespace Anim8orTransl8or.An8.V100
       public @wstring @string;
 
       /// <summary>
-      /// TODO: What does this mean? Is it the font name?
+      /// TODO: What does this mean?
       /// </summary>
       public @string typeface;
 
       /// <summary>
-      /// TODO: What does this mean? Is it the font size? Is it float or int?
+      /// TODO: What does this mean? Is it float or int?
       /// </summary>
       public @float size;
 
       /// <summary>
-      /// TODO: What does this mean? Does it mean the font is bold?
+      /// TODO: What does this mean?
       /// </summary>
       public empty bold;
 
       /// <summary>
-      /// TODO: What does this mean? Does it mean the font is italicized?
+      /// TODO: What does this mean?
       /// </summary>
       public empty italic;
    }
@@ -1344,7 +1347,8 @@ namespace Anim8orTransl8or.An8.V100
       public cylinder cylinder;
       public cube cube;
       public subdivision subdivision;
-      public path path;
+      // TODO: I think the spec incorrectly calls this "path".
+      public pathcom pathcom;
       public textcom textcom;
       public modifier2 modifier;
       public image image;
@@ -1355,6 +1359,11 @@ namespace Anim8orTransl8or.An8.V100
    public class method
    {
       /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public methodenum text;
+
+      /// <summary>
       /// <$string> names the modifier function and the <parameters> define how
       /// it behaves.
       /// </summary>
@@ -1364,6 +1373,14 @@ namespace Anim8orTransl8or.An8.V100
       /// A named parameter to a modifier.
       /// </summary>
       public parameter[] parameter;
+   }
+
+   public enum methodenum
+   {
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      modifier,
    }
 
    public class parameter
@@ -1389,10 +1406,11 @@ namespace Anim8orTransl8or.An8.V100
       public @string name;
 
       /// <summary>
+      /// TODO: I think the spec incorrectly says this is a <$string>.
       /// The <$string> value is the name of the file with
       /// the image, or an empty string if it is undefined.
       /// </summary>
-      public String @string;
+      public @string[] file;
 
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
@@ -1442,7 +1460,8 @@ namespace Anim8orTransl8or.An8.V100
       public cylinder[] cylinder;
       public cube[] cube;
       public subdivision[] subdivision;
-      public path[] path;
+      // TODO: I think the spec incorrectly calls this "path".
+      public pathcom[] pathcom;
       public textcom[] textcom;
       public modifier2[] modifier;
       public image[] image;
@@ -1471,6 +1490,9 @@ namespace Anim8orTransl8or.An8.V100
 
    public class bone2
    {
+      /// <summary>
+      /// The bone's name is given by <name>.
+      /// </summary>
       public String name;
 
       /// <summary>
@@ -1531,7 +1553,8 @@ namespace Anim8orTransl8or.An8.V100
       public cylinder[] cylinder;
       public cube[] cube;
       public subdivision[] subdivision;
-      public path[] path;
+      // TODO: I think the spec incorrectly calls this "path".
+      public pathcom[] pathcom;
       public textcom[] textcom;
       public modifier2[] modifier;
       public image[] image;
@@ -1715,12 +1738,12 @@ namespace Anim8orTransl8or.An8.V100
       public Double value;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public Double value2;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing
+      /// TODO: This was undocumented at the time of writing.
       /// </summary>
       public Double value3;
 
@@ -2437,7 +2460,7 @@ namespace Anim8orTransl8or.An8.V100
       public empty soft;
 
       /// <summary>
-      /// TODO: From the spec, it is not clear where this belongs
+      /// TODO: From the spec, it is not clear where this belongs.
       /// The size of the soft shadow. For infinite lights this is the apparent
       /// width of the light source in degrees. For spotlights and local lights
       /// it represents the apparent diameter of the light as viewed by an
@@ -2446,7 +2469,7 @@ namespace Anim8orTransl8or.An8.V100
       public @float softsize;
 
       /// <summary>
-      /// TODO: From the spec, it is not clear where this belongs
+      /// TODO: From the spec, it is not clear where this belongs.
       /// Set the minimum number of samples used to calculate a soft shadow. An
       /// adaptive algorithm is used to speed up rendering when not in a "soft"
       /// region of the shadow.
@@ -2454,7 +2477,7 @@ namespace Anim8orTransl8or.An8.V100
       public @int minsamples;
 
       /// <summary>
-      /// TODO: From the spec, it is not clear where this belongs
+      /// TODO: From the spec, it is not clear where this belongs.
       /// Set the maximum number of samples used to calculate a soft shadow. An
       /// adaptive algorithm is used to speed up rendering when not in a "soft"
       /// region of the shadow.
@@ -2462,7 +2485,7 @@ namespace Anim8orTransl8or.An8.V100
       public @int maxsamples;
 
       /// <summary>
-      /// TODO: From the spec, it is not clear where this belongs
+      /// TODO: From the spec, it is not clear where this belongs.
       /// Use true Monte Carlo sampling instead of pseudo-Monte Carlo sampling.
       /// This results in a grainer look in the shadows transition region.
       /// </summary>

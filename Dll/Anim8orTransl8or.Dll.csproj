@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Anim8orTransl8or.Dll</RootNamespace>
-    <AssemblyName>Anim8orTransl8or.Dll</AssemblyName>
+    <AssemblyName>Anim8orTransl8or</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
