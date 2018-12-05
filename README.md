@@ -105,10 +105,9 @@ Anim8or Transl8or is open source software. User contributions are appreciated. P
  * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
- * Anim8orTransl8or v0.4.0
+ * Anim8orTransl8or v0.3.0
    * Added conversion for ANIM8OR "figure"
    * Better parsing of ANIM8OR "weights"
- * Anim8orTransl8or v0.3.0
    * Added automatic normal calculation
  * Anim8orTransl8or v0.2.0
    * Added conversion for ANIM8OR "sphere", "cylinder", "cube", and "group"
