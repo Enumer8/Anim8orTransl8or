@@ -1,4 +1,5 @@
-﻿using Anim8orTransl8or.An8.V100;
+﻿using Anim8orTransl8or.An8;
+using Anim8orTransl8or.An8.V100;
 using System;
 using System.Collections.Generic;
 
@@ -24,7 +25,6 @@ namespace Anim8orTransl8or.Utility
          }
 
          List<point> points = new List<point>();
-         List<point> normals = new List<point>();
          List<texcoord> texcoords = new List<texcoord>();
          List<facedata> facedatas = new List<facedata>();
 
@@ -42,513 +42,274 @@ namespace Anim8orTransl8or.Utility
             Int64 divisionY = Math.Max(c.divisions?.y ?? 0, 1);
             Int64 divisionZ = Math.Max(c.divisions?.z ?? 0, 1);
 
-            Int64[][] VertexIndicesVertical = new Int64[4][];
-            VertexIndicesVertical[0] = new Int64[divisionY + 1];
-            VertexIndicesVertical[1] = new Int64[divisionY + 1];
-            VertexIndicesVertical[2] = new Int64[divisionY + 1];
-            VertexIndicesVertical[3] = new Int64[divisionY + 1];
+            Int32[][] verticalIndices = new Int32[4][];
+            verticalIndices[0] = new Int32[divisionY + 1];
+            verticalIndices[1] = new Int32[divisionY + 1];
+            verticalIndices[2] = new Int32[divisionY + 1];
+            verticalIndices[3] = new Int32[divisionY + 1];
 
             Double step = scaleY / divisionY;
 
-            // Front Left
-            point pointRef = new point();
-            pointRef.x = -scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = scaleZ / 2;
-
+            // Left front
             for ( Int64 i = 0; i < divisionY + 1; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x;
-               newPoint.y = pointRef.y - step * i;
-               newPoint.z = pointRef.z;
-               points.Add(newPoint);
-               VertexIndicesVertical[0][i] = points.Count - 1;
+               point p = new point(
+                  -scaleX / 2,
+                  scaleY / 2 - step * i,
+                  scaleZ / 2);
+
+               verticalIndices[0][i] = points.Count;
+               points.Add(p);
             }
 
-            // Front Right
-            pointRef.x = scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = scaleZ / 2;
-
+            // Right front
             for ( Int64 i = 0; i < divisionY + 1; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x;
-               newPoint.y = pointRef.y - step * i;
-               newPoint.z = pointRef.z;
-               points.Add(newPoint);
-               VertexIndicesVertical[1][i] = points.Count - 1;
+               point p = new point(
+                  scaleX / 2,
+                  scaleY / 2 - step * i,
+                  scaleZ / 2);
+
+               verticalIndices[1][i] = points.Count;
+               points.Add(p);
             }
 
-            // Back Right
-            pointRef.x = scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = -scaleZ / 2;
-
+            // Right back
             for ( Int64 i = 0; i < divisionY + 1; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x;
-               newPoint.y = pointRef.y - step * i;
-               newPoint.z = pointRef.z;
-               points.Add(newPoint);
-               VertexIndicesVertical[2][i] = points.Count - 1;
+               point p = new point(
+                  scaleX / 2,
+                  scaleY / 2 - step * i,
+                  -scaleZ / 2);
+
+               verticalIndices[2][i] = points.Count;
+               points.Add(p);
             }
 
-            // Back Left
-            pointRef.x = -scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = -scaleZ / 2;
-
+            // Left back
             for ( Int64 i = 0; i < divisionY + 1; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x;
-               newPoint.y = pointRef.y - step * i;
-               newPoint.z = pointRef.z;
-               points.Add(newPoint);
-               VertexIndicesVertical[3][i] = points.Count - 1;
+               point p = new point(
+                  -scaleX / 2,
+                  scaleY / 2 - step * i,
+                  -scaleZ / 2);
+
+               verticalIndices[3][i] = points.Count;
+               points.Add(p);
             }
 
             // Top
-            Int64[][] VertexIndicesTop = new Int64[4][];
-            VertexIndicesTop[0] = new Int64[divisionX + 1]; // Front
-            VertexIndicesTop[1] = new Int64[divisionZ + 1]; // Right
-            VertexIndicesTop[2] = new Int64[divisionX + 1]; // Back
-            VertexIndicesTop[3] = new Int64[divisionZ + 1]; // Left
+            Int32[][] topIndices = new Int32[4][];
+            topIndices[0] = new Int32[divisionX + 1]; // Front
+            topIndices[1] = new Int32[divisionZ + 1]; // Right
+            topIndices[2] = new Int32[divisionX + 1]; // Back
+            topIndices[3] = new Int32[divisionZ + 1]; // Left
 
             // Bottom
-            Int64[][] VertexIndicesBottom = new Int64[4][];
-            VertexIndicesBottom[0] = new Int64[divisionX + 1]; // Front
-            VertexIndicesBottom[1] = new Int64[divisionZ + 1]; // Right
-            VertexIndicesBottom[2] = new Int64[divisionX + 1]; // Back
-            VertexIndicesBottom[3] = new Int64[divisionZ + 1]; // Left
+            Int32[][] bottomIndices = new Int32[4][];
+            bottomIndices[0] = new Int32[divisionX + 1]; // Front
+            bottomIndices[1] = new Int32[divisionZ + 1]; // Right
+            bottomIndices[2] = new Int32[divisionX + 1]; // Back
+            bottomIndices[3] = new Int32[divisionZ + 1]; // Left
 
             step = scaleX / divisionX;
 
-            // Top/Bottom Front
-            pointRef.x = -scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = scaleZ / 2;
-
+            // Top/bottom front
             for ( Int64 i = 1; i < divisionX; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x + step * i;
-               newPoint.y = pointRef.y;
-               newPoint.z = pointRef.z;
-               points.Add(newPoint);
-               VertexIndicesTop[0][i] = points.Count - 1;
+               point p = new point(
+                  -scaleX / 2 + step * i,
+                  scaleY / 2,
+                  scaleZ / 2);
 
-               point newPoint2 = new point();
-               newPoint2.x = newPoint.x;
-               newPoint2.y = newPoint.y - scaleY;
-               newPoint2.z = newPoint.z;
-               points.Add(newPoint2);
-               VertexIndicesBottom[0][i] = points.Count - 1;
+               topIndices[0][i] = points.Count;
+               points.Add(p);
+
+               point p2 = new point(p.x, p.y - scaleY, p.z);
+
+               bottomIndices[0][i] = points.Count;
+               points.Add(p2);
             }
 
-            VertexIndicesTop[0][0] = VertexIndicesVertical[0][0];
-            VertexIndicesBottom[0][0] = VertexIndicesVertical[0][divisionY];
+            topIndices[0][0] = verticalIndices[0][0];
+            bottomIndices[0][0] = verticalIndices[0][divisionY];
 
-            VertexIndicesTop[0][divisionX] = VertexIndicesVertical[1][0];
-            VertexIndicesBottom[0][divisionX] = VertexIndicesVertical[1][divisionY];
+            topIndices[0][divisionX] = verticalIndices[1][0];
+            bottomIndices[0][divisionX] = verticalIndices[1][divisionY];
 
-            // Top/Bottom Back
-            pointRef.x = -scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = -scaleZ / 2;
-
+            // Top/bottom back
             for ( Int64 i = 1; i < divisionX; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x + step * i;
-               newPoint.y = pointRef.y;
-               newPoint.z = pointRef.z;
-               points.Add(newPoint);
-               VertexIndicesTop[2][divisionX - i] = points.Count - 1;
+               point p = new point(
+                  -scaleX / 2 + step * i,
+                  scaleY / 2,
+                  -scaleZ / 2);
 
-               point newPoint2 = new point();
-               newPoint2.x = newPoint.x;
-               newPoint2.y = newPoint.y - scaleY;
-               newPoint2.z = newPoint.z;
-               points.Add(newPoint2);
-               VertexIndicesBottom[2][divisionX - i] = points.Count - 1;
+               topIndices[2][divisionX - i] = points.Count;
+               points.Add(p);
+
+               point p2 = new point(p.x, p.y - scaleY, p.z);
+
+               bottomIndices[2][divisionX - i] = points.Count;
+               points.Add(p2);
             }
 
-            VertexIndicesTop[2][0] = VertexIndicesVertical[2][0];
-            VertexIndicesBottom[2][0] = VertexIndicesVertical[2][divisionY];
+            topIndices[2][0] = verticalIndices[2][0];
+            bottomIndices[2][0] = verticalIndices[2][divisionY];
 
-            VertexIndicesTop[2][divisionX] = VertexIndicesVertical[3][0];
-            VertexIndicesBottom[2][divisionX] = VertexIndicesVertical[3][divisionY];
+            topIndices[2][divisionX] = verticalIndices[3][0];
+            bottomIndices[2][divisionX] = verticalIndices[3][divisionY];
 
             step = scaleZ / divisionZ;
 
-            // Top/Bottom Right
-            pointRef.x = scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = scaleZ / 2;
-
+            // Right top/bottom
             for ( Int64 i = 1; i < divisionZ; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x;
-               newPoint.y = pointRef.y;
-               newPoint.z = pointRef.z - step * i;
-               points.Add(newPoint);
-               VertexIndicesTop[1][i] = points.Count - 1;
+               point p = new point(
+                  scaleX / 2,
+                  scaleY / 2,
+                  scaleZ / 2 - step * i);
 
-               point newPoint2 = new point();
-               newPoint2.x = newPoint.x;
-               newPoint2.y = newPoint.y - scaleY;
-               newPoint2.z = newPoint.z;
-               points.Add(newPoint2);
-               VertexIndicesBottom[1][i] = points.Count - 1;
+               topIndices[1][i] = points.Count;
+               points.Add(p);
+
+               point p2 = new point(p.x, p.y - scaleY, p.z);
+
+               bottomIndices[1][i] = points.Count;
+               points.Add(p2);
             }
 
-            VertexIndicesTop[1][0] = VertexIndicesVertical[1][0];
-            VertexIndicesBottom[1][0] = VertexIndicesVertical[1][divisionY];
+            topIndices[1][0] = verticalIndices[1][0];
+            bottomIndices[1][0] = verticalIndices[1][divisionY];
 
-            VertexIndicesTop[1][divisionZ] = VertexIndicesVertical[2][0];
-            VertexIndicesBottom[1][divisionZ] = VertexIndicesVertical[2][divisionY];
+            topIndices[1][divisionZ] = verticalIndices[2][0];
+            bottomIndices[1][divisionZ] = verticalIndices[2][divisionY];
 
-            // Top/Bottom Left
-            pointRef.x = -scaleX / 2;
-            pointRef.y = scaleY / 2;
-            pointRef.z = scaleZ / 2;
-
+            // Left top/bottom
             for ( Int64 i = 1; i < divisionZ; i++ )
             {
-               point newPoint = new point();
-               newPoint.x = pointRef.x;
-               newPoint.y = pointRef.y;
-               newPoint.z = pointRef.z - step * i;
-               points.Add(newPoint);
-               VertexIndicesTop[3][divisionZ - i] = points.Count - 1;
+               point p = new point(
+                  -scaleX / 2,
+                  scaleY / 2,
+                  scaleZ / 2 - step * i);
 
-               point newPoint2 = new point();
-               newPoint2.x = newPoint.x;
-               newPoint2.y = newPoint.y - scaleY;
-               newPoint2.z = newPoint.z;
-               points.Add(newPoint2);
-               VertexIndicesBottom[3][divisionZ - i] = points.Count - 1;
+               topIndices[3][divisionZ - i] = points.Count;
+               points.Add(p);
+
+               point p2 = new point(p.x, p.y - scaleY, p.z);
+
+               bottomIndices[3][divisionZ - i] = points.Count;
+               points.Add(p2);
             }
 
-            VertexIndicesTop[3][0] = VertexIndicesVertical[3][0];
-            VertexIndicesBottom[3][0] = VertexIndicesVertical[3][divisionY];
+            topIndices[3][0] = verticalIndices[3][0];
+            bottomIndices[3][0] = verticalIndices[3][divisionY];
 
-            VertexIndicesTop[3][divisionZ] = VertexIndicesVertical[0][0];
-            VertexIndicesBottom[3][divisionZ] = VertexIndicesVertical[0][divisionY];
+            topIndices[3][divisionZ] = verticalIndices[0][0];
+            bottomIndices[3][divisionZ] = verticalIndices[0][divisionY];
 
-            // Texcoord Front/back
+            // Texcoord front/back
             for ( Int64 x = 0; x < divisionX + 1; x++ )
             {
                for ( Int64 y = 0; y < divisionY + 1; y++ )
                {
-                  texcoord newTex = new texcoord();
-                  newTex.u = (Double)x / divisionX;
-                  newTex.v = 1 - (Double)y / divisionY;
+                  texcoord newTex = new texcoord(
+                     (Double)x / divisionX,
+                     1 - (Double)y / divisionY);
+
                   texcoords.Add(newTex);
                }
             }
 
-            void AddCubeFaces(
-               //Int64 divisionX,
-               //Int64 divisionY,
-               //Int64 divisionZ,
-               //List<point> points,
-               //List<facedata> facedatas,
-               Int64[] i_Top,
-               Int64[] i_Left,
-               Int64[] i_Bottom,
-               Int64[] i_Right,
-               Int64 i_DivX,
-               Int64 i_DivY,
-               Int64 i_NormalIndex,
-               Int64 i_TextureOffset)
-            {
-               Int64[][] faces = new Int64[i_DivX + 1][];
-
-               for ( Int64 i = 0; i < i_DivX + 1; i++ )
-               {
-                  faces[i] = new Int64[i_DivY + 1];
-               }
-
-               // Border ////////////////////////////////////////////////////////////
-               if ( i_NormalIndex != 5 )
-               {
-                  for ( Int64 i = 0; i < i_DivY + 1; i++ )
-                  {
-                     faces[0][i] = i_Left[i];
-                  }
-               }
-               else
-               {
-                  for ( Int64 i = 0; i < i_DivY + 1; i++ )
-                  {
-                     faces[0][i] = i_Left[i_DivY - i];
-                  }
-               }
-
-               if ( i_NormalIndex < 4 || i_NormalIndex == 5 )
-               {
-                  for ( Int64 i = 0; i < i_DivY + 1; i++ )
-                  {
-                     faces[i_DivX][i] = i_Right[i];
-                  }
-
-                  for ( Int64 i = 0; i < i_DivX + 1; i++ )
-                  {
-                     faces[i][0] = i_Top[i];
-                  }
-               }
-               else
-               {
-                  for ( Int64 i = 0; i < i_DivY + 1; i++ )
-                  {
-                     faces[i_DivX][i] = i_Right[i_DivY - i];
-                  }
-
-                  for ( Int64 i = 0; i < i_DivX + 1; i++ )
-                  {
-                     faces[i][0] = i_Top[i_DivX - i];
-                  }
-               }
-
-               if ( i_NormalIndex != 5 )
-               {
-                  for ( Int64 i = 0; i < i_DivX + 1; i++ )
-                  {
-                     faces[i][i_DivY] = i_Bottom[i];
-                  }
-               }
-               else
-               {
-                  for ( Int64 i = 0; i < i_DivX + 1; i++ )
-                  {
-                     faces[i][i_DivY] = i_Bottom[i_DivX - i];
-                  }
-               }
-
-               // New points
-               for ( Int64 i = 1; i < i_DivX; i++ )
-               {
-                  point vec = new point();
-                  vec.x = points[(Int32)faces[i][i_DivY]].x - points[(Int32)faces[i][0]].x;
-                  vec.y = points[(Int32)faces[i][i_DivY]].y - points[(Int32)faces[i][0]].y;
-                  vec.z = points[(Int32)faces[i][i_DivY]].z - points[(Int32)faces[i][0]].z;
-                  Double length = Math.Sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-                  vec = An8Math.Normalize(vec);
-
-                  for ( Int64 j = 1; j < i_DivY; j++ )
-                  {
-                     point newPoint = new point();
-                     newPoint.x = points[(Int32)faces[i][0]].x + vec.x * j * length / i_DivY;
-                     newPoint.y = points[(Int32)faces[i][0]].y + vec.y * j * length / i_DivY;
-                     newPoint.z = points[(Int32)faces[i][0]].z + vec.z * j * length / i_DivY;
-                     points.Add(newPoint);
-                     faces[i][j] = points.Count - 1;
-                  }
-               }
-
-               // Create Face
-               for ( Int64 x = 0; x < i_DivX; x++ )
-               {
-                  for ( Int64 y = 0; y < i_DivY; y++ )
-                  {
-                     Int64 v = divisionX - 1 - x;
-                     facedata newFace = new facedata();
-                     newFace.numpoints = 4;
-                     newFace.flags = facedataenum.hasnormals | facedataenum.hastexture;
-                     newFace.matno = 0;
-                     newFace.flatnormalno = 0;
-                     newFace.pointdata = new pointdata[newFace.numpoints];
-
-                     // 0
-                     pointdata index = new pointdata();
-                     index.pointindex = faces[x + 1][y];
-                     index.normalindex = i_NormalIndex;
-
-                     if ( i_NormalIndex == 0 )
-                     {
-                        index.texcoordindex = y + (x + 1) * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 2 )
-                     {
-                        index.texcoordindex = y + v * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 4 || i_NormalIndex == 5 )
-                     {
-                        index.texcoordindex = (x + 1) * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 1 || i_NormalIndex == 3 )
-                     {
-                        index.texcoordindex = y + divisionX * (divisionY + 1);
-                     }
-
-                     newFace.pointdata[0] = index;
-
-                     // 1
-                     index = new pointdata();
-                     index.pointindex = faces[x + 1][y + 1];
-                     index.normalindex = i_NormalIndex;
-
-                     if ( i_NormalIndex == 0 )
-                     {
-                        index.texcoordindex = y + 1 + (x + 1) * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 2 )
-                     {
-                        index.texcoordindex = y + 1 + v * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 4 || i_NormalIndex == 5 )
-                     {
-                        index.texcoordindex = (x + 1) * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 1 || i_NormalIndex == 3 )
-                     {
-                        index.texcoordindex = y + 1 + divisionX * (divisionY + 1);
-                     }
-
-                     newFace.pointdata[1] = index;
-
-                     // 2
-                     index = new pointdata();
-                     index.pointindex = faces[x][y + 1];
-                     index.normalindex = i_NormalIndex;
-
-                     if ( i_NormalIndex == 0 )
-                     {
-                        index.texcoordindex = y + 1 + x * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 2 )
-                     {
-                        index.texcoordindex = y + 1 + (v + 1) * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 4 || i_NormalIndex == 5 )
-                     {
-                        index.texcoordindex = x * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 1 || i_NormalIndex == 3 )
-                     {
-                        index.texcoordindex = y + 1 + divisionX * (divisionY + 1);
-                     }
-
-                     newFace.pointdata[2] = index;
-
-                     // 3
-                     index = new pointdata();
-                     index.pointindex = faces[x][y];
-                     index.normalindex = i_NormalIndex;
-
-                     if ( i_NormalIndex == 0 )
-                     {
-                        index.texcoordindex = y + x * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 2 )
-                     {
-                        index.texcoordindex = y + (v + 1) * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 4 || i_NormalIndex == 5 )
-                     {
-                        index.texcoordindex = x * (divisionY + 1);
-                     }
-                     else if ( i_NormalIndex == 1 || i_NormalIndex == 3 )
-                     {
-                        index.texcoordindex = y + divisionX * (divisionY + 1);
-                     }
-
-                     newFace.pointdata[3] = index;
-
-                     facedatas.Add(newFace);
-                  }
-               }
-            }
+            AddCubeFaces(
+               divisionX,
+               divisionY,
+               divisionZ,
+               points,
+               facedatas,
+               topIndices[0],
+               verticalIndices[0],
+               bottomIndices[0],
+               verticalIndices[1],
+               divisionX,
+               divisionY,
+               0);
 
             AddCubeFaces(
-               //divisionX, divisionY, divisionZ, points, facedatas,
-               VertexIndicesTop[0], VertexIndicesVertical[0], VertexIndicesBottom[0], VertexIndicesVertical[1],
-               divisionX, divisionY,
-               0,
-               0 // Texture Offset
-            );
+               divisionX,
+               divisionY,
+               divisionZ,
+               points,
+               facedatas,
+               topIndices[1],
+               verticalIndices[1],
+               bottomIndices[1],
+               verticalIndices[2],
+               divisionZ,
+               divisionY,
+               1);
 
             AddCubeFaces(
-               //divisionX, divisionY, divisionZ, points, facedatas,
-               VertexIndicesTop[1], VertexIndicesVertical[1], VertexIndicesBottom[1], VertexIndicesVertical[2],
-               divisionZ, divisionY,
-               1,
-               divisionX * divisionY // Texture Offset
-            );
+               divisionX,
+               divisionY,
+               divisionZ,
+               points,
+               facedatas,
+               topIndices[2],
+               verticalIndices[2],
+               bottomIndices[2],
+               verticalIndices[3],
+               divisionX,
+               divisionY,
+               2);
 
             AddCubeFaces(
-               //divisionX, divisionY, divisionZ, points, facedatas,
-               VertexIndicesTop[2], VertexIndicesVertical[2], VertexIndicesBottom[2], VertexIndicesVertical[3],
-               divisionX, divisionY,
-               2,
-               0 // Texture Offset
-            );
+               divisionX,
+               divisionY,
+               divisionZ,
+               points,
+               facedatas,
+               topIndices[3],
+               verticalIndices[3],
+               bottomIndices[3],
+               verticalIndices[0],
+               divisionZ,
+               divisionY,
+               3);
 
             AddCubeFaces(
-               //divisionX, divisionY, divisionZ, points, facedatas,
-               VertexIndicesTop[3], VertexIndicesVertical[3], VertexIndicesBottom[3], VertexIndicesVertical[0],
-               divisionZ, divisionY,
-               3,
-               divisionX * divisionY // Texture Offset
-            );
+               divisionX,
+               divisionY,
+               divisionZ,
+               points,
+               facedatas,
+               topIndices[2],
+               topIndices[3],
+               topIndices[0],
+               topIndices[1],
+               divisionX,
+               divisionZ,
+               4);
 
             AddCubeFaces(
-               //divisionX, divisionY, divisionZ, points, facedatas,
-               VertexIndicesTop[2], VertexIndicesTop[3], VertexIndicesTop[0], VertexIndicesTop[1],
-               divisionX, divisionZ,
-               4,
-               divisionX * divisionY + divisionZ * divisionY // Texture Offset
-           );
-
-            AddCubeFaces(
-               //divisionX, divisionY, divisionZ, points, facedatas,
-               VertexIndicesBottom[0], VertexIndicesBottom[3], VertexIndicesBottom[2], VertexIndicesBottom[1],
-               divisionX, divisionZ,
-               5,
-               divisionX * divisionY + divisionZ * divisionY // Texture Offset
-            );
-
-            point newNormal = new point();
-            newNormal.z = 1;
-            normals.Add(newNormal);
-
-            newNormal = new point();
-            newNormal.x = 1;
-            normals.Add(newNormal);
-
-            newNormal = new point();
-            newNormal.z = -1;
-            normals.Add(newNormal);
-
-            newNormal = new point();
-            newNormal.x = -1;
-            normals.Add(newNormal);
-
-            newNormal = new point();
-            newNormal.y = 1;
-            normals.Add(newNormal);
-
-            newNormal = new point();
-            newNormal.y = -1;
-            normals.Add(newNormal);
+               divisionX,
+               divisionY,
+               divisionZ,
+               points,
+               facedatas,
+               bottomIndices[0],
+               bottomIndices[3],
+               bottomIndices[2],
+               bottomIndices[1],
+               divisionX,
+               divisionZ,
+               5);
          }
 
          if ( points.Count > 0 )
          {
             m.points = new points();
             m.points.point = points.ToArray();
-         }
-
-         if ( normals.Count > 0 )
-         {
-            m.normals = new normals();
-            m.normals.point = normals.ToArray();
          }
 
          if ( texcoords.Count > 0 )
@@ -564,6 +325,211 @@ namespace Anim8orTransl8or.Utility
          }
 
          return m;
+      }
+
+      static void AddCubeFaces(
+         Int64 divisionX,
+         Int64 divisionY,
+         Int64 divisionZ,
+         List<point> points,
+         List<facedata> facedatas,
+         Int32[] top,
+         Int32[] left,
+         Int32[] bottom,
+         Int32[] right,
+         Int64 divX,
+         Int64 divY,
+         Int64 normalIndex)
+      {
+         Int32[][] faces = new Int32[divX + 1][];
+
+         for ( Int64 i = 0; i < divX + 1; i++ )
+         {
+            faces[i] = new Int32[divY + 1];
+         }
+
+         // Border
+         if ( normalIndex != 5 )
+         {
+            for ( Int64 i = 0; i < divY + 1; i++ )
+            {
+               faces[0][i] = left[i];
+            }
+         }
+         else
+         {
+            for ( Int64 i = 0; i < divY + 1; i++ )
+            {
+               faces[0][i] = left[divY - i];
+            }
+         }
+
+         if ( normalIndex < 4 || normalIndex == 5 )
+         {
+            for ( Int64 i = 0; i < divY + 1; i++ )
+            {
+               faces[divX][i] = right[i];
+            }
+
+            for ( Int64 i = 0; i < divX + 1; i++ )
+            {
+               faces[i][0] = top[i];
+            }
+         }
+         else
+         {
+            for ( Int64 i = 0; i < divY + 1; i++ )
+            {
+               faces[divX][i] = right[divY - i];
+            }
+
+            for ( Int64 i = 0; i < divX + 1; i++ )
+            {
+               faces[i][0] = top[divX - i];
+            }
+         }
+
+         if ( normalIndex != 5 )
+         {
+            for ( Int64 i = 0; i < divX + 1; i++ )
+            {
+               faces[i][divY] = bottom[i];
+            }
+         }
+         else
+         {
+            for ( Int64 i = 0; i < divX + 1; i++ )
+            {
+               faces[i][divY] = bottom[divX - i];
+            }
+         }
+
+         // New points
+         for ( Int64 i = 1; i < divX; i++ )
+         {
+            point v = points[faces[i][divY]] - points[faces[i][0]];
+
+            Double length = v.GetLength();
+            v = v / length; // .Normalize();
+
+            for ( Int64 j = 1; j < divY; j++ )
+            {
+               point p = points[faces[i][0]] + v * j * length / divY;
+
+               faces[i][j] = points.Count;
+               points.Add(p);
+            }
+         }
+
+         // Create Face
+         for ( Int64 x = 0; x < divX; x++ )
+         {
+            for ( Int64 y = 0; y < divY; y++ )
+            {
+               Int64 v = divisionX - 1 - x;
+
+               facedata newFace = new facedata();
+               newFace.numpoints = 4;
+               newFace.flags = facedataenum.hastexture;
+               newFace.matno = 0;
+               newFace.flatnormalno = -1;
+               newFace.pointdata = new pointdata[newFace.numpoints];
+
+               // pointdata0
+               pointdata p = new pointdata();
+               p.pointindex = faces[x + 1][y];
+
+               if ( normalIndex == 0 )
+               {
+                  p.texcoordindex = y + (x + 1) * (divisionY + 1);
+               }
+               else if ( normalIndex == 2 )
+               {
+                  p.texcoordindex = y + v * (divisionY + 1);
+               }
+               else if ( normalIndex == 4 || normalIndex == 5 )
+               {
+                  p.texcoordindex = (x + 1) * (divisionY + 1);
+               }
+               else if ( normalIndex == 1 || normalIndex == 3 )
+               {
+                  p.texcoordindex = y + divisionX * (divisionY + 1);
+               }
+
+               newFace.pointdata[0] = p;
+
+               // pointdata1
+               p = new pointdata();
+               p.pointindex = faces[x + 1][y + 1];
+
+               if ( normalIndex == 0 )
+               {
+                  p.texcoordindex = y + 1 + (x + 1) * (divisionY + 1);
+               }
+               else if ( normalIndex == 2 )
+               {
+                  p.texcoordindex = y + 1 + v * (divisionY + 1);
+               }
+               else if ( normalIndex == 4 || normalIndex == 5 )
+               {
+                  p.texcoordindex = (x + 1) * (divisionY + 1);
+               }
+               else if ( normalIndex == 1 || normalIndex == 3 )
+               {
+                  p.texcoordindex = y + 1 + divisionX * (divisionY + 1);
+               }
+
+               newFace.pointdata[1] = p;
+
+               // pointdata2
+               p = new pointdata();
+               p.pointindex = faces[x][y + 1];
+
+               if ( normalIndex == 0 )
+               {
+                  p.texcoordindex = y + 1 + x * (divisionY + 1);
+               }
+               else if ( normalIndex == 2 )
+               {
+                  p.texcoordindex = y + 1 + (v + 1) * (divisionY + 1);
+               }
+               else if ( normalIndex == 4 || normalIndex == 5 )
+               {
+                  p.texcoordindex = x * (divisionY + 1);
+               }
+               else if ( normalIndex == 1 || normalIndex == 3 )
+               {
+                  p.texcoordindex = y + 1 + divisionX * (divisionY + 1);
+               }
+
+               newFace.pointdata[2] = p;
+
+               // pointdata3
+               p = new pointdata();
+               p.pointindex = faces[x][y];
+
+               if ( normalIndex == 0 )
+               {
+                  p.texcoordindex = y + x * (divisionY + 1);
+               }
+               else if ( normalIndex == 2 )
+               {
+                  p.texcoordindex = y + (v + 1) * (divisionY + 1);
+               }
+               else if ( normalIndex == 4 || normalIndex == 5 )
+               {
+                  p.texcoordindex = x * (divisionY + 1);
+               }
+               else if ( normalIndex == 1 || normalIndex == 3 )
+               {
+                  p.texcoordindex = y + divisionX * (divisionY + 1);
+               }
+
+               newFace.pointdata[3] = p;
+
+               facedatas.Add(newFace);
+            }
+         }
       }
    }
 }

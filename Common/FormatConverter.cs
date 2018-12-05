@@ -1,4 +1,5 @@
-﻿using Anim8orTransl8or.An8.V100;
+﻿using Anim8orTransl8or.An8;
+using Anim8orTransl8or.An8.V100;
 using Anim8orTransl8or.Dae.V141;
 using Anim8orTransl8or.Utility;
 using System;
@@ -27,63 +28,29 @@ namespace Anim8orTransl8or
       }
 
       #region common
-      static L[] Append<L, T>(L[] list, T item) where L : class
-      {
-         if ( list != null )
-         {
-            // Add to the array
-            L[] newList = new L[list.LongLength + 1];
-            Array.Copy(list, newList, list.LongLength);
-            newList[list.LongLength] = item as L;
-            return newList;
-         }
-         else
-         {
-            // Create a new array
-            return new L[] { item as L };
-         }
-      }
+      static readonly Char[] NUM_CHARS = new Char[]
+         { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-      /// <summary>
-      /// In order to guarantee unique names when exporting, convert the '.'
-      /// character into "._". We'll use '.' to separate the parent's name from
-      /// child's name. For example:
-      ///  * "object01"
-      ///     * "mesh01"   // becomes "object01.mesh01"
-      ///     * ".mesh01"  // becomes "object01.._mesh01"
-      ///     * "_mesh01"  // becomes "object01._mesh01"
-      ///     * "._mesh01" // becomes "object01..__mesh01;
-      ///  * "object01."
-      ///     * "mesh01"   // becomes "object01._.mesh01"
-      ///     * ".mesh01"  // becomes "object01._.._mesh01"
-      ///     * "_mesh01"  // becomes "object01._._mesh01"
-      ///     * "._mesh01" // becomes "object01._..__mesh01"
-      ///  * "object01_"
-      ///     * "mesh01"   // becomes "object01_.mesh01"
-      ///     * ".mesh01"  // becomes "object01_.._mesh01"
-      ///     * "_mesh01"  // becomes "object01_._mesh01"
-      ///     * "._mesh01" // becomes "object01_..__mesh01"
-      ///  * "object01._"
-      ///     * "mesh01"   // becomes "object01.__.mesh01"
-      ///     * ".mesh01"  // becomes "object01.__.._mesh01"
-      ///     * "_mesh01"  // becomes "object01.__._mesh01"
-      ///     * "._mesh01" // becomes "object01.__..__mesh01"
-      /// </summary>
-      static String Escape(String name)
+      static String MakeUnique(String name)
       {
-         return name?.Replace(".", "._");
-      }
+         Int64 number = 0;
 
-      static String Combine(String parentName, String childName)
-      {
-         return parentName + "." + childName;
+         name = name ?? "Unnamed";
+
+         while ( sNames.Contains(name) )
+         {
+            name = $"{name.TrimEnd(NUM_CHARS)}{++number:00}";
+         }
+
+         sNames.Add(name);
+         return name;
       }
       #endregion
 
       #region asset
       static void CreateAsset(COLLADA dae, ANIM8OR an8)
       {
-         AssemblyName assemblyName = typeof(FormatConverter).Assembly.GetName();
+         AssemblyName assembly = typeof(FormatConverter).Assembly.GetName();
 
          dae.asset = new asset();
          dae.asset.contributor = new assetContributor[1];
@@ -92,7 +59,7 @@ namespace Anim8orTransl8or
             an8?.header?.version?.text ?? "0.0.0" + " build " +
             an8?.header?.build?.text ?? "1970.1.1";
          dae.asset.contributor[0].authoring_tool =
-            assemblyName.Name + " v" + assemblyName.Version.ToString(3);
+            assembly.Name + " v" + assembly.Version.ToString(3);
          dae.asset.contributor[0].comments =
             String.Join("\r\n", an8?.description?.text ?? new String[0]);
          dae.asset.created = DateTime.Now;
@@ -135,404 +102,165 @@ namespace Anim8orTransl8or
       #region library_geometries
       static void CreateLibraryGeometries(COLLADA dae, ANIM8OR an8)
       {
-         library_geometries library_geometries = new library_geometries();
-         dae.Items = Append(dae.Items, library_geometries);
+         library_geometries library = new library_geometries();
+         dae.Items = dae.Items.Append(library);
 
          foreach ( @object o in an8?.@object ?? new @object[0] )
          {
-            void AddModifier(VisualNode node, String parentName, modifier2 m)
+            // Convert the object to a group
+            group2 g = new group2();
+            g.name = new @string() { text = o.name };
+            g.mesh = o.mesh;
+            g.sphere = o.sphere;
+            g.cylinder = o.cylinder;
+            g.cube = o.cube;
+            g.subdivision = o.subdivision;
+            g.pathcom = o.pathcom;
+            g.textcom = o.textcom;
+            g.modifier = o.modifier;
+            g.image = o.image;
+            g.group = o.group;
+
+            AddGroup(library, sVisualNode, g, o);
+         }
+
+         foreach ( figure f in an8?.figure ?? new figure[0] )
+         {
+            if ( f.bone != null )
             {
-               String thisName = Combine(parentName, Escape(m.name?.text));
-               // TODO: I think the modifier base only affects the modifier.
-               VisualNode thisNode = new VisualNode(thisName, null, false);
-               node.ChildrenNodes.Add(thisNode);
-
-               if ( m.mesh != null )
-               {
-                  An8.V100.mesh m2 = m.mesh;
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.sphere != null )
-               {
-                  An8.V100.mesh m2 = An8Sphere.Convert(m.sphere);
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.cylinder != null )
-               {
-                  An8.V100.mesh m2 = An8Cylinder.Convert(m.cylinder);
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.cube != null )
-               {
-                  An8.V100.mesh m2 = An8Cube.Convert(m.cube);
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.subdivision != null )
-               {
-                  An8.V100.mesh m2 = An8Subdivision.Convert(m.subdivision);
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.pathcom != null )
-               {
-                  An8.V100.mesh m2 = An8PathCom.Convert(m.pathcom);
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.textcom != null )
-               {
-                  An8.V100.mesh m2 = An8TextCom.Convert(m.textcom);
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.modifier != null )
-               {
-                  AddModifier(thisNode, thisName, m.modifier);
-               }
-
-               if ( m.image != null )
-               {
-                  An8.V100.mesh m2 = An8Image.Convert(m.image);
-                  geometry geometry = Convert(thisName, m2);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m2.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               if ( m.group != null )
-               {
-                  AddGroup(thisNode, thisName, m.group);
-               }
-            }
-
-            void AddGroup(VisualNode node, String parentName, group2 g)
-            {
-               String thisName = Combine(parentName, Escape(g.name?.text));
-               VisualNode thisNode = new VisualNode(
-                  thisName,
-                  An8Math.Transform(g.@base),
-                  false);
-               node.ChildrenNodes.Add(thisNode);
-
-               foreach ( An8.V100.mesh m in g.mesh ?? new An8.V100.mesh[0] )
-               {
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( An8.V100.sphere s in g.sphere ??
-                         new An8.V100.sphere[0] )
-               {
-                  An8.V100.mesh m = An8Sphere.Convert(s);
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( An8.V100.cylinder c in g.cylinder ??
-                         new An8.V100.cylinder[0] )
-               {
-                  An8.V100.mesh m = An8Cylinder.Convert(c);
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( cube c in g.cube ?? new cube[0] )
-               {
-                  An8.V100.mesh m = An8Cube.Convert(c);
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( subdivision s in g.subdivision ?? new subdivision[0] )
-               {
-                  An8.V100.mesh m = An8Subdivision.Convert(s);
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( pathcom p in g.pathcom ?? new pathcom[0] )
-               {
-                  An8.V100.mesh m = An8PathCom.Convert(p);
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( textcom t in g.textcom ?? new textcom[0] )
-               {
-                  An8.V100.mesh m = An8TextCom.Convert(t);
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( modifier2 m in g.modifier ?? new modifier2[0] )
-               {
-                  AddModifier(thisNode, thisName, m);
-               }
-
-               foreach ( An8.V100.image i in g.image ?? new An8.V100.image[0] )
-               {
-                  An8.V100.mesh m = An8Image.Convert(i);
-                  geometry geometry = Convert(thisName, m);
-
-                  thisNode.ChildrenNodes.Add(new VisualNode(
-                     geometry.id,
-                     An8Math.Transform(m.@base)));
-
-                  library_geometries.geometry = Append(
-                     library_geometries.geometry,
-                     geometry);
-               }
-
-               foreach ( group2 g2 in g.group ?? new group2[0] )
-               {
-                  AddGroup(thisNode, thisName, g2);
-               }
-            }
-
-            String name = Escape(o.name);
-
-            foreach ( An8.V100.mesh m in o.mesh ?? new An8.V100.mesh[0] )
-            {
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( An8.V100.sphere s in o.sphere ?? new An8.V100.sphere[0])
-            {
-               An8.V100.mesh m = An8Sphere.Convert(s);
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( An8.V100.cylinder c in o.cylinder ??
-                      new An8.V100.cylinder[0] )
-            {
-               An8.V100.mesh m = An8Cylinder.Convert(c);
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( cube c in o.cube ?? new cube[0] )
-            {
-               An8.V100.mesh m = An8Cube.Convert(c);
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( subdivision s in o.subdivision ?? new subdivision[0] )
-            {
-               An8.V100.mesh m = An8Subdivision.Convert(s);
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( pathcom p in o.pathcom ?? new pathcom[0] )
-            {
-               An8.V100.mesh m = An8PathCom.Convert(p);
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( textcom t in o.textcom ?? new textcom[0] )
-            {
-               An8.V100.mesh m = An8TextCom.Convert(t);
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( modifier2 m in o.modifier ?? new modifier2[0] )
-            {
-               AddModifier(sVisualNode, name, m);
-            }
-
-            foreach ( An8.V100.image i in o.image ?? new An8.V100.image[0] )
-            {
-               An8.V100.mesh m = An8Image.Convert(i);
-               geometry geometry = Convert(name, m);
-
-               sVisualNode.ChildrenNodes.Add(new VisualNode(
-                  geometry.id,
-                  An8Math.Transform(m.@base)));
-
-               library_geometries.geometry = Append(
-                  library_geometries.geometry,
-                  geometry);
-            }
-
-            foreach ( group2 g in o.group ?? new group2[0] )
-            {
-               AddGroup(sVisualNode, name, g);
+               bone2 b = new bone2();
+               // Use the figure name for convenience
+               b.name = f.name;
+               // Note: Anim8or v1.00 ignores the root bone's length
+               b.length = null;
+               b.diameter = f.bone.diameter;
+               b.orientation = f.bone.orientation;
+               b.locked = f.bone.locked;
+               b.dof = f.bone.dof;
+               b.influence = f.bone.influence;
+               b.mesh = f.bone.mesh;
+               b.sphere = f.bone.sphere;
+               b.cylinder = f.bone.cylinder;
+               b.cube = f.bone.cube;
+               b.subdivision = f.bone.subdivision;
+               b.pathcom = f.bone.pathcom;
+               b.textcom = f.bone.textcom;
+               b.modifier = f.bone.modifier;
+               b.image = f.bone.image;
+               b.group = f.bone.group;
+               b.namedobject = f.bone.namedobject;
+               b.bone = f.bone.bone;
+
+               AddBoneGeometry(an8, library, sVisualNode, b, f.bone);
             }
          }
       }
 
-      static geometry Convert(String parentName, An8.V100.mesh m)
+      static VisualNode AddGroup(
+         library_geometries library,
+         VisualNode parent,
+         group2 g,
+         Object tag)
       {
+         String name = MakeUnique(g.name?.text);
+         point origin = g.@base?.origin?.point ?? new point();
+         quaternion orientation = g.@base?.orientation?.quaternion ??
+            new quaternion(0, 0, 0, 1);
+         Double[] matrix = orientation.ToMatrix(origin);
+         VisualNode node = new VisualNode(name, matrix, tag);
+         node.Parent = parent;
+         parent.Children.Add(node);
+
+         foreach ( An8.V100.mesh m in g.mesh ?? new An8.V100.mesh[0] )
+         {
+            AddMesh(library, node, m, m);
+         }
+
+         foreach ( An8.V100.sphere s in g.sphere ??
+                   new An8.V100.sphere[0] )
+         {
+            AddMesh(library, node, An8Sphere.Convert(s), s);
+         }
+
+         foreach ( An8.V100.cylinder c in g.cylinder ??
+                   new An8.V100.cylinder[0] )
+         {
+            AddMesh(library, node, An8Cylinder.Convert(c), c);
+         }
+
+         foreach ( cube c in g.cube ?? new cube[0] )
+         {
+            AddMesh(library, node, An8Cube.Convert(c), c);
+         }
+
+         foreach ( subdivision s in g.subdivision ?? new subdivision[0] )
+         {
+            AddMesh(library, node, An8Subdivision.Convert(s), s);
+         }
+
+         foreach ( pathcom p in g.pathcom ?? new pathcom[0] )
+         {
+            AddMesh(library, node, An8PathCom.Convert(p), p);
+         }
+
+         foreach ( textcom t in g.textcom ?? new textcom[0] )
+         {
+            AddMesh(library, node, An8TextCom.Convert(t), t);
+         }
+
+         foreach ( modifier2 m in g.modifier ?? new modifier2[0] )
+         {
+            // Convert the modifier to a group
+            // Note: The modifier's base/pivot only affects the modifier.
+            group2 g2 = new group2();
+            g2.name = m.name;
+            g2.mesh = g2.mesh.Append(m.mesh);
+            g2.sphere= g2.sphere.Append(m.sphere);
+            g2.cylinder = g2.cylinder.Append(m.cylinder);
+            g2.cube= g2.cube.Append(m.cube);
+            g2.subdivision = g2.subdivision.Append(m.subdivision);
+            g2.pathcom = g2.pathcom.Append(m.pathcom);
+            g2.textcom = g2.textcom.Append(m.textcom);
+            g2.modifier = g2.modifier.Append(m.modifier);
+            g2.image = g2.image.Append(m.image);
+            g2.group = g2.group.Append(m.group);
+
+            AddGroup(library, node, g2, m);
+         }
+
+         foreach ( An8.V100.image i in g.image ?? new An8.V100.image[0] )
+         {
+            AddMesh(library, node, An8Image.Convert(i), i);
+         }
+
+         foreach ( group2 g2 in g.group ?? new group2[0] )
+         {
+            AddGroup(library, node, g2, g2);
+         }
+
+         return node;
+      }
+
+      static VisualNode AddMesh(
+         library_geometries library,
+         VisualNode parent,
+         An8.V100.mesh m,
+         Object tag)
+      {
+         String name = MakeUnique(m.name?.text);
+         point origin = m.@base?.origin?.point ?? new point();
+         quaternion orientation = m.@base?.orientation?.quaternion ??
+            new quaternion(0, 0, 0, 1);
+         Double[] matrix = orientation.ToMatrix(origin);
+         VisualNode node = new VisualNode(name, matrix, tag);
+         node.GeometryId = name;
+         node.Parent = parent;
+         parent.Children.Add(node);
+
          geometry geometry = new geometry();
-         geometry.id = Combine(parentName, Escape(m.name?.text));
+         library.geometry = library.geometry.Append(geometry);
+
+         geometry.id = node.Id;
          geometry.name = geometry.id;
 
          Dae.V141.mesh mesh = new Dae.V141.mesh();
@@ -543,41 +271,41 @@ namespace Anim8orTransl8or
          if ( m.points?.point != null )
          {
             source source = new source();
-            mesh.source = Append(mesh.source, source);
+            mesh.source = mesh.source.Append(source);
 
-            source.id = geometry.id + "-positions";
+            source.id = MakeUnique(geometry.id + "-positions");
             pointsSourceId = source.id;
 
-            float_array float_array = new float_array();
-            source.Item = float_array;
+            float_array array = new float_array();
+            source.Item = array;
 
-            float_array.id = source.id + "-array";
+            array.id = MakeUnique(source.id + "-array");
 
-            Double[] values = new Double[m.points.point.LongLength * 3];
+            Double[] values = new Double[m.points.point.Length * 3];
 
-            for ( Int64 i = 0; i < m.points.point.LongLength; i++ )
+            for ( Int64 i = 0; i < m.points.point.Length; i++ )
             {
                values[i * 3 + 0] = m.points.point[i].x;
                values[i * 3 + 1] = m.points.point[i].y;
                values[i * 3 + 2] = m.points.point[i].z;
             }
 
-            float_array.count = (UInt64)values.LongLength;
-            float_array.Values = values;
+            array.count = (UInt64)values.Length;
+            array.Values = values;
 
             source.technique_common = new sourceTechnique_common();
 
             accessor accessor = new accessor();
             source.technique_common.accessor = accessor;
 
-            accessor.source = "#" + float_array.id;
-            accessor.count = (UInt64)m.points.point.LongLength;
+            accessor.source = "#" + array.id;
+            accessor.count = (UInt64)m.points.point.Length;
             accessor.stride = 3;
 
             // Add x param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "X";
                param.type = "float";
@@ -586,7 +314,7 @@ namespace Anim8orTransl8or
             // Add y param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "Y";
                param.type = "float";
@@ -595,53 +323,56 @@ namespace Anim8orTransl8or
             // Add z param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "Z";
                param.type = "float";
             }
          }
 
+         // Calculate normals if they are missing
+         An8Normals.Calculate(m);
+
          // Add source for normals
          String normalsSourceId = null;
          if ( m.normals?.point != null )
          {
             source source = new source();
-            mesh.source = Append(mesh.source, source);
+            mesh.source = mesh.source.Append(source);
 
-            source.id = geometry.id + "-normals";
+            source.id = MakeUnique(geometry.id + "-normals");
             normalsSourceId = source.id;
 
-            float_array float_array = new float_array();
-            source.Item = float_array;
+            float_array array = new float_array();
+            source.Item = array;
 
-            float_array.id = source.id + "-array";
+            array.id = MakeUnique(source.id + "-array");
 
-            Double[] values = new Double[m.normals.point.LongLength * 3];
+            Double[] values = new Double[m.normals.point.Length * 3];
 
-            for ( Int64 i = 0; i < m.normals.point.LongLength; i++ )
+            for ( Int64 i = 0; i < m.normals.point.Length; i++ )
             {
                values[i * 3 + 0] = m.normals.point[i].x;
                values[i * 3 + 1] = m.normals.point[i].y;
                values[i * 3 + 2] = m.normals.point[i].z;
             }
 
-            float_array.count = (UInt64)values.LongLength;
-            float_array.Values = values;
+            array.count = (UInt64)values.Length;
+            array.Values = values;
 
             source.technique_common = new sourceTechnique_common();
 
             accessor accessor = new accessor();
             source.technique_common.accessor = accessor;
 
-            accessor.source = "#" + float_array.id;
-            accessor.count = (UInt64)m.normals.point.LongLength;
+            accessor.source = "#" + array.id;
+            accessor.count = (UInt64)m.normals.point.Length;
             accessor.stride = 3;
 
             // Add x param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "X";
                param.type = "float";
@@ -650,7 +381,7 @@ namespace Anim8orTransl8or
             // Add y param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "Y";
                param.type = "float";
@@ -659,7 +390,7 @@ namespace Anim8orTransl8or
             // Add z param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "Z";
                param.type = "float";
@@ -671,40 +402,40 @@ namespace Anim8orTransl8or
          if ( m.texcoords?.texcoord != null )
          {
             source source = new source();
-            mesh.source = Append(mesh.source, source);
+            mesh.source = mesh.source.Append(source);
 
-            source.id = geometry.id + "-map-0";
+            source.id = MakeUnique(geometry.id + "-map-0");
             texcoordsSourceId = source.id;
 
-            float_array float_array = new float_array();
-            source.Item = float_array;
+            float_array array = new float_array();
+            source.Item = array;
 
-            float_array.id = source.id + "-array";
+            array.id = MakeUnique(source.id + "-array");
 
-            Double[] values = new Double[m.texcoords.texcoord.LongLength * 2];
+            Double[] values = new Double[m.texcoords.texcoord.Length * 2];
 
-            for ( Int64 i = 0; i < m.texcoords.texcoord.LongLength; i++ )
+            for ( Int64 i = 0; i < m.texcoords.texcoord.Length; i++ )
             {
                values[i * 2 + 0] = m.texcoords.texcoord[i].u;
                values[i * 2 + 1] = m.texcoords.texcoord[i].v;
             }
 
-            float_array.count = (UInt64)values.LongLength;
-            float_array.Values = values;
+            array.count = (UInt64)values.Length;
+            array.Values = values;
 
             source.technique_common = new sourceTechnique_common();
 
             accessor accessor = new accessor();
             source.technique_common.accessor = accessor;
 
-            accessor.source = "#" + float_array.id;
-            accessor.count = (UInt64)m.texcoords.texcoord.LongLength;
+            accessor.source = "#" + array.id;
+            accessor.count = (UInt64)m.texcoords.texcoord.Length;
             accessor.stride = 2;
 
             // Add s param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "S";
                param.type = "float";
@@ -713,44 +444,47 @@ namespace Anim8orTransl8or
             // Add t param
             {
                param param = new param();
-               accessor.param = Append(accessor.param, param);
+               accessor.param = accessor.param.Append(param);
 
                param.name = "T";
                param.type = "float";
             }
          }
 
-         if ( m.points?.point != null &&
-              m.faces?.facedata != null )
+         // Add vertices
+         String verticesSourceId = null;
+         if ( pointsSourceId != null )
          {
-            // Add vertices
-            String verticesSourceId = null;
-            {
-               mesh.vertices = new vertices();
-               mesh.vertices.id = geometry.id + "-vertices";
-               verticesSourceId = mesh.vertices.id;
+            vertices vertices = new vertices();
+            mesh.vertices = vertices;
 
-               InputLocal input = new InputLocal();
-               mesh.vertices.input = Append(mesh.vertices.input, input);
+            vertices.id = MakeUnique(geometry.id + "-vertices");
+            verticesSourceId = vertices.id;
 
-               input.semantic = "POSITION";
-               input.source = "#" + pointsSourceId;
-            }
+            InputLocal input = new InputLocal();
+            vertices.input = vertices.input.Append(input);
 
+            input.semantic = "POSITION";
+            input.source = "#" + pointsSourceId;
+         }
+
+         if ( m.faces?.facedata != null )
+         {
             // Add polylist
             polylist polylist = new polylist();
-            mesh.Items = Append(mesh.Items, polylist);
+            mesh.Items = mesh.Items.Append(polylist);
 
             // TODO: Set polylist.material
 
-            polylist.count = (UInt64)m.faces.facedata.LongLength;
+            polylist.count = (UInt64)m.faces.facedata.Length;
 
             UInt64 offset = 0;
 
             // Add vertex input
+            if ( verticesSourceId != null )
             {
                InputLocalOffset input = new InputLocalOffset();
-               polylist.input = Append(polylist.input, input);
+               polylist.input = polylist.input.Append(input);
 
                input.semantic = "VERTEX";
                input.source = "#" + verticesSourceId;
@@ -758,10 +492,10 @@ namespace Anim8orTransl8or
             }
 
             // Add normal input
-            if ( m.normals?.point != null )
+            if ( normalsSourceId != null )
             {
                InputLocalOffset input = new InputLocalOffset();
-               polylist.input = Append(polylist.input, input);
+               polylist.input = polylist.input.Append(input);
 
                input.semantic = "NORMAL";
                input.source = "#" + normalsSourceId;
@@ -769,10 +503,10 @@ namespace Anim8orTransl8or
             }
 
             // Add texcoord input
-            if ( m.texcoords?.texcoord != null )
+            if ( texcoordsSourceId != null )
             {
                InputLocalOffset input = new InputLocalOffset();
-               polylist.input = Append(polylist.input, input);
+               polylist.input = polylist.input.Append(input);
 
                input.semantic = "TEXCOORD";
                input.source = "#" + texcoordsSourceId;
@@ -784,13 +518,13 @@ namespace Anim8orTransl8or
             {
                StringBuilder sb = new StringBuilder();
 
-               for ( Int64 i = 0; i < m.faces.facedata.LongLength; i++ )
+               for ( Int64 i = 0; i < m.faces.facedata.Length; i++ )
                {
                   // Note: We could use 'numpoints', but pointdata
                   // contains the actual list of points, so it is safer.
-                  sb.Append(m.faces.facedata[i].pointdata.LongLength);
+                  sb.Append(m.faces.facedata[i].pointdata.Length);
 
-                  if ( i < m.faces.facedata.LongLength - 1 )
+                  if ( i < m.faces.facedata.Length - 1 )
                   {
                      sb.Append(' ');
                   }
@@ -799,22 +533,26 @@ namespace Anim8orTransl8or
                polylist.vcount = sb.ToString();
             }
 
-            // Add indices
+            // Add face indices
             {
                StringBuilder sb = new StringBuilder();
 
-               for ( Int64 i = 0; i < m.faces.facedata.LongLength; i++ )
+               for ( Int64 i = 0; i < m.faces.facedata.Length; i++ )
                {
+                  pointdata[] pointdata = m.faces.facedata[i].pointdata;
+
                   // Note: An8 specifies faces in clockwise order, while
                   // Dae specifies faces in counter-clockwise order.
-                  for ( Int64 j = m.faces.facedata[i].pointdata.LongLength - 1;
-                        j >= 0;
-                        j-- )
+                  for ( Int64 j = pointdata.Length - 1; j >= 0; j-- )
                   {
-                     sb.Append(m.faces.facedata[i].pointdata[j].pointindex);
+                     // Add point index if needed
+                     if ( pointsSourceId != null )
+                     {
+                        sb.Append(pointdata[j].pointindex);
+                     }
 
                      // Add normal index if needed
-                     if ( m.normals?.point != null )
+                     if ( normalsSourceId != null )
                      {
                         sb.Append(' ');
 
@@ -822,12 +560,11 @@ namespace Anim8orTransl8or
                         // per face. Dae only supports enabling/disabling
                         // normals for the whole mesh. For that reason,
                         // we may incorrectly use index 0 sometimes.
-                        sb.Append(
-                           m.faces.facedata[i].pointdata[j].normalindex);
+                        sb.Append(pointdata[j].normalindex);
                      }
 
                      // Add texcoord index if needed
-                     if ( m.texcoords?.texcoord != null )
+                     if ( texcoordsSourceId != null )
                      {
                         sb.Append(' ');
 
@@ -835,12 +572,10 @@ namespace Anim8orTransl8or
                         // per face. Dae only supports enabling/disabling
                         // textures for the whole mesh. For that reason,
                         // we may incorrectly use index 0 sometimes.
-                        sb.Append(
-                           m.faces.facedata[i].pointdata[j].texcoordindex);
+                        sb.Append(pointdata[j].texcoordindex);
                      }
 
-                     if ( i < m.faces.facedata.LongLength - 1 ||
-                          j > 0 )
+                     if ( i < m.faces.facedata.Length - 1 || j > 0 )
                      {
                         sb.Append(' ');
                      }
@@ -851,7 +586,102 @@ namespace Anim8orTransl8or
             }
          }
 
-         return geometry;
+         return node;
+      }
+
+      static void AddBoneGeometry(
+         ANIM8OR an8,
+         library_geometries library,
+         VisualNode parent,
+         bone2 b,
+         Object tag,
+         point p = new point())
+      {
+         // Convert the bone to a group
+         group2 g = new group2();
+         g.name = new @string() { text = b.name };
+         g.@base = new @base()
+         {
+            origin = new origin() { point = p },
+            orientation = b.orientation,
+         };
+         g.mesh = b.mesh;
+         g.sphere = b.sphere;
+         g.cylinder = b.cylinder;
+         g.cube = b.cube;
+         g.subdivision = b.subdivision;
+         g.pathcom = b.pathcom;
+         g.textcom = b.textcom;
+         g.modifier = b.modifier;
+         g.image = b.image;
+         g.group = b.group;
+
+         VisualNode node = AddGroup(library, parent, g, tag);
+
+         foreach ( namedobject n in b.namedobject ?? new namedobject[0] )
+         {
+            // Convert the namedobject to a group
+            group2 g2 = new group2();
+            g2.name = n.name;
+            g2.@base = n.@base;
+
+            VisualNode nNode = AddGroup(library, node, g2, n);
+
+            // Scale the node
+            Double scale = n.scale?.text ?? 1.0;
+
+            if ( scale != 1.0 )
+            {
+               nNode.Matrix = nNode.Matrix ?? IDENTITY;
+               nNode.Matrix[0] *= scale;
+               nNode.Matrix[5] *= scale;
+               nNode.Matrix[10] *= scale;
+            }
+
+            // Find the object that was named
+            foreach ( @object o in an8?.@object ?? new @object[0] )
+            {
+               if ( o.name == n.objectname )
+               {
+                  // Find the original node of the object
+                  VisualNode oNode = sVisualNode.Find(
+                     (VisualNode v) => v.Tag == o);
+
+                  if ( oNode != null )
+                  {
+                     CloneChildren(nNode, oNode);
+                  }
+                  break;
+               }
+            }
+         }
+
+         Double length = b.length?.text ?? 0.0;
+         point p2 = new point(0, length, 0);
+
+         foreach ( bone2 b2 in b.bone ?? new bone2[0] )
+         {
+            AddBoneGeometry(an8, library, node, b2, b2, p2);
+         }
+      }
+
+      static void CloneChildren(VisualNode first, VisualNode second)
+      {
+         foreach ( VisualNode secondChildNode in second.Children )
+         {
+            VisualNode firstChildNode = new VisualNode(
+               MakeUnique(secondChildNode.Id),
+               secondChildNode.Matrix,
+               secondChildNode.Tag);
+
+            firstChildNode.GeometryId = secondChildNode.GeometryId;
+            firstChildNode.ControllerId = secondChildNode.ControllerId;
+            firstChildNode.RootJointId = secondChildNode.RootJointId;
+            firstChildNode.Parent = first;
+            first.Children.Add(firstChildNode);
+
+            CloneChildren(firstChildNode, secondChildNode);
+         }
       }
       #endregion
 
@@ -865,7 +695,482 @@ namespace Anim8orTransl8or
       #region library_controllers
       static void CreateLibraryControllers(COLLADA dae, ANIM8OR an8)
       {
-         // TODO: Implement
+         library_controllers library = new library_controllers();
+         dae.Items = dae.Items.Append(library);
+
+         foreach ( figure f in an8?.figure ?? new figure[0] )
+         {
+            if ( f.bone != null )
+            {
+               VisualNode node = sVisualNode.Find(
+                  (VisualNode v) => v.Tag == f.bone);
+
+               if ( node != null )
+               {
+                  AddBoneController(an8, library, node, node);
+               }
+            }
+         }
+      }
+
+      static void AddBoneController(
+         ANIM8OR an8,
+         library_controllers library,
+         VisualNode node,
+         VisualNode rootNode)
+      {
+         if ( node.Tag is namedobject n )
+         {
+            // TODO: Calculate weights if they are missing
+            An8Weights.Calculate(
+               n,
+               an8.@object,
+               node.Parent.Tag as bone2,
+               rootNode.Tag as bone2);
+
+            foreach ( weights w in n.weights ?? new weights[0] )
+            {
+               VisualNode mNode = node.Find(
+                  (VisualNode v) => v.Tag is An8.V100.mesh m &&
+                  m.name?.text == w.meshname);
+
+               if ( mNode != null )
+               {
+                  Dae.V141.controller controller = new Dae.V141.controller();
+                  library.controller = library.controller.Append(controller);
+
+                  controller.id = MakeUnique(mNode.Id + "-skin");
+                  controller.name = controller.id;
+
+                  skin skin = new skin();
+                  controller.Item = skin;
+
+                  skin.source1 = "#" + mNode.GeometryId;
+
+                  {
+                     // TODO: What is the correct matrix?
+                     Double[] bindMatrix = mNode.Matrix;
+
+                     skin.bind_shape_matrix =
+                        COLLADA.ConvertFromArray(bindMatrix);
+
+                     // Convert the geometry node to a controller node
+                     mNode.GeometryId = null;
+                     mNode.ControllerId = controller.id;
+                     mNode.RootJointId = rootNode.Id;
+                  }
+
+                  List<VisualNode> boneNodes = new List<VisualNode>();
+                  FindAllBoneNodes(rootNode, boneNodes);
+
+                  // TODO: This hides a warning in Autodesk, but doesn't change
+                  // the displayed result.
+                  boneNodes.Add(node);
+
+                  // Arrange the bone nodes in the "weighedby" order
+                  if ( n.weightedby != null )
+                  {
+                     for ( Int32 i = 0; i < n.weightedby.Length; i++ )
+                     {
+                        String boneName = n.weightedby[i].text;
+
+                        for ( Int32 j = 0; j < boneNodes.Count; j++ )
+                        {
+                           if ( boneNodes[j].Tag is bone2 b &&
+                                b.name == boneName )
+                           {
+                              VisualNode temp = boneNodes[i];
+                              boneNodes[i] = boneNodes[j];
+                              boneNodes[j] = temp;
+                              break;
+                           }
+                        }
+                     }
+                  }
+
+                  // Add source for joints
+                  String jointsSourceId = null;
+                  {
+                     source source = new source();
+                     skin.source = skin.source.Append(source);
+
+                     source.id = MakeUnique(controller.id + "-joints");
+                     jointsSourceId = source.id;
+
+                     Name_array array = new Name_array();
+                     source.Item = array;
+
+                     array.id = MakeUnique(source.id + "-array");
+
+                     String[] values = new String[boneNodes.Count];
+
+                     for ( Int64 i = 0; i < boneNodes.Count; i++ )
+                     {
+                        values[i] = boneNodes[(Int32)i].Id;
+                     }
+
+                     array.count = (UInt64)values.Length;
+                     array.Values = values;
+
+                     source.technique_common = new sourceTechnique_common();
+
+                     accessor accessor = new accessor();
+                     source.technique_common.accessor = accessor;
+
+                     accessor.source = "#" + array.id;
+                     accessor.count = (UInt64)values.Length;
+                     accessor.stride = 1;
+
+                     // Add joint param
+                     {
+                        param param = new param();
+                        accessor.param = accessor.param.Append(param);
+
+                        param.name = "JOINT";
+                        param.type = "name";
+                     }
+                  }
+
+                  // Add source for bind poses
+                  String bindPosesSourceId = null;
+                  {
+                     source source = new source();
+                     skin.source = skin.source.Append(source);
+
+                     source.id = MakeUnique(controller.id + "-bind_poses");
+                     bindPosesSourceId = source.id;
+
+                     float_array array = new float_array();
+                     source.Item = array;
+
+                     array.id = MakeUnique(source.id + "-array");
+
+                     Double[] values = new Double[boneNodes.Count * 16];
+
+                     for ( Int64 i = 0; i < boneNodes.Count; i++ )
+                     {
+                        Double[] matrix = CalculateInverseBind(
+                           boneNodes[(Int32)i]);
+
+                        for ( Int64 j = 0; j < matrix.Length; j++ )
+                        {
+                           values[i * 16 + j] = matrix[j];
+                        }
+                     }
+
+                     array.count = (UInt64)values.Length;
+                     array.Values = values;
+
+                     source.technique_common = new sourceTechnique_common();
+
+                     accessor accessor = new accessor();
+                     source.technique_common.accessor = accessor;
+
+                     accessor.source = "#" + array.id;
+                     accessor.count = (UInt64)boneNodes.Count;
+                     accessor.stride = 16;
+
+                     // Add transform param
+                     {
+                        param param = new param();
+                        accessor.param = accessor.param.Append(param);
+
+                        param.name = "TRANSFORM";
+                        param.type = "float4x4";
+                     }
+                  }
+
+                  // Add source for weights
+                  String weightsSourceId = null;
+                  {
+                     source source = new source();
+                     skin.source = skin.source.Append(source);
+
+                     source.id = MakeUnique(controller.id + "-weights");
+                     weightsSourceId = source.id;
+
+                     float_array array = new float_array();
+                     source.Item = array;
+
+                     array.id = MakeUnique(source.id + "-array");
+
+                     List<Double> values = new List<Double>();
+
+                     foreach ( weightdata w2 in w.weightdata )
+                     {
+                        foreach ( bonedata b in w2.bonedata )
+                        {
+                           values.Add(b.boneweight);
+                        }
+                     }
+
+                     array.count = (UInt64)values.Count;
+                     array.Values = values.ToArray();
+
+                     source.technique_common = new sourceTechnique_common();
+
+                     accessor accessor = new accessor();
+                     source.technique_common.accessor = accessor;
+
+                     accessor.source = "#" + array.id;
+                     accessor.count = (UInt64)values.Count;
+                     accessor.stride = 1;
+
+                     // Add weight param
+                     {
+                        param param = new param();
+                        accessor.param = accessor.param.Append(param);
+
+                        param.name = "WEIGHT";
+                        param.type = "float";
+                     }
+                  }
+
+                  // Add joints
+                  {
+                     skinJoints joints = new skinJoints();
+                     skin.joints = joints;
+
+                     // Add joint input
+                     if ( jointsSourceId != null )
+                     {
+                        InputLocal input = new InputLocal();
+                        joints.input = joints.input.Append(input);
+
+                        input.semantic = "JOINT";
+                        input.source = "#" + jointsSourceId;
+                     }
+
+                     // Add bind pose input
+                     if ( bindPosesSourceId != null )
+                     {
+                        InputLocal input = new InputLocal();
+                        joints.input = joints.input.Append(input);
+
+                        input.semantic = "INV_BIND_MATRIX";
+                        input.source = "#" + bindPosesSourceId;
+                     }
+                  }
+
+                  {
+                     // Add weights
+                     skinVertex_weights weights = new skinVertex_weights();
+                     skin.vertex_weights = weights;
+
+                     weights.count = (UInt64)w.weightdata.Length;
+
+                     UInt64 offset = 0;
+
+                     // Add joint input
+                     if ( jointsSourceId != null )
+                     {
+                        InputLocalOffset input = new InputLocalOffset();
+                        weights.input = weights.input.Append(input);
+
+                        input.semantic = "JOINT";
+                        input.source = "#" + jointsSourceId;
+                        input.offset = offset++;
+                     }
+
+                     // Add weight input
+                     if ( weightsSourceId != null )
+                     {
+                        InputLocalOffset input = new InputLocalOffset();
+                        weights.input = weights.input.Append(input);
+
+                        input.semantic = "WEIGHT";
+                        input.source = "#" + weightsSourceId;
+                        input.offset = offset++;
+                     }
+
+                     // Add bone weight counts
+                     {
+                        StringBuilder sb = new StringBuilder();
+
+                        for ( Int64 i = 0; i < w.weightdata.Length; i++ )
+                        {
+                           // Note: We could use 'numweights', but bonedata
+                           // contains the actual list of weights, so it is
+                           // safer.
+                           sb.Append(w.weightdata[i].bonedata.Length);
+
+                           if ( i < w.weightdata.Length - 1 )
+                           {
+                              sb.Append(' ');
+                           }
+                        }
+
+                        weights.vcount = sb.ToString();
+                     }
+
+                     // Add indices
+                     {
+                        StringBuilder sb = new StringBuilder();
+                        Int64 index = 0;
+
+                        for ( Int64 i = 0; i < w.weightdata.Length; i++ )
+                        {
+                           bonedata[] bonedata = w.weightdata[i].bonedata;
+
+                           for ( Int64 j = 0; j < bonedata.Length; j++ )
+                           {
+                              sb.Append(bonedata[j].boneindex);
+                              sb.Append(' ');
+                              sb.Append(index++);
+
+                              if ( i < w.weightdata.Length - 1 ||
+                                   j < bonedata.Length - 1 )
+                              {
+                                 sb.Append(' ');
+                              }
+                           }
+                        }
+
+                        weights.v = sb.ToString();
+                     }
+                  }
+               }
+            }
+         }
+
+         foreach ( VisualNode child in node.Children )
+         {
+            AddBoneController(an8, library, child, rootNode);
+         }
+      }
+
+      static void FindAllBoneNodes(VisualNode node, List<VisualNode> boneNodes)
+      {
+         if ( node.Tag is bone2 b )
+         {
+            boneNodes.Add(node);
+         }
+
+         foreach ( VisualNode child in node.Children )
+         {
+            FindAllBoneNodes(child, boneNodes);
+         }
+      }
+
+      static readonly Double[] IDENTITY = new Double[]
+      {
+         1, 0, 0, 0,
+         0, 1, 0, 0,
+         0, 0, 1, 0,
+         0, 0, 0, 1,
+      };
+
+      #region Inverse
+      static Double[] Inverse(Double[] matrix)
+      {
+         if ( matrix != null )
+         {
+            Double invf(Int64 i, Int64 j, Double[] m)
+            {
+               Int64 o = 2 + (j - i);
+
+               i += 4 + o;
+               j += 4 - o;
+
+               Double e(Int64 a, Int64 b)
+               {
+                  return m[(j + b) % 4 * 4 + (i + a) % 4];
+               }
+
+               Double inv =
+                + e(+1, -1) * e(+0, +0) * e(-1, +1)
+                + e(+1, +1) * e(+0, -1) * e(-1, +0)
+                + e(-1, -1) * e(+1, +0) * e(+0, +1)
+                - e(-1, -1) * e(+0, +0) * e(+1, +1)
+                - e(-1, +1) * e(+0, -1) * e(+1, +0)
+                - e(+1, -1) * e(-1, +0) * e(+0, +1);
+
+               return o % 2 != 0 ? inv : -inv;
+            }
+
+            Double[] inverse = new Double[16];
+
+            for ( Int64 i = 0; i < 4; i++ )
+            {
+               for ( Int64 j = 0; j < 4; j++ )
+               {
+                  inverse[j * 4 + i] = invf(i, j, matrix);
+               }
+            }
+
+            Double determinant = 0;
+
+            for ( Int64 k = 0; k < 4; k++ )
+            {
+               determinant += matrix[k] * inverse[k * 4];
+            }
+
+            if ( determinant != 0 )
+            {
+               determinant = 1 / determinant;
+
+               for ( Int64 i = 0; i < 16; i++ )
+               {
+                  inverse[i] = inverse[i] * determinant;
+               }
+
+               return inverse;
+            }
+         }
+
+         return null;
+      }
+      #endregion
+
+      #region Multiply
+      static Double[] Multiply(Double[] a, Double[] b)
+      {
+         if ( a != null && b != null )
+         {
+            Double[] matrix = new Double[16];
+
+            for ( Int32 i = 0; i < 4; i++ )
+            {
+               for ( Int32 j = 0; j < 4; j++ )
+               {
+                  Double e = 0;
+
+                  for ( Int32 k = 0; k < 4; k++ )
+                  {
+                     e += a[i + k * 4] * b[k + j * 4];
+                  }
+
+                  matrix[i + j * 4] = e;
+               }
+            }
+
+            return matrix;
+         }
+         else if ( a != null )
+         {
+            return a;
+         }
+         else
+         {
+            return b;
+         }
+      }
+      #endregion
+
+      static Double[] CalculateInverseBind(VisualNode node)
+      {
+         Double[] matrix = node.Matrix;
+
+         VisualNode iterator = node.Parent;
+
+         while ( iterator != null )
+         {
+            matrix = Multiply(matrix, iterator.Matrix);
+
+            iterator = iterator.Parent;
+         }
+
+         return Inverse(matrix) ?? IDENTITY;
       }
       #endregion
 
@@ -873,33 +1178,64 @@ namespace Anim8orTransl8or
       class VisualNode
       {
          public VisualNode(
-            String id,
+            String id = null,
             Double[] matrix = null,
-            Boolean hasGeometry = true)
+            Object tag = null)
          {
             Id = id;
             Matrix = matrix;
-            HasGeometry = hasGeometry;
-            ChildrenNodes = new List<VisualNode>();
+            Tag = tag;
+            Children = new List<VisualNode>();
          }
+
+         public VisualNode Find(Condition condition)
+         {
+            if ( condition(this) )
+            {
+               return this;
+            }
+            else
+            {
+               VisualNode match = null;
+
+               foreach ( VisualNode child in Children )
+               {
+                  match = child.Find(condition);
+
+                  if ( match != null )
+                  {
+                     break;
+                  }
+               }
+
+               return match;
+            }
+         }
+
+         public delegate Boolean Condition(VisualNode node);
          public String Id;
          public Double[] Matrix;
-         public Boolean HasGeometry;
-         public List<VisualNode> ChildrenNodes;
+         public String GeometryId;
+         public String ControllerId;
+         public String RootJointId;
+         public Object Tag;
+         public VisualNode Parent;
+         public List<VisualNode> Children;
       }
-      static VisualNode sVisualNode = new VisualNode("root", null, false);
+
+      static List<String> sNames = new List<String>();
+      static VisualNode sVisualNode = new VisualNode();
 
       static void CreateLibraryVisualScenes(COLLADA dae, ANIM8OR an8)
       {
-         library_visual_scenes library_visual_scenes =
-            new library_visual_scenes();
-         dae.Items = Append(dae.Items, library_visual_scenes);
-         visual_scene visual_scene = new visual_scene();
-         library_visual_scenes.visual_scene = Append(
-            library_visual_scenes.visual_scene,
-            visual_scene);
-         visual_scene.id = sVisualNode.Id;
-         visual_scene.name = visual_scene.id;
+         library_visual_scenes library = new library_visual_scenes();
+         dae.Items = dae.Items.Append(library);
+
+         visual_scene scene = new visual_scene();
+         library.visual_scene = library.visual_scene.Append(scene);
+
+         scene.id = sVisualNode.Id;
+         scene.name = scene.id;
 
          void AddNode(VisualNode visualNode, node parentNode = null)
          {
@@ -907,44 +1243,66 @@ namespace Anim8orTransl8or
 
             if ( parentNode == null )
             {
-               visual_scene.node = Append(visual_scene.node, node);
+               scene.node = scene.node.Append(node);
             }
             else
             {
-               parentNode.node1 = Append(parentNode.node1, node);
+               parentNode.node1 = parentNode.node1.Append(node);
             }
 
             node.id = visualNode.Id;
             node.name = node.id;
             node.sid = node.id;
 
-            if ( visualNode.HasGeometry )
+            if ( visualNode.Tag is bone2 )
             {
-               instance_geometry instance_geometry = new instance_geometry();
-               node.instance_geometry = Append(
-                  node.instance_geometry,
-                  instance_geometry);
-               instance_geometry.url = "#" + node.id;
+               node.type = NodeType.JOINT;
+            }
+            else
+            {
+               node.type = NodeType.NODE;
             }
 
-            if ( visualNode.Matrix?.Length == 16 )
+            if ( visualNode.Matrix != null )
             {
-               matrix matrix = new matrix();
-               node.Items = Append(node.Items, matrix);
-               matrix.Values = visualNode.Matrix;
+               matrix m = new matrix();
+               node.Items = node.Items.Append(m);
+
+               m.Values = visualNode.Matrix;
+
                node.ItemsElementName = new ItemsChoiceType7[]
                {
                   ItemsChoiceType7.matrix,
                };
             }
 
-            foreach ( VisualNode childNode in visualNode.ChildrenNodes )
+            if ( visualNode.GeometryId != null )
+            {
+               instance_geometry i = new instance_geometry();
+               node.instance_geometry = node.instance_geometry.Append(i);
+
+               i.url = "#" + visualNode.GeometryId;
+            }
+
+            if ( visualNode.ControllerId != null )
+            {
+               instance_controller i = new instance_controller();
+               node.instance_controller = node.instance_controller.Append(i);
+
+               i.url = "#" + visualNode.ControllerId;
+               i.skeleton = new String[] { "#" + visualNode.RootJointId };
+            }
+
+            foreach ( VisualNode childNode in visualNode.Children )
             {
                AddNode(childNode, node);
             }
          }
 
-         AddNode(sVisualNode);
+         foreach ( VisualNode visualNode in sVisualNode.Children )
+         {
+            AddNode(visualNode);
+         }
       }
       #endregion
 

@@ -70,26 +70,28 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
  * ANIM8OR "header" converts to COLLADA "author"
  * ANIM8OR "description" converts to COLLADA "comments"
  * ANIM8OR "mesh", "sphere", "cylinder", and "cube" convert to COLLADA "polylist"
-   * ANIM8OR "points" convert to the COLLADA "VERTEX" semantic
-   * ANIM8OR "normals" convert to the COLLADA "NORMAL" semantic (see [caveat](#how-to-export-normals-from-anim8or))
-   * ANIM8OR "texcoords" convert to the COLLADA "TEXCOORD" semantic
+ * ANIM8OR "figure" converts to COLLADA "controller"
 
 ## Not Yet Supported
  * ANIM8OR "environment"
  * ANIM8OR "texture"
  * ANIM8OR "material"
- * ANIM8OR "subdivision", "pathcom", "textcom", "modifier", "image"
- * ANIM8OR "figure"
+ * ANIM8OR "subdivision", "pathcom", "textcom", "modifier", and "image"
+ * ANIM8OR "sphere", "cylinder", and "cube" skinning
  * ANIM8OR "sequence"
  * ANIM8OR "scene"
- * Automatic normal calculation
  * Configuration/optimization. Everything will be converted as faithfully as possible.
  * Error handling. The program will just crash if it does not like something.
+ * Generating ANIM8OR (\*.an8) files.
  * Converting COLLADA (\*.dae) to ANIM8OR (\*.an8).
  * Converting ANIM8OR (\*.an8) to other formats besides COLLADA (\*.dae).
 
-## How to Export Normals from Anim8or
-In order to support normals in the .dae file, it is currently required that Anim8or exports them. Anim8or will only export normals if Options->Debug->Output Normals is checked. You will have to resave the file after checking it.
+## Limitations
+There are a handful of things that Anim8or calculates internally that are somewhat challenging to reproduce. For instance, Anim8or supports sphere, cylinder, and cube objects defined by a few parameters. We, however, need to know the exact object vertices when creating the COLLADA file. Anim8or Transl8or has preliminary support for generating them, but if there are issues, you can select them in Anim8or and click Build->Convert to Mesh. This forces Anim8or to output the exact vertices.
+
+Also, object normals are usually automatically calculated by Anim8or and not stored in the file. Anim8or Transl8or has preliminary support for generating them, but if there are issues, you can click Options->Debug->Output Normals in Anim8or. This forces Anim8or to output the exact normals.
+
+Finally, Anim8or supports weighting vertices using bone influences. Anim8or Transl8or does not yet support calculating weights from the influence envelopes. To force Anim8or to output the exact weights, you can double-click all figures that are weighted and choose Weights instead of Bone Influences.
 
 ## Report Problems
 Anim8or Transl8or is very immature, and the ANIM8OR (\*.an8) format is not completely documented, so there will be problems and incompatibilities. Please enter issues on GitHub (https://github.com/Enumer8/Anim8orTransl8or/issues). Please don't enter issues about things that are [not supported yet](#not-supported-yet). For the best chance at fixing the issue, please attach or link to the ANIM8OR (\*.an8) file that causes the problem.
@@ -99,9 +101,15 @@ Anim8or Transl8or is open source software. User contributions are appreciated. P
 
 ## Acknowledgements
  * Thanks, R. Steven Glanville, for making Anim8or!
- * Thanks, texel3d, for a great reference for using Anim8or files (https://sourceforge.net/projects/liban8/)
+ * Thanks, texel3d, for a great reference for ANIM8OR files (https://sourceforge.net/projects/liban8/)
+ * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
+ * Anim8orTransl8or v0.4.0
+   * Added conversion for ANIM8OR "figure"
+   * Better parsing of ANIM8OR "weights"
+ * Anim8orTransl8or v0.3.0
+   * Added automatic normal calculation
  * Anim8orTransl8or v0.2.0
    * Added conversion for ANIM8OR "sphere", "cylinder", "cube", and "group"
    * Better parsing of ANIM8OR "sphere", "pathcom", "modifier", and "image"

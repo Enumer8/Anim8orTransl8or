@@ -1,4 +1,5 @@
-﻿using Anim8orTransl8or.An8.V100;
+﻿using Anim8orTransl8or.An8;
+using Anim8orTransl8or.An8.V100;
 using System.Collections.Generic;
 
 namespace Anim8orTransl8or.Utility
@@ -14,7 +15,6 @@ namespace Anim8orTransl8or.Utility
          m.pivot = p.pivot;
 
          List<point> points = new List<point>();
-         List<point> normals = new List<point>();
          List<texcoord> texcoords = new List<texcoord>();
          List<facedata> facedatas = new List<facedata>();
 
@@ -24,12 +24,6 @@ namespace Anim8orTransl8or.Utility
          {
             m.points = new points();
             m.points.point = points.ToArray();
-         }
-
-         if ( normals.Count > 0 )
-         {
-            m.normals = new normals();
-            m.normals.point = normals.ToArray();
          }
 
          if ( texcoords.Count > 0 )

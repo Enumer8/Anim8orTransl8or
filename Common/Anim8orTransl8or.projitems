@@ -17,10 +17,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cube.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cylinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Image.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Math.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)An8\Math.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Normals.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8PathCom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Sphere.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Subdivision.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8TextCom.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Weights.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\Extensions.cs" />
   </ItemGroup>
 </Project>

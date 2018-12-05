@@ -1,4 +1,5 @@
-﻿using Anim8orTransl8or.An8.V100;
+﻿using Anim8orTransl8or.An8;
+using Anim8orTransl8or.An8.V100;
 using System;
 using System.Collections.Generic;
 
@@ -24,7 +25,6 @@ namespace Anim8orTransl8or.Utility
          }
 
          List<point> points = new List<point>();
-         List<point> normals = new List<point>();
          List<texcoord> texcoords = new List<texcoord>();
          List<facedata> facedatas = new List<facedata>();
 
@@ -48,104 +48,84 @@ namespace Anim8orTransl8or.Utility
             latitude = Math.Min(latitude, 100);
 
             Double angle = 2 * Math.PI / longitude;
-            point vec3Ref = new point() { x = startDiameter / 2 };
-            point vec3RefTop = new point() { x = endDiameter / 2, y = length };
+            point vec3Ref = new point(startDiameter / 2, 0);
+            point vec3RefTop = new point(endDiameter / 2, length);
             Double heightStep = length / latitude;
-            Int64[,] vertexIndices = new Int64[longitude, latitude + 1];
+            Int32[,] indices = new Int32[longitude, latitude + 1];
 
             for ( Int64 i = 0; i < longitude; i++ )
             {
-               quaternion quat = new quaternion();
-               quat.y = Math.Sin(angle * i / 2);
-               quat.w = Math.Cos(angle * i / 2);
+               quaternion q = new quaternion();
+               q.y = Math.Sin(angle * i / 2);
+               q.w = Math.Cos(angle * i / 2);
 
-               point vec4 = An8Math.Rotate(quat, vec3Ref);
-               point vec4Top = An8Math.Rotate(quat, vec3RefTop);
-               point vecCone = new point();
-               vecCone.x = vec4Top.x - vec4.x;
-               vecCone.y = vec4Top.y - vec4.y;
-               vecCone.z = vec4Top.z - vec4.z;
-               vecCone = An8Math.Normalize(vecCone);
+               point vec4 = q.Rotate(vec3Ref);
+               point vec4Top = q.Rotate(vec3RefTop);
+               point vecCone = vec4Top - vec4;
+               vecCone = vecCone.Normalize();
 
                for ( Int64 j = 0; j <= latitude; j++ )
                {
-                  // point
-                  point newPoint = new point();
-                  newPoint.x = vec4.x + vecCone.x * (j * heightStep);
-                  newPoint.y = vec4.y + vecCone.y * (j * heightStep);
-                  newPoint.z = vec4.z + vecCone.z * (j * heightStep);
-                  points.Add(newPoint);
+                  point p = vec4 + vecCone * (j * heightStep);
 
-                  // Normal
-                  point newNormal = new point() { x = newPoint.x, z = newPoint.z };
-                  newNormal = An8Math.Normalize(newNormal);
-                  normals.Add(newNormal);
+                  indices[i, j] = points.Count;
+                  points.Add(p);
 
-                  // texcoord
-                  texcoord newTexCoord = new texcoord() { u = (Double)i / longitude, v = (Double)j / latitude };
-                  texcoords.Add(newTexCoord);
+                  texcoord t = new texcoord(
+                     (Double)i / longitude,
+                     (Double)j / latitude);
 
-                  vertexIndices[i, j] = points.Count - 1;
+                  texcoords.Add(t);
                }
             }
 
             for ( Int64 j = 0; j <= latitude; j++ )
             {
-               // texcoord
-               texcoord newTexCoord = new texcoord() { u = 1, v = (Double)j / latitude };
-               texcoords.Add(newTexCoord);
+               texcoord t = new texcoord(1, (Double)j / latitude);
+               texcoords.Add(t);
             }
 
-            // Faces //////////////////////////////////////////////////////////
+            // Faces
             if ( c.capstart != null )
             {
                // Disc base
-               facedata newFaceBottom = new facedata();
-               newFaceBottom.numpoints = longitude;
-               newFaceBottom.flags = facedataenum.hasnormals | facedataenum.hastexture;
-               newFaceBottom.matno = 0;
-               newFaceBottom.flatnormalno = 0;
-               newFaceBottom.pointdata = new pointdata[newFaceBottom.numpoints];
+               facedata f = new facedata();
+               f.numpoints = longitude;
+               f.flags = facedataenum.hastexture;
+               f.matno = 0;
+               f.flatnormalno = -1;
+               f.pointdata = new pointdata[f.numpoints];
 
                for ( Int64 i = 0; i < longitude; i++ )
                {
                   pointdata index = new pointdata();
-                  index.pointindex = vertexIndices[i, 0];
-                  index.normalindex = normals.Count;
+                  index.pointindex = indices[i, 0];
                   index.texcoordindex = i * (latitude + 1);
-                  newFaceBottom.pointdata[i] = index;
+                  f.pointdata[i] = index;
                }
 
-               facedatas.Add(newFaceBottom);
-
-               point newNormal = new point() { y = -1 };
-               normals.Add(newNormal);
+               facedatas.Add(f);
             }
 
             if ( c.capend != null )
             {
-               // Disc Top
-               facedata newFaceTop = new facedata();
-               newFaceTop.numpoints = longitude;
-               newFaceTop.flags = facedataenum.hasnormals | facedataenum.hastexture;
-               newFaceTop.matno = 0;
-               newFaceTop.flatnormalno = 0;
-               newFaceTop.pointdata = new pointdata[newFaceTop.numpoints];
+               // Disc top
+               facedata f = new facedata();
+               f.numpoints = longitude;
+               f.flags = facedataenum.hastexture;
+               f.matno = 0;
+               f.flatnormalno = -1;
+               f.pointdata = new pointdata[f.numpoints];
 
                for ( Int64 i = 0; i < longitude; i++ )
                {
                   pointdata index = new pointdata();
-                  index.pointindex = vertexIndices[longitude - 1 - i, latitude];
-                  index.normalindex = normals.Count;
+                  index.pointindex = indices[longitude - 1 - i, latitude];
                   index.texcoordindex = i * (latitude + 1);
-                  //newFaceTop.pointdata[i] = index;
-                  newFaceTop.pointdata[i] = index;
+                  f.pointdata[i] = index;
                }
 
-               facedatas.Add(newFaceTop);
-
-               point newNormal = new point() { y = 1 };
-               normals.Add(newNormal);
+               facedatas.Add(f);
             }
 
             // Faces of the "tunnel"
@@ -153,67 +133,59 @@ namespace Anim8orTransl8or.Utility
             {
                for ( Int64 j = 0; j < latitude; j++ )
                {
-                  facedata newFaceTunnel = new facedata();
-                  newFaceTunnel.numpoints = 4;
-                  newFaceTunnel.flags = facedataenum.hasnormals | facedataenum.hastexture;
-                  newFaceTunnel.matno = 0;
-                  newFaceTunnel.flatnormalno = 0;
-                  newFaceTunnel.pointdata = new pointdata[newFaceTunnel.numpoints];
+                  facedata f = new facedata();
+                  f.numpoints = 4;
+                  f.flags = facedataenum.hastexture;
+                  f.matno = 0;
+                  f.flatnormalno = -1;
+                  f.pointdata = new pointdata[f.numpoints];
 
                   if ( i != longitude - 1 )
                   {
-                     pointdata index = new pointdata();
-                     index.pointindex = vertexIndices[i, j];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + i * (latitude + 1);
-                     newFaceTunnel.pointdata[0] = index;
+                     pointdata p = new pointdata();
+                     p.pointindex = indices[i, j];
+                     p.texcoordindex = j + i * (latitude + 1);
+                     f.pointdata[0] = p;
 
-                     index = new pointdata();
-                     index.pointindex = vertexIndices[i, j + 1];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + 1 + i * (latitude + 1);
-                     newFaceTunnel.pointdata[1] = index;
+                     p = new pointdata();
+                     p.pointindex = indices[i, j + 1];
+                     p.texcoordindex = j + 1 + i * (latitude + 1);
+                     f.pointdata[1] = p;
 
-                     index = new pointdata();
-                     index.pointindex = vertexIndices[i + 1, j + 1];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + 1 + (i + 1) * (latitude + 1);
-                     newFaceTunnel.pointdata[2] = index;
+                     p = new pointdata();
+                     p.pointindex = indices[i + 1, j + 1];
+                     p.texcoordindex = j + 1 + (i + 1) * (latitude + 1);
+                     f.pointdata[2] = p;
 
-                     index = new pointdata();
-                     index.pointindex = vertexIndices[i + 1, j];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + (i + 1) * (latitude + 1);
-                     newFaceTunnel.pointdata[3] = index;
+                     p = new pointdata();
+                     p.pointindex = indices[i + 1, j];
+                     p.texcoordindex = j + (i + 1) * (latitude + 1);
+                     f.pointdata[3] = p;
                   }
                   else
                   {
-                     pointdata index = new pointdata();
-                     index.pointindex = vertexIndices[i, j];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + i * (latitude + 1);
-                     newFaceTunnel.pointdata[0] = index;
+                     pointdata p = new pointdata();
+                     p.pointindex = indices[i, j];
+                     p.texcoordindex = j + i * (latitude + 1);
+                     f.pointdata[0] = p;
 
-                     index = new pointdata();
-                     index.pointindex = vertexIndices[i, j + 1];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + 1 + i * (latitude + 1);
-                     newFaceTunnel.pointdata[1] = index;
+                     p = new pointdata();
+                     p.pointindex = indices[i, j + 1];
+                     p.texcoordindex = j + 1 + i * (latitude + 1);
+                     f.pointdata[1] = p;
 
-                     index = new pointdata();
-                     index.pointindex = vertexIndices[0, j + 1];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + 1 + (i + 1) * (latitude + 1);
-                     newFaceTunnel.pointdata[2] = index;
+                     p = new pointdata();
+                     p.pointindex = indices[0, j + 1];
+                     p.texcoordindex = j + 1 + (i + 1) * (latitude + 1);
+                     f.pointdata[2] = p;
 
-                     index = new pointdata();
-                     index.pointindex = vertexIndices[0, j];
-                     index.normalindex = index.pointindex;
-                     index.texcoordindex = j + (i + 1) * (latitude + 1);
-                     newFaceTunnel.pointdata[3] = index;
+                     p = new pointdata();
+                     p.pointindex = indices[0, j];
+                     p.texcoordindex = j + (i + 1) * (latitude + 1);
+                     f.pointdata[3] = p;
                   }
 
-                  facedatas.Add(newFaceTunnel);
+                  facedatas.Add(f);
                }
             }
          }
@@ -222,12 +194,6 @@ namespace Anim8orTransl8or.Utility
          {
             m.points = new points();
             m.points.point = points.ToArray();
-         }
-
-         if ( normals.Count > 0 )
-         {
-            m.normals = new normals();
-            m.normals.point = normals.ToArray();
          }
 
          if ( texcoords.Count > 0 )

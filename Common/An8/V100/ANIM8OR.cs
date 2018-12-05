@@ -653,34 +653,15 @@ namespace Anim8orTransl8or.An8.V100
       public orientation orientation;
    }
 
-   #region origin
    public class origin
    {
       public point point;
    }
 
-   public class point
-   {
-      public Double x;
-      public Double y;
-      public Double z;
-   }
-   #endregion
-
-   #region orientation
    public class orientation
    {
       public quaternion quaternion;
    }
-
-   public class quaternion
-   {
-      public Double x;
-      public Double y;
-      public Double z;
-      public Double w;
-   }
-   #endregion
    #endregion
 
    public class pivot
@@ -741,25 +722,10 @@ namespace Anim8orTransl8or.An8.V100
    }
    #endregion
 
-   #region texcoords
    public class texcoords
    {
       public texcoord[] texcoord;
    }
-
-   public class texcoord
-   {
-      /// <summary>
-      /// The value represents the U texture coordinate.
-      /// </summary>
-      public Double u;
-
-      /// <summary>
-      /// The value represents the V texture coordinate.
-      /// </summary>
-      public Double v;
-   }
-   #endregion
 
    #region faces
    public class faces
@@ -1615,12 +1581,12 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// inRadius0 - The radius of the inner layer at center0.
       /// </summary>
-      public Double inRadius0;
+      public Double inradius0;
 
       /// <summary>
       /// outRadius0 - The radius of the outer layer at center0.
       /// </summary>
-      public Double outRadius0;
+      public Double outradius0;
 
       /// <summary>
       /// center1 - The location along the bone of the center of the uppper end
@@ -1631,23 +1597,26 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// inRadius1 - The radius of the inner layer at center1.
       /// </summary>
-      public Double inRadius1;
+      public Double inradius1;
 
       /// <summary>
       /// outRadius1 - The radius of the outer layer at center1.
       /// </summary>
-      public Double outRadius1;
+      public Double outradius1;
    }
 
+   #region namedobject
    public class namedobject
    {
       /// <summary>
-      /// TODO: What does this mean?
+      /// Note: The spec doesn't say what this is, but it is pretty obvious
+      /// that this is the name of the object that is referenced.
       /// </summary>
       public String objectname;
 
       /// <summary>
-      /// TODO: Is this a string chunk or string? What does this mean?
+      /// The namedobject's name is given by <name>.
+      /// </summary>
       /// </summary>
       public @string name;
        
@@ -1673,11 +1642,65 @@ namespace Anim8orTransl8or.An8.V100
       public material material;
 
       /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public @float scale;
+
+      /// <summary>
       /// This object's shape is determined partially by the bone <$string>'s
       /// position in this figure.
       /// </summary>
       public @string[] weightedby;
+
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public weights[] weights;
    }
+
+   #region weights
+   public class weights
+   {
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public String meshname;
+
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public weightdata[] weightdata;
+   }
+
+   #region weightdata
+   public class weightdata
+   {
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public Int64 numweights;
+
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public bonedata[] bonedata;
+   }
+
+   public class bonedata
+   {
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public Int64 boneindex;
+
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public Double boneweight;
+   }
+   #endregion
+   #endregion
+   #endregion
    #endregion
 
    #region sequence
@@ -2401,7 +2424,7 @@ namespace Anim8orTransl8or.An8.V100
       public empty spotlight;
 
       /// <summary>
-      /// Note: From the spec, it is not clear where this belongs
+      /// Note: From the spec, it is not clear where this belongs.
       /// Spotlights and local lights can have a different intensity depending
       /// on the distance from an object. By default the intensity is the same.
       /// If these chunks are present then the intensity drops off linearly
@@ -2411,7 +2434,7 @@ namespace Anim8orTransl8or.An8.V100
       public @float inradius;
 
       /// <summary>
-      /// Note: From the spec, it is not clear where this belongs
+      /// Note: From the spec, it is not clear where this belongs.
       /// Spotlights and local lights can have a different intensity depending
       /// on the distance from an object. By default the intensity is the same.
       /// If these chunks are present then the intensity drops off linearly
@@ -2421,7 +2444,7 @@ namespace Anim8orTransl8or.An8.V100
       public @float outradius;
 
       /// <summary>
-      /// Note: From the spec, it is not clear where this belongs
+      /// Note: From the spec, it is not clear where this belongs.
       /// Spotlights also have a cone of influence. Within an angle of
       /// <inangle> to the direction of the light the intensity is full value.
       /// Between <inangle> and <outangle> it drops off linearly to zero.
@@ -2430,7 +2453,7 @@ namespace Anim8orTransl8or.An8.V100
       public @float inangle;
 
       /// <summary>
-      /// Note: From the spec, it is not clear where this belongs
+      /// Note: From the spec, it is not clear where this belongs.
       /// Spotlights also have a cone of influence. Within an angle of
       /// <inangle> to the direction of the light the intensity is full value.
       /// Between <inangle> and <outangle> it drops off linearly to zero.

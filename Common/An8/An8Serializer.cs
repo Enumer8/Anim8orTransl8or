@@ -44,12 +44,11 @@ namespace Anim8orTransl8or.An8
                         if ( fi.GetValue(o) is Array oldArray )
                         {
                            // Add to the array
-                           // TODO: Why does this crash with long instead of int?
                            newArray = Activator.CreateInstance(
                               fi.FieldType,
-                              (Int32)oldArray.LongLength + 1) as Array;
+                              oldArray.Length + 1) as Array;
 
-                           Array.Copy(oldArray, newArray, oldArray.LongLength);
+                           Array.Copy(oldArray, newArray, oldArray.Length);
                         }
                         else
                         {
@@ -59,7 +58,7 @@ namespace Anim8orTransl8or.An8
                               1) as Array;
                         }
 
-                        newArray.SetValue(o2, newArray.LongLength - 1);
+                        newArray.SetValue(o2, newArray.Length - 1);
                         fi.SetValue(o, newArray);
                      }
                      else
@@ -324,7 +323,30 @@ namespace Anim8orTransl8or.An8
          return sb.ToString();
       }
 
-      #region Special Case
+      static Boolean IsTexCoordStart(StreamReader sr)
+      {
+         return sr.Peek() == '(';
+      }
+
+      /// <summary>
+      /// Reads an An8 texcoord, e.g. "(1.0 2.0)".
+      /// </summary>
+      static texcoord ParseTexCoord(StreamReader sr)
+      {
+         texcoord texcoord = new texcoord();
+         AssertChar(sr, (Char c) => IsTexCoordStart(sr));
+         ParseWhiteSpace(sr);
+
+         texcoord.u = ParseFloat(sr);
+         ParseWhiteSpace(sr);
+
+         texcoord.v = ParseFloat(sr);
+         ParseWhiteSpace(sr);
+
+         AssertChar(sr, (Char c) => c == ')');
+         return texcoord;
+      }
+
       static Boolean IsPointStart(StreamReader sr)
       {
          return sr.Peek() == '(';
@@ -333,11 +355,10 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 point, e.g. "(1.0 2.0 3.0)".
       /// </summary>
-      static V100.point ParsePoint(StreamReader sr)
+      static point ParsePoint(StreamReader sr)
       {
-         V100.point point = new V100.point();
+         point point = new point();
          AssertChar(sr, (Char c) => IsPointStart(sr));
-
          ParseWhiteSpace(sr);
 
          point.x = ParseFloat(sr);
@@ -361,12 +382,10 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 quaternion, e.g. "(1.0 2.0 3.0 4.0)".
       /// </summary>
-      static V100.quaternion ParseQuaternion(
-         StreamReader sr)
+      static quaternion ParseQuaternion(StreamReader sr)
       {
-         V100.quaternion quaternion = new V100.quaternion();
+         quaternion quaternion = new quaternion();
          AssertChar(sr, (Char c) => IsQuaternionStart(sr));
-
          ParseWhiteSpace(sr);
 
          quaternion.x = ParseFloat(sr);
@@ -385,31 +404,7 @@ namespace Anim8orTransl8or.An8
          return quaternion;
       }
 
-      static Boolean IsTexCoordStart(StreamReader sr)
-      {
-         return sr.Peek() == '(';
-      }
-
-      /// <summary>
-      /// Reads an An8 texcoord, e.g. "(1.0 2.0)".
-      /// </summary>
-      static V100.texcoord ParseTexCoord(StreamReader sr)
-      {
-         V100.texcoord texcoord = new V100.texcoord();
-         AssertChar(sr, (Char c) => IsTexCoordStart(sr));
-
-         ParseWhiteSpace(sr);
-
-         texcoord.u = ParseFloat(sr);
-         ParseWhiteSpace(sr);
-
-         texcoord.v = ParseFloat(sr);
-         ParseWhiteSpace(sr);
-
-         AssertChar(sr, (Char c) => c == ')');
-         return texcoord;
-      }
-
+      #region Special Case
       static Boolean IsFaceDataStart(StreamReader sr)
       {
          return IsIntStart(sr);
@@ -471,6 +466,49 @@ namespace Anim8orTransl8or.An8
          facedata.pointdata = pointdatas.ToArray();
 
          return facedata;
+      }
+
+      static Boolean IsWeightDataStart(StreamReader sr)
+      {
+         return sr.Peek() == '(';
+      }
+
+      /// <summary>
+      /// Reads an An8 weightdata, e.g. "(2 (0 0.928) (1 0.072))".
+      /// </summary>
+      static V100.weightdata ParseWeightData(StreamReader sr)
+      {
+         V100.weightdata weightdata = new V100.weightdata();
+         AssertChar(sr, (Char c) => IsWeightDataStart(sr));
+         ParseWhiteSpace(sr);
+
+         weightdata.numweights = ParseInt(sr);
+         ParseWhiteSpace(sr);
+
+         List<V100.bonedata> bonedatas = new List<V100.bonedata>();
+
+         while ( sr.Peek() != ')' )
+         {
+            V100.bonedata bonedata = new V100.bonedata();
+            AssertChar(sr, (Char c) => c == '(');
+            ParseWhiteSpace(sr);
+
+            bonedata.boneindex = ParseInt(sr);
+            ParseWhiteSpace(sr);
+
+            bonedata.boneweight = ParseFloat(sr);
+            ParseWhiteSpace(sr);
+
+            AssertChar(sr, (Char c) => c == ')');
+            bonedatas.Add(bonedata);
+
+            ParseWhiteSpace(sr);
+         }
+
+         AssertChar(sr, (Char c) => c == ')');
+         weightdata.bonedata = bonedatas.ToArray();
+
+         return weightdata;
       }
       #endregion
 
@@ -566,53 +604,14 @@ namespace Anim8orTransl8or.An8
                   ParseWhiteSpace(sr);
                }
             }
-            #region Special Case - parsing a point
-            else if ( fi.FieldType == typeof(V100.point) )
-            {
-               fi.SetValue(o, ParsePoint(sr));
-               ParseWhiteSpace(sr);
-            }
-            else if ( fi.FieldType == typeof(V100.point[]) )
-            {
-               List<V100.point> points = new List<V100.point>();
-
-               while ( IsPointStart(sr) )
-               {
-                  points.Add(ParsePoint(sr));
-                  ParseWhiteSpace(sr);
-               }
-
-               fi.SetValue(o, points.ToArray());
-            }
-            #endregion
-            #region Special Case - parsing a quaternion
-            else if ( fi.FieldType == typeof(V100.quaternion) )
-            {
-               fi.SetValue(o, ParseQuaternion(sr));
-               ParseWhiteSpace(sr);
-            }
-            else if ( fi.FieldType == typeof(V100.quaternion[]) )
-            {
-               List<V100.quaternion> quaternions = new List<V100.quaternion>();
-
-               while ( IsQuaternionStart(sr) )
-               {
-                  quaternions.Add(ParseQuaternion(sr));
-                  ParseWhiteSpace(sr);
-               }
-
-               fi.SetValue(o, quaternions.ToArray());
-            }
-            #endregion
-            #region Special Case - parsing a texcoord
-            else if ( fi.FieldType == typeof(V100.texcoord) )
+            else if ( fi.FieldType == typeof(texcoord) )
             {
                fi.SetValue(o, ParseTexCoord(sr));
                ParseWhiteSpace(sr);
             }
-            else if ( fi.FieldType == typeof(V100.texcoord[]) )
+            else if ( fi.FieldType == typeof(texcoord[]) )
             {
-               List<V100.texcoord> texcoords = new List<V100.texcoord>();
+               List<texcoord> texcoords = new List<texcoord>();
 
                while ( IsTexCoordStart(sr) )
                {
@@ -622,8 +621,41 @@ namespace Anim8orTransl8or.An8
 
                fi.SetValue(o, texcoords.ToArray());
             }
-            #endregion
-            #region Special Case - parsing a facedata
+            else if ( fi.FieldType == typeof(point) )
+            {
+               fi.SetValue(o, ParsePoint(sr));
+               ParseWhiteSpace(sr);
+            }
+            else if ( fi.FieldType == typeof(point[]) )
+            {
+               List<point> points = new List<point>();
+
+               while ( IsPointStart(sr) )
+               {
+                  points.Add(ParsePoint(sr));
+                  ParseWhiteSpace(sr);
+               }
+
+               fi.SetValue(o, points.ToArray());
+            }
+            else if ( fi.FieldType == typeof(quaternion) )
+            {
+               fi.SetValue(o, ParseQuaternion(sr));
+               ParseWhiteSpace(sr);
+            }
+            else if ( fi.FieldType == typeof(quaternion[]) )
+            {
+               List<quaternion> quaternions = new List<quaternion>();
+
+               while ( IsQuaternionStart(sr) )
+               {
+                  quaternions.Add(ParseQuaternion(sr));
+                  ParseWhiteSpace(sr);
+               }
+
+               fi.SetValue(o, quaternions.ToArray());
+            }
+            #region Special Case - parsing facedata
             else if ( fi.FieldType == typeof(V100.facedata) )
             {
                fi.SetValue(o, ParseFaceData(sr));
@@ -640,6 +672,25 @@ namespace Anim8orTransl8or.An8
                }
 
                fi.SetValue(o, facedatas.ToArray());
+            }
+            #endregion
+            #region Special Case - parsing weightdata
+            else if ( fi.FieldType == typeof(V100.weightdata) )
+            {
+               fi.SetValue(o, ParseWeightData(sr));
+               ParseWhiteSpace(sr);
+            }
+            else if ( fi.FieldType == typeof(V100.weightdata[]) )
+            {
+               List<V100.weightdata> weightdatas = new List<V100.weightdata>();
+
+               while ( IsWeightDataStart(sr) )
+               {
+                  weightdatas.Add(ParseWeightData(sr));
+                  ParseWhiteSpace(sr);
+               }
+
+               fi.SetValue(o, weightdatas.ToArray());
             }
             #endregion
          }
@@ -674,12 +725,11 @@ namespace Anim8orTransl8or.An8
                      if ( fi.GetValue(o) is Array oldArray )
                      {
                         // Add to the array
-                        // TODO: Why does this crash with long instead of int?
                         newArray = Activator.CreateInstance(
                            fi.FieldType,
-                           (Int32)oldArray.LongLength + 1) as Array;
+                           oldArray.Length + 1) as Array;
 
-                        Array.Copy(oldArray, newArray, oldArray.LongLength);
+                        Array.Copy(oldArray, newArray, oldArray.Length);
                      }
                      else
                      {
@@ -689,7 +739,7 @@ namespace Anim8orTransl8or.An8
                            1) as Array;
                      }
 
-                     newArray.SetValue(o2, newArray.LongLength - 1);
+                     newArray.SetValue(o2, newArray.Length - 1);
                      fi.SetValue(o, newArray);
                   }
                   else
