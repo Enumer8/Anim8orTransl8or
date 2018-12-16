@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Anim8orTransl8or.Utility
+namespace Anim8orTransl8or
 {
-   static class ArrayExtensions
+   static class Extensions
    {
       internal static L[] Append<L, T>(this L[] list, T item) where L : class
       {

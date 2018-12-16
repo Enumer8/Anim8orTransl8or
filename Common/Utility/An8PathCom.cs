@@ -6,7 +6,7 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8PathCom
    {
-      internal static mesh Convert(pathcom p)
+      internal static mesh Calculate(pathcom p)
       {
          // Convert the pathcom to a mesh
          mesh m = new mesh();

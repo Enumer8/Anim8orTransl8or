@@ -6,7 +6,7 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8Image
    {
-      internal static mesh Convert(image i)
+      internal static mesh Calculate(image i)
       {
          // Convert the image to a mesh
          mesh m = new mesh();

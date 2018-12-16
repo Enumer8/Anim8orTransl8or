@@ -6,7 +6,7 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8TextCom
    {
-      internal static mesh Convert(textcom t)
+      internal static mesh Calculate(textcom t)
       {
          // Convert the textcom to a mesh
          mesh m = new mesh();

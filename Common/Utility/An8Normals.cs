@@ -7,14 +7,14 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8Normals
    {
-      internal static void Calculate(mesh m)
+      internal static mesh Calculate(mesh m)
       {
          // Return if normals are already present or information is missing
          if ( m.normals?.point != null ||
               m.points?.point == null ||
               m.faces?.facedata == null )
          {
-            return;
+            return m;
          }
 
          Double smoothAngle = m.smoothangle?.text ?? 45.0;
@@ -123,6 +123,7 @@ namespace Anim8orTransl8or.Utility
 
          m.normals = new normals();
          m.normals.point = normals.ToArray();
+         return m;
       }
 
       class LinkedNode

@@ -4,7 +4,7 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8Subdivision
    {
-      internal static mesh Convert(subdivision s)
+      internal static mesh Calculate(subdivision s)
       {
          // Convert the subdivision to a mesh
          // TODO: Do we need to actually subdivide using 'working' or

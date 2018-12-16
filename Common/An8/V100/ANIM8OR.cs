@@ -545,9 +545,9 @@ namespace Anim8orTransl8or.An8.V100
       // TODO: I think the spec incorrectly calls this "path".
       public pathcom[] pathcom;
       public textcom[] textcom;
-      public modifier2[] modifier;
+      public modifier1[] modifier;
       public image[] image;
-      public group2[] group;
+      public group1[] group;
       // TODO: morphtarget?
    }
 
@@ -1258,7 +1258,7 @@ namespace Anim8orTransl8or.An8.V100
    }
 
    #region modifier
-   public class modifier2
+   public class modifier1
    {
       /// <summary>
       /// A <modifier> chunk defines the size, location and kind of a modifier
@@ -1316,9 +1316,9 @@ namespace Anim8orTransl8or.An8.V100
       // TODO: I think the spec incorrectly calls this "path".
       public pathcom pathcom;
       public textcom textcom;
-      public modifier2 modifier;
+      public modifier1 modifier;
       public image image;
-      public group2 group;
+      public group1 group;
    }
 
    #region method
@@ -1399,7 +1399,7 @@ namespace Anim8orTransl8or.An8.V100
       public size size;
    }
 
-   public class group2
+   public class group1
    {
       /// <summary>
       /// A <group> is a collection of zero of more <components>.
@@ -1429,9 +1429,9 @@ namespace Anim8orTransl8or.An8.V100
       // TODO: I think the spec incorrectly calls this "path".
       public pathcom[] pathcom;
       public textcom[] textcom;
-      public modifier2[] modifier;
+      public modifier1[] modifier;
       public image[] image;
-      public group2[] group;
+      public group1[] group;
    }
    #endregion
 
@@ -1451,10 +1451,10 @@ namespace Anim8orTransl8or.An8.V100
       /// <summary>
       /// <bone> is the root bone, which contains all other bones.
       /// </summary>
-      public bone2 bone;
+      public bone1 bone;
    }
 
-   public class bone2
+   public class bone1
    {
       /// <summary>
       /// The bone's name is given by <name>.
@@ -1522,9 +1522,9 @@ namespace Anim8orTransl8or.An8.V100
       // TODO: I think the spec incorrectly calls this "path".
       public pathcom[] pathcom;
       public textcom[] textcom;
-      public modifier2[] modifier;
+      public modifier1[] modifier;
       public image[] image;
-      public group2[] group;
+      public group1[] group;
 
       /// <summary>
       /// A <namedobject> is a reference to an <object> from within another
@@ -1532,7 +1532,7 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       public namedobject[] namedobject;
 
-      public bone2[] bone;
+      public bone1[] bone;
    }
 
    public class dof
@@ -1907,7 +1907,7 @@ namespace Anim8orTransl8or.An8.V100
       /// chunk is present then it is a panoroma, otherwise it is a fixed
       /// background.
       /// </summary>
-      public image2 image;
+      public image1 image;
 
       /// <summary>
       /// The <color> chunk is the color of the fog in 3 ints, from 0 to 255.
@@ -1960,7 +1960,7 @@ namespace Anim8orTransl8or.An8.V100
    }
 
    #region image
-   public class image2
+   public class image1
    {
       /// <summary>
       /// The name of a file used for the background image.

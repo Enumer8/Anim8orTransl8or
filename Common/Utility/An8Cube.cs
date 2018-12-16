@@ -7,7 +7,7 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8Cube
    {
-      internal static mesh Convert(cube c)
+      internal static mesh Calculate(cube c)
       {
          // Convert the sphere to a mesh
          mesh m = new mesh();
