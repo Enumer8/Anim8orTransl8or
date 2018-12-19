@@ -36,7 +36,7 @@ namespace Anim8orTransl8or.Utility
          // the cylinder as id it was 1.
          if ( c.diameter?.text > 0 || c.topdiameter?.text > 0 )
          {
-            // Note: Anim8or v1.00 limits length to 0.001
+            // Note: Anim8or v1.00 limits length to 0.001.
             Double length = Math.Max(c.length?.text ?? 0, 0.001);
             Double startDiameter = Math.Max(c.diameter?.text ?? 0, 0);
             Double endDiameter = Math.Max(c.topdiameter?.text ?? 0, 0);

@@ -1,9 +1,9 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
+﻿# Directories to ignore
 **/.vs/
 **/bin/
 **/obj/
+**/packages/
+
+# Files to ignore
 *.csproj.user
 *.ini

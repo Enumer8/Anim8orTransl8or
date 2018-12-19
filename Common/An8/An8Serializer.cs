@@ -98,7 +98,7 @@ namespace Anim8orTransl8or.An8
 
       static Char AssertChar(StreamReader sr, CharCondition condition)
       {
-         // Note: Don't read yet just in case the condition wants to 'peek'
+         // Note: Don't read yet just in case the condition wants to 'peek'.
          Char c = (Char)sr.Peek();
 
          if ( condition(c) )
@@ -236,7 +236,7 @@ namespace Anim8orTransl8or.An8
          StringBuilder sb = new StringBuilder();
          sb.Append(AssertChar(sr, (Char c) => IsFloatStart(sr)));
 
-         // Note: This is not perfect, but it is assumed to be good enough
+         // Note: This is not perfect, but it is assumed to be good enough.
          while ( sr.Peek() == '.' ||
                  sr.Peek() == 'e' ||
                  sr.Peek() == 'E' ||

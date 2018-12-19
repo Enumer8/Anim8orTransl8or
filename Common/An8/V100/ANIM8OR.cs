@@ -1619,7 +1619,7 @@ namespace Anim8orTransl8or.An8.V100
       /// </summary>
       /// </summary>
       public @string name;
-       
+
       /// <summary>
       /// A <base> chunk can have either an <origin>, an <orientation>, or
       /// both. This chunk gives the location and orientation of the component
