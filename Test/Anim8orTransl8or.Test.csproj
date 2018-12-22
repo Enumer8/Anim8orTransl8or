@@ -49,12 +49,15 @@
     <AssemblyOriginatorKeyFile>Properties\Key.snk.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="An8Cube\TestAn8Cube.cs" />
+    <Compile Include="An8Cylinder\TestAn8Cylinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +67,18 @@
     <None Include="An8Cube\Cube_X1_Y1_Z1_Mesh.an8" />
     <None Include="An8Cube\Cube_X2_Y3_Z5.an8" />
     <None Include="An8Cube\Cube_X2_Y3_Z5_Mesh.an8" />
+    <None Include="An8Cylinder\Cone_Lon4_Lat2.an8" />
+    <None Include="An8Cylinder\Cone_Lon4_Lat2_Mesh.an8" />
+    <None Include="An8Cylinder\Cone_Lon5_Lat2.an8" />
+    <None Include="An8Cylinder\Cone_Lon5_Lat2_Mesh.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon11_Lat7.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon11_Lat7_Mesh.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon3_Lat1.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon3_Lat1_Mesh.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon4_Lat5.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon4_Lat5_Mesh.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon6_Lat6.an8" />
+    <None Include="An8Cylinder\Cylinder_Lon6_Lat6_Mesh.an8" />
     <None Include="Properties\Key.snk.pfx" />
   </ItemGroup>
   <ItemGroup>

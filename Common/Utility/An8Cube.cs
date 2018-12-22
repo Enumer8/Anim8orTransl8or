@@ -9,12 +9,11 @@ namespace Anim8orTransl8or.Utility
    {
       /// <summary>
       /// This will produce the same points, texcoords, and vertices as if the
-      /// user had clicked Build->Convert to Mesh in Anim8or v1.00. The
-      /// degenerate cases will produce an empty mesh.
+      /// user had clicked Build->Convert to Mesh in Anim8or v1.00.
       /// </summary>
       /// <param name="c">the cube</param>
       /// <param name="callback">the callback for warnings</param>
-      /// <returns>the cube converted to a mesh</returns>
+      /// <returns>the converted mesh</returns>
       internal static mesh Calculate(cube c, Action<String> callback = null)
       {
          mesh m = new mesh();
@@ -31,387 +30,359 @@ namespace Anim8orTransl8or.Utility
             m.materiallist.materialname[0].text = c.material.name;
          }
 
-         // Note: We will treat non-positive scales and non-positive divisions
-         // as degenerate cases that shouldn't create any points (since they
-         // do not create a 3D shape). Technically Anim8or v1.00 may still draw
-         // lines or some faces.
-         if ( c?.scale?.x > 0 &&
-              c?.scale?.y > 0 &&
-              c?.scale?.z > 0 &&
-              c?.divisions?.x > 0 &&
-              c?.divisions?.y > 0 &&
-              c?.divisions?.z > 0 )
+         List<point> points = new List<point>();
+         List<texcoord> texcoords = new List<texcoord>();
+         List<facedata> facedatas = new List<facedata>();
+
+         // Note: These defaults and limits were reversed engineered.
+         Double scaleX = (c?.scale?.x ?? 10).LimitTo(0);
+         Double scaleY = (c?.scale?.y ?? 10).LimitTo(0);
+         Double scaleZ = (c?.scale?.z ?? 10).LimitTo(0);
+         Int32 divisionsX = (Int32)(c?.divisions?.x ?? 1).LimitTo(1, 100);
+         Int32 divisionsY = (Int32)(c?.divisions?.y ?? 1).LimitTo(1, 100);
+         Int32 divisionsZ = (Int32)(c?.divisions?.z ?? 1).LimitTo(1, 100);
+
+         if ( callback != null )
          {
-            List<point> points = new List<point>();
-            List<texcoord> texcoords = new List<texcoord>();
-            List<facedata> facedatas = new List<facedata>();
-
-            Double scaleX = c.scale.x;
-            Double scaleY = c.scale.y;
-            Double scaleZ = c.scale.z;
-
-            // Note: Anim8or v1.00 limits divisions to 100
-            Int32 divisionX = Math.Min((Int32)c.divisions.x, 100);
-            Int32 divisionY = Math.Min((Int32)c.divisions.y, 100);
-            Int32 divisionZ = Math.Min((Int32)c.divisions.z, 100);
-
-            Double minX = scaleX / -2;
-            Double minY = scaleY / -2;
-            Double minZ = scaleZ / -2;
-            Double stepX = scaleX / divisionX;
-            Double stepY = scaleY / divisionY;
-            Double stepZ = scaleZ / divisionZ;
-            Double stepU = 1.0 / divisionX;
-            Double stepV = 1.0 / divisionY;
-
-            // This contains the indices of the right side.
-            //
-            // [0,0]  [1,0]  [2,0]
-            //   *------*------*               Y
-            //   |      |      |               | X
-            // [0,1]  [1,1]  [2,1]             |/
-            //   *------*------*               *------Z
-            //   |      |      |
-            // [0,2]  [1,2]  [2,2]
-            //   *------*------*
-            //
-            Int32[,] rightIndices = new Int32[divisionZ + 1, divisionY + 1];
-
-            // This contains the indices of the left side.
-            //
-            // [0,0]  [1,0]  [2,0]
-            //   *------*------*               Y
-            //   |      |      |               |
-            // [0,1]  [1,1]  [2,1]             |
-            //   *------*------*        Z------*
-            //   |      |      |              /
-            // [0,2]  [1,2]  [2,2]           X
-            //   *------*------*
-            //
-            Int32[,] leftIndices = new Int32[divisionZ + 1, divisionY + 1];
-
-            // This contains the indices of the bottom side.
-            //
-            // [0,0]  [1,0]  [2,0]
-            //   *------*------*          Z
-            //   |      |      |          | Y
-            // [0,1]  [1,1]  [2,1]        |/
-            //   *------*------*          *------X
-            //   |      |      |
-            // [0,2]  [1,2]  [2,2]
-            //   *------*------*
-            //
-            Int32[,] bottomIndices = new Int32[divisionX + 1, divisionZ + 1];
-
-            // This contains the indices of the top side.
-            //
-            // [0,0]  [1,0]  [2,0]
-            //   *------*------*
-            //   |      |      |
-            // [0,1]  [1,1]  [2,1]
-            //   *------*------*          *------X
-            //   |      |      |         /|
-            // [0,2]  [1,2]  [2,2]      Y |
-            //   *------*------*          Z
-            //
-            Int32[,] topIndices = new Int32[divisionX + 1, divisionZ + 1];
-
-            // This contains the indices of the back side.
-            //
-            // [0,0]  [1,0]  [2,0]
-            //   *------*------*               Y
-            //   |      |      |               | Z
-            // [0,1]  [1,1]  [2,1]             |/
-            //   *------*------*        X------*
-            //   |      |      |
-            // [0,2]  [1,2]  [2,2]
-            //   *------*------*
-            //
-            Int32[,] backIndices = new Int32[divisionX + 1, divisionY + 1];
-
-            // This contains the indices of the front side.
-            //
-            // [0,0]  [1,0]  [2,0]
-            //   *------*------*          Y
-            //   |      |      |          |
-            // [0,1]  [1,1]  [2,1]        |
-            //   *------*------*          *------X
-            //   |      |      |         /
-            // [0,2]  [1,2]  [2,2]      Z
-            //   *------*------*
-            //
-            Int32[,] frontIndices = new Int32[divisionX + 1, divisionY + 1];
-
-            // Create all back side and front side points (interleaved).
-            //
-            //     4*----10*----16* (back)
-            //      |      |      |
-            //      |      |      |          Y
-            //     2*-----8*----14*          |
-            // 5*----11*----17*   |          |
-            //  |   |  |   |  |   |          *------X
-            //  |  0*--|--6*--|-12*         /
-            // 3*-----9*----15*            Z
-            //  |      |      |
-            //  |      |      |
-            // 1*-----7*----13* (front)
-            //
-            for ( Int32 ix = 0; ix <= divisionX; ix++ )
+            if ( c?.scale != null )
             {
-               Double x = minX + stepX * ix;
-               Double u = stepU * ix;
-
-               for ( Int32 iy = 0; iy <= divisionY; iy++ )
+               if ( c.scale.x != scaleX )
                {
-                  Double y = minY + stepY * iy;
-                  Double v = stepV * iy;
+                  callback($"The \"{c.name?.text}\" cube's X scale of {c.scale.x} has been limited to {scaleX}.");
+               }
 
-                  for ( Int32 iz = 0; iz <= divisionZ; iz += divisionZ )
-                  {
-                     Double z = minZ + stepZ * iz;
+               if ( c.scale.y != scaleY )
+               {
+                  callback($"The \"{c.name?.text}\" cube's Y scale of {c.scale.y} has been limited to {scaleY}.");
+               }
 
-                     #region Save indices for later
-                     if ( ix == 0 )
-                     {
-                        rightIndices[iz, divisionY - iy] = points.Count;
-                     }
-                     else if ( ix == divisionX )
-                     {
-                        leftIndices[divisionZ - iz, divisionY - iy] =
-                           points.Count;
-                     }
-
-                     if ( iy == 0 )
-                     {
-                        bottomIndices[ix, divisionZ - iz] = points.Count;
-                     }
-                     else if ( iy == divisionY )
-                     {
-                        topIndices[ix, iz] = points.Count;
-                     }
-
-                     if ( iz == 0 )
-                     {
-                        backIndices[divisionX - ix, divisionY - iy] =
-                           points.Count;
-                     }
-                     else if ( iz == divisionZ )
-                     {
-                        frontIndices[ix, divisionY - iy] = points.Count;
-                     }
-                     #endregion
-
-                     points.Add(new point(x, y, z));
-                     texcoords.Add(new texcoord(u, v));
-                  }
+               if ( c.scale.z != scaleZ )
+               {
+                  callback($"The \"{c.name?.text}\" cube's Z scale of {c.scale.z} has been limited to {scaleZ}.");
                }
             }
 
-            // Create the right side and left side points (interleaved) except
-            // for the back and front side points already created.
-            //
-            //      * (right)     * (left)
-            //     /|            /|
-            //   4* |          5* |          Y
-            //   /| *          /| *          |
-            //  * |/|         * |/|          |
-            //  |2* |         |3* |          *------X
-            //  |/| *         |/| *         /
-            //  * |/          * |/         Z
-            //  |0*           |1*
-            //  |/            |/
-            //  *             *
-            //
-            for ( Int32 iy = 0; iy <= divisionY; iy++ )
+            if ( c?.divisions != null )
+            {
+               if ( c.divisions.x != divisionsX )
+               {
+                  callback($"The \"{c.name?.text}\" cube's X divisions of {c.divisions.x} has been limited to {divisionsX}.");
+               }
+
+               if ( c.divisions.y != divisionsY )
+               {
+                  callback($"The \"{c.name?.text}\" cube's Y divisions of {c.divisions.y} has been limited to {divisionsY}.");
+               }
+
+               if ( c.divisions.z != divisionsZ )
+               {
+                  callback($"The \"{c.name?.text}\" cube's Z divisions of {c.divisions.z} has been limited to {divisionsZ}.");
+               }
+            }
+         }
+
+         Double minX = scaleX / -2;
+         Double minY = scaleY / -2;
+         Double minZ = scaleZ / -2;
+         Double stepX = scaleX / divisionsX;
+         Double stepY = scaleY / divisionsY;
+         Double stepZ = scaleZ / divisionsZ;
+         Double stepU = 1.0 / divisionsX;
+         Double stepV = 1.0 / divisionsY;
+
+         // This contains the indices of the right side.
+         //
+         // [0,0]  [1,0]  [2,0]
+         //   *------*------*               Y
+         //   |      |      |               | X
+         // [0,1]  [1,1]  [2,1]             |/
+         //   *------*------*               *------Z
+         //   |      |      |
+         // [0,2]  [1,2]  [2,2]
+         //   *------*------*
+         //
+         Int32[,] rightIndices = new Int32[divisionsZ + 1, divisionsY + 1];
+
+         // This contains the indices of the left side.
+         //
+         // [0,0]  [1,0]  [2,0]
+         //   *------*------*               Y
+         //   |      |      |               |
+         // [0,1]  [1,1]  [2,1]             |
+         //   *------*------*        Z------*
+         //   |      |      |              /
+         // [0,2]  [1,2]  [2,2]           X
+         //   *------*------*
+         //
+         Int32[,] leftIndices = new Int32[divisionsZ + 1, divisionsY + 1];
+
+         // This contains the indices of the bottom side.
+         //
+         // [0,0]  [1,0]  [2,0]
+         //   *------*------*          Z
+         //   |      |      |          | Y
+         // [0,1]  [1,1]  [2,1]        |/
+         //   *------*------*          *------X
+         //   |      |      |
+         // [0,2]  [1,2]  [2,2]
+         //   *------*------*
+         //
+         Int32[,] bottomIndices = new Int32[divisionsX + 1, divisionsZ + 1];
+
+         // This contains the indices of the top side.
+         //
+         // [0,0]  [1,0]  [2,0]
+         //   *------*------*
+         //   |      |      |
+         // [0,1]  [1,1]  [2,1]
+         //   *------*------*          *------X
+         //   |      |      |         /|
+         // [0,2]  [1,2]  [2,2]      Y |
+         //   *------*------*          Z
+         //
+         Int32[,] topIndices = new Int32[divisionsX + 1, divisionsZ + 1];
+
+         // This contains the indices of the back side.
+         //
+         // [0,0]  [1,0]  [2,0]
+         //   *------*------*               Y
+         //   |      |      |               | Z
+         // [0,1]  [1,1]  [2,1]             |/
+         //   *------*------*        X------*
+         //   |      |      |
+         // [0,2]  [1,2]  [2,2]
+         //   *------*------*
+         //
+         Int32[,] backIndices = new Int32[divisionsX + 1, divisionsY + 1];
+
+         // This contains the indices of the front side.
+         //
+         // [0,0]  [1,0]  [2,0]
+         //   *------*------*          Y
+         //   |      |      |          |
+         // [0,1]  [1,1]  [2,1]        |
+         //   *------*------*          *------X
+         //   |      |      |         /
+         // [0,2]  [1,2]  [2,2]      Z
+         //   *------*------*
+         //
+         Int32[,] frontIndices = new Int32[divisionsX + 1, divisionsY + 1];
+
+         // Create all back side and front side points (interleaved).
+         //
+         //     4*----10*----16* (back)
+         //      |      |      |
+         //      |      |      |          Y
+         //     2*-----8*----14*          |
+         // 5*----11*----17*   |          |
+         //  |   |  |   |  |   |          *------X
+         //  |  0*--|--6*--|-12*         /
+         // 3*-----9*----15*            Z
+         //  |      |      |
+         //  |      |      |
+         // 1*-----7*----13* (front)
+         //
+         for ( Int32 ix = 0; ix <= divisionsX; ix++ )
+         {
+            Double x = minX + stepX * ix;
+            Double u = stepU * ix;
+
+            for ( Int32 iy = 0; iy <= divisionsY; iy++ )
             {
                Double y = minY + stepY * iy;
                Double v = stepV * iy;
 
-               for ( Int32 iz = 1; iz < divisionZ; iz++ )
+               for ( Int32 iz = 0; iz <= divisionsZ; iz += divisionsZ )
                {
                   Double z = minZ + stepZ * iz;
 
-                  for ( Int32 ix = 0; ix <= divisionX; ix += divisionX )
+                  #region Save indices for later
+                  if ( ix == 0 )
                   {
-                     Double x = minX + stepX * ix;
-                     Double u = stepU * ix;
-
-                     #region Save indices for later
-                     if ( ix == 0 )
-                     {
-                        rightIndices[iz, divisionY - iy] = points.Count;
-                     }
-                     else if ( ix == divisionX )
-                     {
-                        leftIndices[divisionZ - iz, divisionY - iy] =
-                           points.Count;
-                     }
-
-                     if ( iy == 0 )
-                     {
-                        bottomIndices[ix, divisionZ - iz] = points.Count;
-                     }
-                     else if ( iy == divisionY )
-                     {
-                        topIndices[ix, iz] = points.Count;
-                     }
-                     #endregion
-
-                     points.Add(new point(x, y, z));
-                     texcoords.Add(new texcoord(u, v));
+                     rightIndices[iz, divisionsY - iy] = points.Count;
                   }
+                  else if ( ix == divisionsX )
+                  {
+                     leftIndices[divisionsZ - iz, divisionsY - iy] =
+                        points.Count;
+                  }
+
+                  if ( iy == 0 )
+                  {
+                     bottomIndices[ix, divisionsZ - iz] = points.Count;
+                  }
+                  else if ( iy == divisionsY )
+                  {
+                     topIndices[ix, iz] = points.Count;
+                  }
+
+                  if ( iz == 0 )
+                  {
+                     backIndices[divisionsX - ix, divisionsY - iy] =
+                        points.Count;
+                  }
+                  else if ( iz == divisionsZ )
+                  {
+                     frontIndices[ix, divisionsY - iy] = points.Count;
+                  }
+                  #endregion
+
+                  points.Add(new point(x, y, z));
+                  texcoords.Add(new texcoord(u, v));
                }
             }
-
-            // Create the bottom side and top side points (interleaved) except
-            // for right, left, back, and front side points already created.
-            //
-            //      *------*------* (top)
-            //     /      /      /
-            //    *-----1*------*            Y
-            //   /      /      /             |
-            //  *------*------*              |
-            //                               *------X
-            //      *------*------*         /
-            //     /      /      /         Z
-            //    *-----0*------*
-            //   /      /      /
-            //  *------*------* (bottom)
-            //
-            for ( Int32 ix = 1; ix < divisionX; ix++ )
-            {
-               Double x = minX + stepX * ix;
-               Double u = stepU * ix;
-
-               for ( Int32 iz = 1; iz < divisionZ; iz++ )
-               {
-                  Double z = minZ + stepZ * iz;
-
-                  for ( Int32 iy = 0; iy <= divisionY; iy += divisionY )
-                  {
-                     Double y = minY + stepY * iy;
-                     Double v = stepV * iy;
-
-                     #region Save indices for later
-                     if ( iy == 0 )
-                     {
-                        bottomIndices[ix, divisionZ - iz] = points.Count;
-                     }
-                     else if ( iy == divisionY )
-                     {
-                        topIndices[ix, iz] = points.Count;
-                     }
-                     #endregion
-
-                     points.Add(new point(x, y, z));
-                     texcoords.Add(new texcoord(u, v));
-                  }
-               }
-            }
-
-            // Create the back side faces
-            AddFaces(
-               facedatas,
-               backIndices,
-               BuildSideFrom.BottomToTopRightToLeft,
-               BuildFaceStartingAt.RightBottom);
-
-            // Create the front side faces
-            AddFaces(
-               facedatas,
-               frontIndices,
-               BuildSideFrom.BottomToTopLeftToRight,
-               BuildFaceStartingAt.LeftBottom);
-
-            // Create the right side faces
-            AddFaces(
-               facedatas,
-               rightIndices,
-               BuildSideFrom.LeftToRightBottomToTop,
-               BuildFaceStartingAt.LeftBottom);
-
-            // Create the left side faces
-            AddFaces(
-               facedatas,
-               leftIndices,
-               BuildSideFrom.RightToLeftBottomToTop,
-               BuildFaceStartingAt.RightBottom);
-
-            // Create the top side faces
-            AddFaces(
-               facedatas,
-               topIndices,
-               BuildSideFrom.TopToBottomLeftToRight,
-               BuildFaceStartingAt.LeftTop);
-
-            // Create the bottom side faces
-            AddFaces(
-               facedatas,
-               bottomIndices,
-               BuildSideFrom.BottomToTopLeftToRight,
-               BuildFaceStartingAt.LeftBottom);
-
-            // Add the points, texcoords, and faces to the mesh
-            m.points = new points();
-            m.points.point = points.ToArray();
-            m.texcoords = new texcoords();
-            m.texcoords.texcoord = texcoords.ToArray();
-            m.faces = new faces();
-            m.faces.facedata = facedatas.ToArray();
          }
-         else if ( callback != null )
+
+         // Create the right side and left side points (interleaved) except
+         // for the back and front side points already created.
+         //
+         //      * (right)     * (left)
+         //     /|            /|
+         //   4* |          5* |          Y
+         //   /| *          /| *          |
+         //  * |/|         * |/|          |
+         //  |2* |         |3* |          *------X
+         //  |/| *         |/| *         /
+         //  * |/          * |/         Z
+         //  |0*           |1*
+         //  |/            |/
+         //  *             *
+         //
+         for ( Int32 iy = 0; iy <= divisionsY; iy++ )
          {
-            if ( c == null )
+            Double y = minY + stepY * iy;
+            Double v = stepV * iy;
+
+            for ( Int32 iz = 1; iz < divisionsZ; iz++ )
             {
-               callback("The cube is null. No points will be created.");
-            }
-            else
-            {
-               if ( c.scale == null )
+               Double z = minZ + stepZ * iz;
+
+               for ( Int32 ix = 0; ix <= divisionsX; ix += divisionsX )
                {
-                  callback($"The \"{c.name?.text}\" cube's scale is null. No points will be created.");
-               }
-               else
-               {
-                  if ( c.scale.x <= 0 )
+                  Double x = minX + stepX * ix;
+                  Double u = stepU * ix;
+
+                  #region Save indices for later
+                  if ( ix == 0 )
                   {
-                     callback($"The \"{c.name?.text}\" cube's X scale (i.e. {c.scale.x}) is not positive. No points will be created.");
+                     rightIndices[iz, divisionsY - iy] = points.Count;
+                  }
+                  else if ( ix == divisionsX )
+                  {
+                     leftIndices[divisionsZ - iz, divisionsY - iy] =
+                        points.Count;
                   }
 
-                  if ( c.scale.y <= 0 )
+                  if ( iy == 0 )
                   {
-                     callback($"The \"{c.name?.text}\" cube's Y scale (i.e. {c.scale.y}) is not positive. No points will be created.");
+                     bottomIndices[ix, divisionsZ - iz] = points.Count;
                   }
+                  else if ( iy == divisionsY )
+                  {
+                     topIndices[ix, iz] = points.Count;
+                  }
+                  #endregion
 
-                  if ( c.scale.z <= 0 )
-                  {
-                     callback($"The \"{c.name?.text}\" cube's Z scale (i.e. {c.scale.z}) is not positive. No points will be created.");
-                  }
-               }
-
-               if ( c.divisions == null )
-               {
-                  callback($"The \"{c.name?.text}\" cube's divisions is null. No points will be created.");
-               }
-               else
-               {
-                  if ( c.divisions.x <= 0 )
-                  {
-                     callback($"The \"{c.name?.text}\" cube's X divisions (i.e. {c.divisions.x}) is not positive. No points will be created.");
-                  }
-
-                  if ( c.divisions.y <= 0 )
-                  {
-                     callback($"The \"{c.name?.text}\" cube's Y divisions (i.e. {c.divisions.y}) is not positive. No points will be created.");
-                  }
-
-                  if ( c.divisions.z <= 0 )
-                  {
-                     callback($"The \"{c.name?.text}\" cube's Z divisions (i.e. {c.divisions.z}) is not positive. No points will be created.");
-                  }
+                  points.Add(new point(x, y, z));
+                  texcoords.Add(new texcoord(u, v));
                }
             }
          }
+
+         // Create the bottom side and top side points (interleaved) except
+         // for right, left, back, and front side points already created.
+         //
+         //      *------*------* (top)
+         //     /      /      /
+         //    *-----1*------*            Y
+         //   /      /      /             |
+         //  *------*------*              |
+         //                               *------X
+         //      *------*------*         /
+         //     /      /      /         Z
+         //    *-----0*------*
+         //   /      /      /
+         //  *------*------* (bottom)
+         //
+         for ( Int32 ix = 1; ix < divisionsX; ix++ )
+         {
+            Double x = minX + stepX * ix;
+            Double u = stepU * ix;
+
+            for ( Int32 iz = 1; iz < divisionsZ; iz++ )
+            {
+               Double z = minZ + stepZ * iz;
+
+               for ( Int32 iy = 0; iy <= divisionsY; iy += divisionsY )
+               {
+                  Double y = minY + stepY * iy;
+                  Double v = stepV * iy;
+
+                  #region Save indices for later
+                  if ( iy == 0 )
+                  {
+                     bottomIndices[ix, divisionsZ - iz] = points.Count;
+                  }
+                  else if ( iy == divisionsY )
+                  {
+                     topIndices[ix, iz] = points.Count;
+                  }
+                  #endregion
+
+                  points.Add(new point(x, y, z));
+                  texcoords.Add(new texcoord(u, v));
+               }
+            }
+         }
+
+         // Create the back side faces
+         AddFaces(
+            facedatas,
+            backIndices,
+            BuildSideFrom.BottomToTopRightToLeft,
+            BuildFaceStartingAt.RightBottom);
+
+         // Create the front side faces
+         AddFaces(
+            facedatas,
+            frontIndices,
+            BuildSideFrom.BottomToTopLeftToRight,
+            BuildFaceStartingAt.LeftBottom);
+
+         // Create the right side faces
+         AddFaces(
+            facedatas,
+            rightIndices,
+            BuildSideFrom.LeftToRightBottomToTop,
+            BuildFaceStartingAt.LeftBottom);
+
+         // Create the left side faces
+         AddFaces(
+            facedatas,
+            leftIndices,
+            BuildSideFrom.RightToLeftBottomToTop,
+            BuildFaceStartingAt.RightBottom);
+
+         // Create the top side faces
+         AddFaces(
+            facedatas,
+            topIndices,
+            BuildSideFrom.TopToBottomLeftToRight,
+            BuildFaceStartingAt.LeftTop);
+
+         // Create the bottom side faces
+         AddFaces(
+            facedatas,
+            bottomIndices,
+            BuildSideFrom.BottomToTopLeftToRight,
+            BuildFaceStartingAt.LeftBottom);
+
+         m.points = new points();
+         m.points.point = points.ToArray();
+         m.texcoords = new texcoords();
+         m.texcoords.texcoord = texcoords.ToArray();
+         m.faces = new faces();
+         m.faces.facedata = facedatas.ToArray();
 
          return m;
       }

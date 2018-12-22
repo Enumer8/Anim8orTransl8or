@@ -27,5 +27,21 @@ namespace Anim8orTransl8or
             return list;
          }
       }
+
+      internal static Double LimitTo(
+         this Double d,
+         Double minimum,
+         Double maximum = Double.MaxValue)
+      {
+         return Math.Min(Math.Max(!Double.IsNaN(d) ? d : 0, minimum), maximum);
+      }
+
+      internal static Int64 LimitTo(
+         this Int64 i,
+         Int64 minimum,
+         Int64 maximum = Int64.MaxValue)
+      {
+         return Math.Min(Math.Max(i, minimum), maximum);
+      }
    }
 }
