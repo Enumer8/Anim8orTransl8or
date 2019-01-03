@@ -7,16 +7,22 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8Sphere
    {
-      internal static mesh Calculate(sphere s)
+      /// <summary>
+      /// This will produce the same points, texcoords, and vertices as if the
+      /// user had clicked Build->Convert to Mesh in Anim8or v1.00.
+      /// </summary>
+      /// <param name="s">the sphere</param>
+      /// <param name="callback">the callback for warnings</param>
+      /// <returns>the converted mesh</returns>
+      internal static mesh Calculate(sphere s, Action<String> callback = null)
       {
-         // Convert the sphere to a mesh
          mesh m = new mesh();
-         m.name = s.name;
-         m.@base = s.@base;
-         m.pivot = s.pivot;
-         m.material = s.material;
+         m.name = s?.name;
+         m.@base = s?.@base;
+         m.pivot = s?.pivot;
+         m.material = s?.material;
 
-         if ( s.material?.name != null )
+         if ( s?.material?.name != null )
          {
             m.materiallist = new materiallist();
             m.materiallist.materialname = new @string[1];
@@ -28,705 +34,657 @@ namespace Anim8orTransl8or.Utility
          List<texcoord> texcoords = new List<texcoord>();
          List<facedata> facedatas = new List<facedata>();
 
-         // Note: Anim8or v1.00 prioritizes longlat over geodesic.
-         if ( s.longlat != null )
+         // Note: These defaults and limits were reversed engineered.
+         Double diameter = (s?.diameter?.text ?? 10).Limit(0);
+         Int32 longitude = (Int32)(s?.longlat?.longitude ?? 12).Limit(0, 32);
+         Int32 latitude = (Int32)(s?.longlat?.latitude ?? 8).Limit(0, 16);
+         // Note: Anim8or v1.00's editor limits geodesic from 1 to 6, but
+         // the actual mesh in the object editor can be between 0 and 32.
+         Int32 geodesic = (Int32)(s?.geodesic?.text ?? 0).Limit(0, 32);
+
+         if ( callback != null )
          {
-            // Note: If diameter is 0 or longitude is 1 or less or latitude is
-            // 1 or less, then there's nothing to draw. Technically Anim8or
-            // v1.00 may draw lines.
-            if ( s.diameter?.text > 0 &&
-                 s.longlat.longitude > 1 &&
-                 s.longlat.latitude > 1 )
+            if ( s?.diameter != null && s.diameter.text != diameter )
             {
-               Double diameter = s.diameter.text;
-               // Note: Anim8or v1.00 limits longitude to 32.
-               Int64 longitude = Math.Min(s.longlat.longitude, 32);
-               // Note: Anim8or v1.00 limits latitude to 16.
-               Int64 latitude = Math.Min(s.longlat.latitude, 16);
-               Double stepAngleX = -Math.PI / latitude;
-               Double stepAngleY = 2 * Math.PI / longitude;
-               point startPoint = new point(0, diameter / 2);
+               callback($"The \"{s.name?.text}\" sphere's diameter of {s.diameter.text} has been limited to {diameter}.");
+            }
 
-               for ( Int64 i = 1; i < latitude; i++ )
+            if ( s?.longlat != null )
+            {
+               if ( s.longlat.longitude != longitude )
                {
-                  quaternion q = new quaternion(
-                     0,
-                     0,
-                     Math.Sin(stepAngleX * i / 2),
-                     Math.Cos(stepAngleX * i / 2));
-
-                  point p = q.Rotate(startPoint);
-
-                  for ( Int64 j = 0; j < longitude; j++ )
-                  {
-                     q.y = Math.Sin(stepAngleY * j / 2);
-                     q.z = 0;
-                     q.w = Math.Cos(stepAngleY * j / 2);
-
-                     point p2 = q.Rotate(p);
-                     points.Add(p2);
-
-                     texcoord t = new texcoord(
-                        (Double)j / longitude,
-                        1 - (Double)i / latitude);
-
-                     texcoords.Add(t);
-                  }
+                  callback($"The \"{s.name?.text}\" sphere's longitude of {s.longlat.longitude} has been limited to {longitude}.");
                }
 
-               // Top point
-               point topPoint = new point(0, diameter / 2);
-               points.Add(topPoint);
-
-               // Bottom point
-               point bottomPoint = new point(0, -diameter / 2);
-               points.Add(bottomPoint);
-
-               for ( Int64 i = 0; i < latitude - 2; i++ )
+               if ( s.longlat.latitude != latitude )
                {
-                  for ( Int64 j = 0; j < longitude; j++ )
-                  {
-                     facedata f = new facedata();
-                     f.numpoints = 4;
-                     f.flags = facedataenum.hastexture;
-                     f.matno = 0;
-                     f.flatnormalno = -1;
-                     f.pointdata = new pointdata[f.numpoints];
-
-                     // pointdata0
-                     f.pointdata[0] = new pointdata();
-                     f.pointdata[0].pointindex = i * longitude + j;
-                     f.pointdata[0].texcoordindex = f.pointdata[0].pointindex;
-
-                     // pointdata1
-                     if ( j == longitude - 1 )
-                     {
-                        f.pointdata[1] = new pointdata();
-                        f.pointdata[1].pointindex = i * longitude;
-
-                        // TexCoord
-                        texcoord t = texcoords[
-                           (Int32)f.pointdata[1].pointindex];
-                        t.u = 1;
-
-                        f.pointdata[1].texcoordindex = texcoords.Count;
-                        texcoords.Add(t);
-                     }
-                     else
-                     {
-                        f.pointdata[1] = new pointdata();
-                        f.pointdata[1].pointindex = i * longitude + j + 1;
-                        f.pointdata[1].texcoordindex =
-                           f.pointdata[1].pointindex;
-                     }
-
-                     // pointdata2
-                     if ( j == longitude - 1 )
-                     {
-                        f.pointdata[2] = new pointdata();
-                        f.pointdata[2].pointindex = (i + 1) * longitude;
-
-                        // TexCoord
-                        texcoord t = texcoords[
-                           (Int32)f.pointdata[2].pointindex];
-                        t.u = 1;
-
-                        f.pointdata[2].texcoordindex = texcoords.Count;
-                        texcoords.Add(t);
-                     }
-                     else
-                     {
-                        f.pointdata[2] = new pointdata();
-                        f.pointdata[2].pointindex =
-                           (i + 1) * longitude + j + 1;
-                        f.pointdata[2].texcoordindex =
-                           f.pointdata[2].pointindex;
-                     }
-
-                     // pointdata3
-                     f.pointdata[3] = new pointdata();
-                     f.pointdata[3].pointindex = (i + 1) * longitude + j;
-                     f.pointdata[3].texcoordindex =
-                        f.pointdata[3].pointindex;
-
-                     facedatas.Add(f);
-                  }
-               }
-
-               // Top and bottom faces
-               for ( Int64 i = 0; i < 2; i++ )
-               {
-                  for ( Int64 j = 0; j < longitude; j++ )
-                  {
-                     facedata f = new facedata();
-                     f.numpoints = 3;
-                     f.flags = facedataenum.hastexture;
-                     f.matno = 0;
-                     f.flatnormalno = -1;
-                     f.pointdata = new pointdata[f.numpoints];
-
-                     // pointdata0
-                     pointdata p0 = new pointdata();
-                     p0.pointindex = i * longitude * (latitude - 2) + j;
-                     p0.texcoordindex = p0.pointindex;
-
-                     // pointdata1
-                     pointdata p1 = new pointdata();
-
-                     if ( j == longitude - 1 )
-                     {
-                        p1.pointindex = i * longitude * (latitude - 2);
-
-                        // TexCoord
-                        texcoord t = texcoords[
-                           (Int32)p1.pointindex];
-                        t.u = 1;
-
-                        p1.texcoordindex = texcoords.Count;
-                        texcoords.Add(t);
-                     }
-                     else
-                     {
-                        p1.pointindex = i * longitude * (latitude - 2) + j + 1;
-                        p1.texcoordindex = p1.pointindex;
-                     }
-
-                     // pointdata2
-                     pointdata p2 = new pointdata();
-                     p2.pointindex = longitude * (latitude - 1) + i;
-
-                     // Top TexCoord
-                     texcoord topTexCoord = new texcoord(
-                        (Double)j / longitude,
-                        1 - i);
-
-                     p2.texcoordindex = texcoords.Count;
-                     texcoords.Add(topTexCoord);
-
-                     if ( i != 0 )
-                     {
-                        f.pointdata[0] = p0;
-                        f.pointdata[1] = p1;
-                        f.pointdata[2] = p2;
-                     }
-                     else
-                     {
-                        f.pointdata[0] = p0;
-                        f.pointdata[1] = p2;
-                        f.pointdata[2] = p1;
-                     }
-
-                     facedatas.Add(f);
-                  }
+                  callback($"The \"{s.name?.text}\" sphere's latitude of {s.longlat.latitude} has been limited to {latitude}.");
                }
             }
-         }
-         else if ( s.geodesic != null )
-         {
-            // Note: If diameter is 0 or geodesic is 0, then there's nothing to
-            // draw.
-            if ( s.diameter?.text > 0 && s.geodesic.text > 0 )
+
+            if ( s?.geodesic != null && s.geodesic.text != geodesic )
             {
-               Double diameter = s.diameter.text;
-               // Note: Anim8or v1.00 limits geodesic to 32 (the editor limits
-               // to 6).
-               Int64 geodesic = Math.Min(s.geodesic.text, 32);
-
-               // Indices
-               Int32[] topFront = new Int32[geodesic + 1];
-               Int32[] topBack = new Int32[geodesic + 1];
-               Int32[] topRight = new Int32[geodesic + 1];
-               Int32[] topLeft = new Int32[geodesic + 1];
-
-               Int32[] bottomFront = new Int32[geodesic + 1];
-               Int32[] bottomBack = new Int32[geodesic + 1];
-               Int32[] bottomRight = new Int32[geodesic + 1];
-               Int32[] bottomLeft = new Int32[geodesic + 1];
-
-               Int32[] rightFront = new Int32[geodesic + 1];
-               Int32[] rightBack = new Int32[geodesic + 1];
-               Int32[] leftFront = new Int32[geodesic + 1];
-               Int32[] leftBack = new Int32[geodesic + 1];
-
-               // UV top
-               Int32[] uvTopFront0 = new Int32[geodesic + 1];
-               Int32[] uvTopRight0 = new Int32[geodesic + 1];
-               Int32[] uvRightFront0 = new Int32[geodesic + 1];
-
-               Int32[] uvTopRight1 = new Int32[geodesic + 1];
-               Int32[] uvTopBack1 = new Int32[geodesic + 1];
-               Int32[] uvRightBack1 = new Int32[geodesic + 1];
-
-               Int32[] uvTopLeft2 = new Int32[geodesic + 1];
-               Int32[] uvTopBack2 = new Int32[geodesic + 1];
-               Int32[] uvLeftBack2 = new Int32[geodesic + 1];
-
-               Int32[] uvTopLeft3 = new Int32[geodesic + 1];
-               Int32[] uvTopFront3 = new Int32[geodesic + 1];
-               Int32[] uvLeftFront3 = new Int32[geodesic + 1];
-
-               // Uv bottom
-               Int32[] uvBottomFront4 = new Int32[geodesic + 1];
-               Int32[] uvBottomRight4 = new Int32[geodesic + 1];
-               //Int32[] uvRightFront4 = new Int32[geodesic + 1];
-
-               Int32[] uvBottomRight5 = new Int32[geodesic + 1];
-               Int32[] uvBottomBack5 = new Int32[geodesic + 1];
-               //Int32[] uvRightBack5 = new Int32[geodesic + 1];
-
-               Int32[] uvBottomLeft6 = new Int32[geodesic + 1];
-               Int32[] uvBottomBack6 = new Int32[geodesic + 1];
-               //Int32[] uvLeftFront6 = new Int32[geodesic + 1];
-
-               Int32[] uvBottomLeft7 = new Int32[geodesic + 1];
-               Int32[] uvBottomFront7 = new Int32[geodesic + 1];
-               //Int32[] uvLeftBack7 = new Int32[geodesic + 1];
-
-               Double radius = 1 /*diameter / 2*/;
-
-               // Points of level 0
-
-               // Point top
-               point p = new point(0, radius, 0);
-
-               topFront[0] = points.Count;
-               topBack[0] = points.Count;
-               topRight[0] = points.Count;
-               topLeft[0] = points.Count;
-               points.Add(p);
-
-               texcoord t = new texcoord(0.875, 1);
-
-               uvTopFront0[0] = texcoords.Count;
-               uvTopRight0[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               t = new texcoord(0.125, 1);
-
-               uvTopRight1[0] = texcoords.Count;
-               uvTopBack1[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               t = new texcoord(0.375, 1);
-
-               uvTopLeft2[0] = texcoords.Count;
-               uvTopBack2[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               t = new texcoord(0.625, 1);
-
-               uvTopLeft3[0] = texcoords.Count;
-               uvTopFront3[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               // Point bottom
-               p = new point(0, -radius, 0);
-
-               bottomFront[0] = points.Count;
-               bottomBack[0] = points.Count;
-               bottomRight[0] = points.Count;
-               bottomLeft[0] = points.Count;
-               points.Add(p);
-
-               t = new texcoord(0.875, 0);
-
-               uvBottomFront4[0] = texcoords.Count;
-               uvBottomRight4[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               t = new texcoord(0.125, 0);
-
-               uvBottomRight5[0] = texcoords.Count;
-               uvBottomBack5[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               t = new texcoord(0.375, 0);
-
-               uvBottomLeft6[0] = texcoords.Count;
-               uvBottomBack6[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               t = new texcoord(0.625, 0);
-
-               uvBottomLeft7[0] = texcoords.Count;
-               uvBottomFront7[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               // Point back
-               p = new point(0, 0, -radius);
-
-               topBack[geodesic] = points.Count;
-               rightBack[geodesic] = points.Count;
-               leftBack[0] = points.Count;
-               bottomBack[geodesic] = points.Count;
-               points.Add(p);
-
-               t = new texcoord(0.25, 0.5);
-
-               uvTopBack1[geodesic] = texcoords.Count;
-               uvTopBack2[geodesic] = texcoords.Count;
-               uvBottomBack5[geodesic] = texcoords.Count;
-               uvBottomBack6[geodesic] = texcoords.Count;
-               uvRightBack1[geodesic] = texcoords.Count;
-               uvLeftBack2[0] = texcoords.Count;
-               texcoords.Add(t);
-
-               // Point front
-               p = new point(0, 0, radius);
-
-               topFront[geodesic] = points.Count;
-               bottomFront[geodesic] = points.Count;
-               leftFront[geodesic] = points.Count;
-               rightFront[0] = points.Count;
-               points.Add(p);
-
-               t = new texcoord(0.75, 0.5);
-
-               uvTopFront0[geodesic] = texcoords.Count;
-               uvTopFront3[geodesic] = texcoords.Count;
-               uvBottomFront4[geodesic] = texcoords.Count;
-               uvBottomFront7[geodesic] = texcoords.Count;
-               uvRightFront0[0] = texcoords.Count;
-               uvLeftFront3[geodesic] = texcoords.Count;
-               texcoords.Add(t);
-
-               // Point right
-               p = new point(radius, 0, 0);
-
-               topRight[geodesic] = points.Count;
-               bottomRight[geodesic] = points.Count;
-               rightBack[0] = points.Count;
-               rightFront[geodesic] = points.Count;
-               points.Add(p);
-
-               t = new texcoord(0, 0.5);
-
-               uvTopRight1[geodesic] = texcoords.Count;
-               uvRightBack1[0] = texcoords.Count;
-               uvBottomRight5[geodesic] = texcoords.Count;
-               texcoords.Add(t);
-
-               t = new texcoord(1, 0.5);
-
-               uvTopRight0[geodesic] = texcoords.Count;
-               uvRightFront0[geodesic] = texcoords.Count;
-               uvBottomRight4[geodesic] = texcoords.Count;
-               texcoords.Add(t);
-
-               // Point left
-               p = new point(-radius, 0, 0);
-
-               topLeft[geodesic] = points.Count;
-               bottomLeft[geodesic] = points.Count;
-               leftBack[geodesic] = points.Count;
-               leftFront[0] = points.Count;
-               points.Add(p);
-
-               t = new texcoord(0.5, 0.5);
-
-               uvTopLeft2[geodesic] = texcoords.Count;
-               uvTopLeft3[geodesic] = texcoords.Count;
-               uvLeftBack2[geodesic] = texcoords.Count;
-               uvLeftFront3[0] = texcoords.Count;
-               uvBottomLeft6[geodesic] = texcoords.Count;
-               uvBottomLeft7[geodesic] = texcoords.Count;
-               texcoords.Add(t);
-
-               // Create points on the edges of the initial octahedron
-               for ( Int64 i = 1; i < geodesic; i++ )
-               {
-                  Double t0 = (Double)i / geodesic;
-                  Double t1 = 1 - t0;
-
-                  // Top front
-                  p = new point(0, t1, t0);
-
-                  topFront[i] = points.Count;
-                  points.Add(p);
-
-                  point vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvTopFront0[i] = texcoords.Count;
-                  uvTopFront3[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Top right
-                  p = new point(t0, t1, 0);
-
-                  topRight[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-                  t.u = 1;
-
-                  uvTopRight0[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  t.v = 0;
-
-                  uvTopRight1[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Top back
-                  p = new point(0, t1, -t0);
-
-                  topBack[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvTopBack1[i] = texcoords.Count;
-                  uvTopBack2[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Top left
-                  p = new point(-t0, t1, 0);
-
-                  topLeft[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvTopLeft2[i] = texcoords.Count;
-                  uvTopLeft3[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Bottom front
-                  p = new point(0, -t1, t0);
-
-                  bottomFront[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvBottomFront4[i] = texcoords.Count;
-                  uvBottomFront7[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Bottom right
-                  p = new point(t0, -t1, 0);
-
-                  bottomRight[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-                  t.u = 1;
-
-                  uvBottomRight4[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  t.v = 0;
-
-                  uvBottomRight5[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Bottom back
-                  p = new point(0, -t1, -t0);
-
-                  bottomBack[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvBottomBack5[i] = texcoords.Count;
-                  uvBottomBack6[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Bottom left
-                  p = new point(-t0, -t1, 0);
-
-                  bottomLeft[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvBottomLeft6[i] = texcoords.Count;
-                  uvBottomLeft7[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Right front
-                  p = new point(t0, 0, t1);
-
-                  rightFront[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvRightFront0[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Right back
-                  p = new point(t1, 0, -t0);
-
-                  rightBack[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvRightBack1[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Left back
-                  p = new point(-t0, 0, -t1);
-
-                  leftBack[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvLeftBack2[i] = texcoords.Count;
-                  texcoords.Add(t);
-
-                  // Left front
-                  p = new point(-t1, 0, t0);
-
-                  leftFront[i] = points.Count;
-                  points.Add(p);
-
-                  vec3 = points[points.Count - 1].Normalize();
-                  t = SphericalTexCoordFromNormal(vec3);
-
-                  uvLeftFront3[i] = texcoords.Count;
-                  texcoords.Add(t);
-               }
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  topFront,
-                  topRight,
-                  rightFront,
-                  uvTopFront0,
-                  uvTopRight0,
-                  uvRightFront0,
-                  true);
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  topLeft,
-                  topFront,
-                  leftFront,
-                  uvTopLeft3,
-                  uvTopFront3,
-                  uvLeftFront3,
-                  true);
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  topRight,
-                  topBack,
-                  rightBack,
-                  uvTopRight1,
-                  uvTopBack1,
-                  uvRightBack1,
-                  true);
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  topBack,
-                  topLeft,
-                  leftBack,
-                  uvTopBack2,
-                  uvTopLeft2,
-                  uvLeftBack2,
-                  true);
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  bottomFront,
-                  bottomRight,
-                  rightFront,
-                  uvBottomFront4,
-                  uvBottomRight4,
-                  uvRightFront0,
-                  false);
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  bottomLeft,
-                  bottomFront,
-                  leftFront,
-                  uvBottomLeft7,
-                  uvBottomFront7,
-                  uvLeftFront3,
-                  false);
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  bottomRight,
-                  bottomBack,
-                  rightBack,
-                  uvBottomRight5,
-                  uvBottomBack5,
-                  uvRightBack1,
-                  false);
-
-               AddGeodesicFaces(
-                  geodesic,
-                  points,
-                  texcoords,
-                  facedatas,
-                  bottomBack,
-                  bottomLeft,
-                  leftBack,
-                  uvBottomBack6,
-                  uvBottomLeft6,
-                  uvLeftBack2,
-                  false);
-
-               radius = diameter / 2;
-
-               for ( Int64 i = 0; i < points.Count; ++i )
-               {
-                  points[(Int32)i] = points[(Int32)i].Normalize() * radius;
-               }
+               callback($"The \"{s.name?.text}\" sphere's geodesic of {s.geodesic.text} has been limited to {geodesic}.");
             }
          }
 
-         if ( points.Count > 0 )
+         // Anim8or prioritizes longlat over geodesic
+         if ( s?.longlat != null || s?.geodesic == null )
          {
-            m.points = new points();
-            m.points.point = points.ToArray();
+            //
+            //       -4*--               Y
+            //   7*        3*            |
+            //   /           \           |
+            // 6*            2*          *------X
+            //   \           /          /
+            //   5*        1*          Z
+            //       -0*--
+            //
+            for ( Int32 ix = 0; ix <= longitude; ix++ )
+            {
+               Double cosX = Math.Cos(ix * 2 * Math.PI / longitude);
+               Double sinX = -Math.Sin(ix * 2 * Math.PI / longitude);
+
+               for ( Int32 iy = 0; iy <= latitude; iy++ )
+               {
+                  Double cosY = -Math.Cos(iy * Math.PI / latitude);
+                  Double sinY = Math.Sin(iy * Math.PI / latitude);
+
+                  // Don't create the last vertical slice of points, since
+                  // they are the same as the first
+                  if ( ix < longitude )
+                  {
+                     // Don't create the bottom and top points more than once
+                     if ( ix == 0 || iy != 0 && iy != latitude )
+                     {
+                        points.Add(new point(
+                           cosX * sinY * diameter / 2,
+                           cosY * diameter / 2,
+                           sinX * sinY * diameter / 2));
+                     }
+                  }
+
+                  texcoords.Add(new texcoord(
+                     (Double)ix / longitude,
+                     (Double)iy / latitude));
+               }
+            }
+
+            // Note: Anim8or v1.00 does some special handling of edge cases.
+            if ( longitude == 0 || latitude == 0 )
+            {
+               points.Clear();
+               texcoords.Clear();
+
+               // If both are 0, create a point at the center
+               if ( longitude == 0 && latitude == 0 )
+               {
+                  points.Add(new point(0, 0, 0));
+                  texcoords.Add(new texcoord(0, 0));
+               }
+               else if ( latitude == 0 )
+               {
+                  points.Add(new point(0, 0, 0));
+
+                  for ( Int32 ix = 0; ix <= longitude; ix++ )
+                  {
+                     texcoords.Add(new texcoord((Double)ix / longitude, 0));
+                  }
+               }
+               else // if ( longitude == 0 )
+               {
+                  points.Add(new point(0, -diameter / 2, 0));
+                  points.Add(new point(0, diameter / 2, 0));
+
+                  for ( Int32 iy = 0; iy <= latitude; iy++ )
+                  {
+                     texcoords.Add(new texcoord(0, (Double)iy / latitude));
+                  }
+               }
+            }
+
+            // Create the faces
+            for ( Int32 iy = 0; iy < latitude; iy++ )
+            {
+               for ( Int32 ix = 0; ix < longitude; ix++ )
+               {
+                  pointdata leftTop = new pointdata();
+                  leftTop.pointindex = ix * (latitude + 1) + iy + 1;
+                  leftTop.normalindex = 0;
+                  leftTop.texcoordindex = leftTop.pointindex;
+
+                  pointdata rightTop = new pointdata();
+                  rightTop.pointindex = (ix + 1) * (latitude + 1) + iy + 1;
+                  rightTop.normalindex = 0;
+                  rightTop.texcoordindex = rightTop.pointindex;
+
+                  pointdata rightBottom = new pointdata();
+                  rightBottom.pointindex = (ix + 1) * (latitude + 1) + iy;
+                  rightBottom.normalindex = 0;
+                  rightBottom.texcoordindex = rightBottom.pointindex;
+
+                  pointdata leftBottom = new pointdata();
+                  leftBottom.pointindex = ix * (latitude + 1) + iy;
+                  leftBottom.normalindex = 0;
+                  leftBottom.texcoordindex = leftBottom.pointindex;
+
+                  Int64 FixIndex(Int64 index)
+                  {
+                     // If the first vertical slice
+                     if ( index <= latitude )
+                     {
+                        // Return the first vertical slice unchanged
+                        return index;
+                     }
+                     // If the middle vertical slices
+                     else if ( index < (latitude + 1) * longitude )
+                     {
+                        Int64 mod = index % (latitude + 1);
+
+                        if ( mod == 0 || mod == latitude )
+                        {
+                           // Return the original bottom or top point
+                           return mod;
+                        }
+                        else
+                        {
+                           // Shift the indices by removing the duplicate
+                           // bottom and top points
+                           Int64 div = index / (latitude + 1);
+                           return index - (div - 1) * 2 - 1;
+                        }
+                     }
+                     // If the last vertical slice
+                     else
+                     {
+                        // Return the first vertical slice instead
+                        return index % (latitude + 1);
+                     }
+                  }
+
+                  leftTop.pointindex = FixIndex(leftTop.pointindex);
+                  rightTop.pointindex = FixIndex(rightTop.pointindex);
+                  rightBottom.pointindex = FixIndex(rightBottom.pointindex);
+                  leftBottom.pointindex = FixIndex(leftBottom.pointindex);
+
+                  pointdata[] pointdata;
+
+                  if ( iy == 0 ) // bottom
+                  {
+                     // Builds the vertices starting at the left bottom
+                     //
+                     // 1*----2*
+                     //  |   /
+                     //  | /
+                     // 0*
+                     pointdata = new pointdata[]
+                     {
+                        leftBottom,
+                        leftTop,
+                        rightTop,
+                     };
+                  }
+                  else if ( iy < latitude - 1 ) // middle
+                  {
+                     // Build the vertices starting at the right bottom
+                     //
+                     // 2*----3*
+                     //  |     |
+                     //  |     |
+                     // 1*----0*
+                     pointdata = new pointdata[]
+                     {
+                        rightBottom,
+                        leftBottom,
+                        leftTop,
+                        rightTop,
+                     };
+                  }
+                  else // top
+                  {
+                     // Builds the vertices starting at the right bottom
+                     //
+                     // 2*
+                     //  | \
+                     //  |   \
+                     // 1*----0*
+                     pointdata = new pointdata[]
+                     {
+                        rightBottom,
+                        leftBottom,
+                        leftTop,
+                     };
+                  }
+
+                  facedata facedata = new facedata();
+                  facedata.numpoints = pointdata.Length;
+                  facedata.flags = facedataenum.hastexture;
+                  facedata.matno = 0;
+                  facedata.flatnormalno = -1;
+                  facedata.pointdata = pointdata;
+
+                  facedatas.Add(facedata);
+               }
+            }
+         }
+         else // if ( s?.geodesic != null )
+         {
+            Int32[] leftBottomIndices = new Int32[geodesic + 1];
+            Int32[] leftTopIndices = new Int32[geodesic + 1];
+            Int32[] leftBackIndices = new Int32[geodesic + 1];
+            Int32[] leftFrontIndices = new Int32[geodesic + 1];
+            Int32[] rightBottomIndices = new Int32[geodesic + 1];
+            Int32[] rightTopIndices = new Int32[geodesic + 1];
+            Int32[] rightBackIndices = new Int32[geodesic + 1];
+            Int32[] rightFrontIndices = new Int32[geodesic + 1];
+            Int32[] bottomBackIndices = new Int32[geodesic + 1];
+            Int32[] bottomFrontIndices = new Int32[geodesic + 1];
+            Int32[] topBackIndices = new Int32[geodesic + 1];
+            Int32[] topFrontIndices = new Int32[geodesic + 1];
+            Int32[] uvRightTop0 = new Int32[geodesic + 1];
+            Int32[] uvRightFront0 = new Int32[geodesic + 1];
+            Int32[] uvTopFront0 = new Int32[geodesic + 1];
+            Int32[] uvRightTop1 = new Int32[geodesic + 1];
+            Int32[] uvRightBack1 = new Int32[geodesic + 1];
+            Int32[] uvTopBack1 = new Int32[geodesic + 1];
+            Int32[] uvLeftTop2 = new Int32[geodesic + 1];
+            Int32[] uvLeftBack2 = new Int32[geodesic + 1];
+            Int32[] uvTopBack2 = new Int32[geodesic + 1];
+            Int32[] uvLeftFront3 = new Int32[geodesic + 1];
+            Int32[] uvLeftTop3 = new Int32[geodesic + 1];
+            Int32[] uvTopFront3 = new Int32[geodesic + 1];
+            Int32[] uvBottomFront4 = new Int32[geodesic + 1];
+            Int32[] uvBottomRight4 = new Int32[geodesic + 1];
+            Int32[] uvRightBottom5 = new Int32[geodesic + 1];
+            Int32[] uvBottomBack5 = new Int32[geodesic + 1];
+            Int32[] uvLeftBottom6 = new Int32[geodesic + 1];
+            Int32[] uvBottomBack6 = new Int32[geodesic + 1];
+            Int32[] uvLeftBottom7 = new Int32[geodesic + 1];
+            Int32[] uvBottomFront7 = new Int32[geodesic + 1];
+
+            // Points of level 0
+            point p;
+            texcoord t;
+
+            // Point top
+            p = new point(0, diameter / 2, 0); // point0
+            topFrontIndices[0] = points.Count;
+            topBackIndices[0] = points.Count;
+            rightTopIndices[0] = points.Count;
+            leftTopIndices[0] = points.Count;
+            points.Add(p);
+
+            // Note: Anim8or v1.00 creates this even though it is unused.
+            t = new texcoord(0, 1); // texcoord0
+            texcoords.Add(t);
+
+            t = new texcoord(0.125, 1); // texcoord1
+            uvRightTop1[0] = texcoords.Count;
+            uvTopBack1[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            t = new texcoord(0.375, 1); // texcoord2
+            uvLeftTop2[0] = texcoords.Count;
+            uvTopBack2[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            t = new texcoord(0.625, 1); // texcoord3
+            uvLeftTop3[0] = texcoords.Count;
+            uvTopFront3[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            t = new texcoord(0.875, 1); // texcoord4
+            uvTopFront0[0] = texcoords.Count;
+            uvRightTop0[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            // Note: Anim8or v1.00 creates this even though it is unused.
+            t = new texcoord(0, 0); // texcoord5
+            texcoords.Add(t);
+
+            // Point bottom
+            p = new point(0, -diameter / 2, 0); // point1
+            bottomFrontIndices[0] = points.Count;
+            bottomBackIndices[0] = points.Count;
+            rightBottomIndices[0] = points.Count;
+            leftBottomIndices[0] = points.Count;
+            points.Add(p);
+
+            t = new texcoord(0.125, 0); // texcoord6
+            uvRightBottom5[0] = texcoords.Count;
+            uvBottomBack5[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            t = new texcoord(0.375, 0); // texcoord7
+            uvLeftBottom6[0] = texcoords.Count;
+            uvBottomBack6[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            t = new texcoord(0.625, 0); // texcoord8
+            uvLeftBottom7[0] = texcoords.Count;
+            uvBottomFront7[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            t = new texcoord(0.875, 0); // texcoord9
+            uvBottomFront4[0] = texcoords.Count;
+            uvBottomRight4[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            // Point front
+            p = new point(0, 0, diameter / 2); // point2
+            topFrontIndices[geodesic] = points.Count;
+            bottomFrontIndices[geodesic] = points.Count;
+            leftFrontIndices[geodesic] = points.Count;
+            rightFrontIndices[0] = points.Count;
+            points.Add(p);
+
+            t = new texcoord(0.75, 0.5); // texcoord10
+            uvTopFront0[geodesic] = texcoords.Count;
+            uvTopFront3[geodesic] = texcoords.Count;
+            uvBottomFront4[geodesic] = texcoords.Count;
+            uvBottomFront7[geodesic] = texcoords.Count;
+            uvRightFront0[0] = texcoords.Count;
+            uvLeftFront3[geodesic] = texcoords.Count;
+            texcoords.Add(t);
+
+            // Point back
+            p = new point(0, 0, -diameter / 2); // point3
+            topBackIndices[geodesic] = points.Count;
+            rightBackIndices[geodesic] = points.Count;
+            leftBackIndices[0] = points.Count;
+            bottomBackIndices[geodesic] = points.Count;
+            points.Add(p);
+
+            t = new texcoord(0.25, 0.5); // texcoord11
+            uvTopBack1[geodesic] = texcoords.Count;
+            uvTopBack2[geodesic] = texcoords.Count;
+            uvBottomBack5[geodesic] = texcoords.Count;
+            uvBottomBack6[geodesic] = texcoords.Count;
+            uvRightBack1[geodesic] = texcoords.Count;
+            uvLeftBack2[0] = texcoords.Count;
+            texcoords.Add(t);
+
+            // Point right
+            p = new point(diameter / 2, 0, 0); // point4
+            rightTopIndices[geodesic] = points.Count;
+            rightBottomIndices[geodesic] = points.Count;
+            rightBackIndices[0] = points.Count;
+            rightFrontIndices[geodesic] = points.Count;
+            points.Add(p);
+
+            t = new texcoord(0, 0.5); // texcoord12
+            uvRightTop1[geodesic] = texcoords.Count;
+            uvRightBack1[0] = texcoords.Count;
+            uvRightBottom5[geodesic] = texcoords.Count;
+            texcoords.Add(t);
+
+            t = new texcoord(1, 0.5); // texcoord13
+            uvRightTop0[geodesic] = texcoords.Count;
+            uvRightFront0[geodesic] = texcoords.Count;
+            uvBottomRight4[geodesic] = texcoords.Count;
+            texcoords.Add(t);
+
+            // Point left
+            p = new point(-diameter / 2, 0, 0); // point5
+            leftTopIndices[geodesic] = points.Count;
+            leftBottomIndices[geodesic] = points.Count;
+            leftBackIndices[geodesic] = points.Count;
+            leftFrontIndices[0] = points.Count;
+            points.Add(p);
+
+            t = new texcoord(0.5, 0.5); // texcoord14
+            uvLeftTop2[geodesic] = texcoords.Count;
+            uvLeftTop3[geodesic] = texcoords.Count;
+            uvLeftBack2[geodesic] = texcoords.Count;
+            uvLeftFront3[0] = texcoords.Count;
+            uvLeftBottom6[geodesic] = texcoords.Count;
+            uvLeftBottom7[geodesic] = texcoords.Count;
+            texcoords.Add(t);
+
+            for ( Int32 i = 1; i < geodesic; i++ )
+            {
+               Double t0 = (Double)i / geodesic;
+               Double t1 = 1 - t0;
+               Double scale = diameter / 2 / Math.Sqrt(t0 * t0 + t1 * t1);
+               t0 *= scale;
+               t1 *= scale;
+
+               // Top front
+               p = new point(0, t1, t0); // point6
+               topFrontIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord15
+               uvTopFront0[i] = texcoords.Count;
+               uvTopFront3[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Top right
+               p = new point(t0, t1, 0); // point7
+               rightTopIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord16
+               uvRightTop0[i] = texcoords.Count;
+               texcoords.Add(t);
+               t.u = 1;// texcoord17
+               uvRightTop1[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Top back
+               p = new point(0, t1, -t0); // point8
+               topBackIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord18
+               uvTopBack1[i] = texcoords.Count;
+               uvTopBack2[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Top left
+               p = new point(-t0, t1, 0); // point9
+               leftTopIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord19
+               uvLeftTop2[i] = texcoords.Count;
+               uvLeftTop3[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Bottom front
+               p = new point(0, -t1, t0); // point10
+               bottomFrontIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord20
+               uvBottomFront4[i] = texcoords.Count;
+               uvBottomFront7[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Bottom right
+               p = new point(t0, -t1, 0); // point11
+               rightBottomIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord21
+               uvBottomRight4[i] = texcoords.Count;
+               texcoords.Add(t);
+               t.u = 1;// texcoord22
+               uvRightBottom5[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Bottom back
+               p = new point(0, -t1, -t0); // point12
+               bottomBackIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord23
+               uvBottomBack5[i] = texcoords.Count;
+               uvBottomBack6[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Bottom left
+               p = new point(-t0, -t1, 0); // point13
+               leftBottomIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord24
+               uvLeftBottom6[i] = texcoords.Count;
+               uvLeftBottom7[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Right front
+               p = new point(t0, 0, t1); // point14
+               rightFrontIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord25
+               uvRightFront0[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Right back
+               p = new point(t1, 0, -t0); // point15
+               rightBackIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord26
+               uvRightBack1[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Left back
+               p = new point(-t0, 0, -t1); // point16
+               leftBackIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord27
+               uvLeftBack2[i] = texcoords.Count;
+               texcoords.Add(t);
+
+               // Left front
+               p = new point(-t1, 0, t0); // point17
+               leftFrontIndices[i] = points.Count;
+               points.Add(p);
+               t = SphericalTexCoord(p); // texcoord28
+               uvLeftFront3[i] = texcoords.Count;
+               texcoords.Add(t);
+            }
+
+            // face0
+            // LeftTopFront faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               topFrontIndices,
+               rightTopIndices,
+               rightFrontIndices,
+               uvTopFront0,
+               uvRightTop0,
+               uvRightFront0,
+               true);
+
+            // face1
+            // LeftTopBack faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               rightTopIndices,
+               topBackIndices,
+               rightBackIndices,
+               uvRightTop1,
+               uvTopBack1,
+               uvRightBack1,
+               true);
+
+            // face2
+            // RightTopBack faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               topBackIndices,
+               leftTopIndices,
+               leftBackIndices,
+               uvTopBack2,
+               uvLeftTop2,
+               uvLeftBack2,
+               true);
+
+            // face3
+            // RightTopFront faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               leftTopIndices,
+               topFrontIndices,
+               leftFrontIndices,
+               uvLeftTop3,
+               uvTopFront3,
+               uvLeftFront3,
+               true);
+
+            // face4
+            // LeftBottomFront faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               bottomFrontIndices,
+               rightBottomIndices,
+               rightFrontIndices,
+               uvBottomFront4,
+               uvBottomRight4,
+               uvRightFront0,
+               false);
+
+            // face5
+            // LeftBottomBack faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               rightBottomIndices,
+               bottomBackIndices,
+               rightBackIndices,
+               uvRightBottom5,
+               uvBottomBack5,
+               uvRightBack1,
+               false);
+
+            // face6
+            // RightBottomBack faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               bottomBackIndices,
+               leftBottomIndices,
+               leftBackIndices,
+               uvBottomBack6,
+               uvLeftBottom6,
+               uvLeftBack2,
+               false);
+
+            // face7
+            // RightBottomFront faces?
+            AddGeodesicFaces(
+               geodesic,
+               points,
+               texcoords,
+               facedatas,
+               leftBottomIndices,
+               bottomFrontIndices,
+               leftFrontIndices,
+               uvLeftBottom7,
+               uvBottomFront7,
+               uvLeftFront3,
+               false);
          }
 
-         if ( texcoords.Count > 0 )
-         {
-            m.texcoords = new texcoords();
-            m.texcoords.texcoord = texcoords.ToArray();
-         }
+         m.points = new points();
+         m.points.point = points.ToArray();
+         m.texcoords = new texcoords();
+         m.texcoords.texcoord = texcoords.ToArray();
 
+         // Note: It is possible for there to be no faces.
          if ( facedatas.Count > 0 )
          {
             m.faces = new faces();
@@ -736,32 +694,17 @@ namespace Anim8orTransl8or.Utility
          return m;
       }
 
-      static texcoord SphericalTexCoordFromNormal(point p)
+      static texcoord SphericalTexCoord(point p)
       {
-         point vecA = new point(1, 0, 0);
-         point vecB = new point(p.x, 0, p.z).Normalize();
-
-         Double cosAngle = vecB.x;
-         Double angle = Math.Acos(cosAngle);
-
          texcoord t = new texcoord();
-
-         if ( p.z < 0 )
-         {
-            t.u = angle / (2 * Math.PI);
-         }
-         else
-         {
-            t.u = 1 - angle / (2 * Math.PI);
-         }
-
-         t.v = p.y / 2 + 0.5;
-
+         t.u = Math.Atan2(p.z, p.x) / (-2 * Math.PI);
+         t.u = t.u >= 0 ? t.u : t.u + 1;
+         t.v = Math.Asin(p.y) / Math.PI + 0.5;
          return t;
       }
 
       static void AddGeodesicFaces(
-         Int64 geodesic,
+         Int32 geodesic,
          List<point> points,
          List<texcoord> texcoords,
          List<facedata> facedatas,
@@ -777,25 +720,25 @@ namespace Anim8orTransl8or.Utility
          Int32[,] uvlevel = new Int32[geodesic + 1, geodesic + 1];
 
          // Create new vertices + copy indices in level
-         for ( Int64 v = 0; v <= geodesic; v++ )
+         for ( Int32 v = 0; v <= geodesic; v++ )
          {
             level[v, 0] = left[v];
             uvlevel[v, 0] = uvLeft[v];
          }
 
-         for ( Int64 v = 0; v <= geodesic; v++ )
+         for ( Int32 v = 0; v <= geodesic; v++ )
          {
             level[v, v] = right[v];
             uvlevel[v, v] = uvRight[v];
          }
 
-         for ( Int64 h = 1; h < geodesic; h++ )
+         for ( Int32 h = 1; h < geodesic; h++ )
          {
             level[geodesic, h] = bottom[h];
             uvlevel[geodesic, h] = uvBottom[h];
          }
 
-         for ( Int64 v = 2; v < geodesic; ++v )
+         for ( Int32 v = 2; v < geodesic; ++v )
          {
             point vec = points[level[v, v]] - points[level[v, 0]];
 
@@ -807,7 +750,7 @@ namespace Anim8orTransl8or.Utility
             Double lengthUV = t.GetLength();
             t = t / lengthUV; // t.Normalize();
 
-            for ( Int64 h = 1; h < v; h++ )
+            for ( Int32 h = 1; h < v; h++ )
             {
                point p = points[level[v, 0]] + vec * (h * length / v);
 
@@ -822,9 +765,9 @@ namespace Anim8orTransl8or.Utility
             }
          }
 
-         for ( Int64 v = 0; v < geodesic; v++ )
+         for ( Int32 v = 0; v < geodesic; v++ )
          {
-            for ( Int64 i = 0; i < v + 1; i++ )
+            for ( Int32 i = 0; i < v + 1; i++ )
             {
                facedata f = new facedata();
                f.numpoints = 3;
@@ -864,7 +807,7 @@ namespace Anim8orTransl8or.Utility
                facedatas.Add(f);
             }
 
-            for ( Int64 i = 0; i < v; i++ )
+            for ( Int32 i = 0; i < v; i++ )
             {
                facedata f = new facedata();
                f.numpoints = 3;

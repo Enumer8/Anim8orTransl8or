@@ -1,7 +1,7 @@
 # Anim8or Transl8or
 Anim8or Transl8or converts ANIM8OR (\*.an8) files into COLLADA (\*.dae) files.
 
-(For more information on Anim8or, please visit http://www.anim8or.com/)
+(For more information on Anim8or®, please visit http://www.anim8or.com/)
 
 (For more information on COLLADA, please visit https://www.khronos.org/collada/)
 

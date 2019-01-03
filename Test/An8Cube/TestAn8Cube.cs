@@ -1,14 +1,12 @@
-﻿using Anim8orTransl8or.An8;
-using Anim8orTransl8or.An8.V100;
+﻿using Anim8orTransl8or.An8.V100;
 using Anim8orTransl8or.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.IO;
 
 namespace Anim8orTransl8or.Test
 {
    [TestClass]
-   public class TestAn8Cube
+   public class TestAn8Cube : TestBase
    {
       [TestMethod]
       public void EdgeCases()
@@ -32,12 +30,16 @@ namespace Anim8orTransl8or.Test
          Int32 warnings = 0;
          An8Cube.Calculate(cube, (String s) => warnings++);
          Assert.IsTrue(warnings > 0);
+
+         CompareCubes(
+            @"..\..\An8Cube\Cube_Edge_Case.an8",
+            @"..\..\An8Cube\Cube_Edge_Case_Mesh.an8");
       }
 
       [TestMethod]
       public void X1_Y1_Z1()
       {
-         CompareCube(
+         CompareCubes(
             @"..\..\An8Cube\Cube_X1_Y1_Z1.an8",
             @"..\..\An8Cube\Cube_X1_Y1_Z1_Mesh.an8");
       }
@@ -45,7 +47,7 @@ namespace Anim8orTransl8or.Test
       [TestMethod]
       public void X2_Y3_Z5()
       {
-         CompareCube(
+         CompareCubes(
             @"..\..\An8Cube\Cube_X2_Y3_Z5.an8",
             @"..\..\An8Cube\Cube_X2_Y3_Z5_Mesh.an8");
       }
@@ -53,12 +55,12 @@ namespace Anim8orTransl8or.Test
       [TestMethod]
       public void X13_Y11_Z7()
       {
-         CompareCube(
+         CompareCubes(
             @"..\..\An8Cube\Cube_X13_Y11_Z7.an8",
             @"..\..\An8Cube\Cube_X13_Y11_Z7_Mesh.an8");
       }
 
-      static void CompareCube(String cubeFile, String meshFile)
+      static void CompareCubes(String cubeFile, String meshFile)
       {
          Int32 warnings = 0;
 
@@ -72,157 +74,7 @@ namespace Anim8orTransl8or.Test
 
          Assert.IsTrue(warnings == 0);
 
-         Assert.AreEqual(
-            expected.name.text,
-            actual.name.text,
-            "Calculated cube's name doesn't match.");
-
-         Assert.AreEqual(
-            expected.material.name,
-            actual.material.name,
-            "Calculated cube's material doesn't match.");
-
-         Assert.AreEqual(
-            expected.materiallist.materialname.Length,
-            actual.materiallist.materialname.Length,
-            "Calculated cube's material list length doesn't match.");
-
-         Assert.AreEqual(
-            expected.materiallist.materialname[0].text,
-            actual.materiallist.materialname[0].text,
-            "Calculated cube's material list doesn't match.");
-
-         Assert.AreEqual(
-            expected.points.point.Length,
-            actual.points.point.Length,
-            "Calculated cube's points length doesn't match.");
-
-         for ( Int32 i = 0; i < expected.points.point.Length; i++ )
-         {
-            point expectedPoint = expected.points.point[i];
-            point actualPoint = actual.points.point[i];
-
-            Assert.AreEqual(
-               expectedPoint.x,
-               actualPoint.x,
-               TOLERANCE,
-               $"Calculated cube's point {i}'s X doesn't match");
-
-            Assert.AreEqual(
-               expectedPoint.y,
-               actualPoint.y,
-               TOLERANCE,
-               $"Calculated cube's point {i}'s Y doesn't match");
-
-            Assert.AreEqual(
-               expectedPoint.z,
-               actualPoint.z,
-               TOLERANCE,
-               $"Calculated cube's point {i}'s Z doesn't match");
-         }
-
-         // Note: The normals should be null.
-         Assert.AreEqual(
-            expected.normals,
-            actual.normals,
-            "Calculated cube's normals length doesn't match.");
-
-         Assert.AreEqual(
-            expected.texcoords.texcoord.Length,
-            actual.texcoords.texcoord.Length,
-            "Calculated cube's tex coords list doesn't match");
-
-         for ( Int32 i = 0; i < expected.texcoords.texcoord.Length; i++ )
-         {
-            texcoord expectedTexcoord = expected.texcoords.texcoord[i];
-            texcoord actualTexcoord = actual.texcoords.texcoord[i];
-
-            Assert.AreEqual(
-               expectedTexcoord.u,
-               actualTexcoord.u,
-               TOLERANCE,
-               $"Calculated cube's tex coord {i}'s U doesn't match");
-
-            Assert.AreEqual(
-               expectedTexcoord.v,
-               actualTexcoord.v,
-               TOLERANCE,
-               $"Calculated cube's tex coord {i}'s V doesn't match");
-         }
-
-         Assert.AreEqual(
-            expected.faces.facedata.Length,
-            actual.faces.facedata.Length,
-            "Calculated cube's faces list doesn't match");
-
-         for ( Int32 i = 0; i < expected.faces.facedata.Length; i++ )
-         {
-            facedata expectedFacedata = expected.faces.facedata[i];
-            facedata actualFacedata = actual.faces.facedata[i];
-
-            Assert.AreEqual(
-               expectedFacedata.numpoints,
-               actualFacedata.numpoints,
-               $"Calculated cube's face {i}'s num points doesn't match");
-
-            Assert.AreEqual(
-               expectedFacedata.flags,
-               actualFacedata.flags,
-               $"Calculated cube's face {i}'s flags doesn't match");
-
-            Assert.AreEqual(
-               expectedFacedata.matno,
-               actualFacedata.matno,
-               $"Calculated cube's face {i}'s mat no doesn't match");
-
-            // Note: The flat normal no should be -1.
-            Assert.AreEqual(
-               expectedFacedata.flatnormalno,
-               actualFacedata.flatnormalno,
-               $"Calculated cube's face {i}'s flat normal no doesn't match");
-
-            Assert.AreEqual(
-               expectedFacedata.pointdata.Length,
-               actualFacedata.pointdata.Length,
-               $"Calculated cube's face {i}'s points list doesn't match");
-
-            for ( Int32 j = 0; j < expectedFacedata.pointdata.Length; j++ )
-            {
-               pointdata expectedPointdata = expectedFacedata.pointdata[j];
-               pointdata actualPointdata = actualFacedata.pointdata[j];
-
-               Assert.AreEqual(
-                  expectedPointdata.pointindex,
-                  actualPointdata.pointindex,
-                  $"Calculated cube's face {i}'s data {j}'s point index doesn't match");
-
-               // Note: The normal index should be 0.
-               Assert.AreEqual(
-                  expectedPointdata.normalindex,
-                  actualPointdata.normalindex,
-                  $"Calculated cube's face {i}'s data {j}'s normal index doesn't match");
-
-               Assert.AreEqual(
-                  expectedPointdata.texcoordindex,
-                  actualPointdata.texcoordindex,
-                  $"Calculated cube's face {i}'s data {j}'s tex coord index doesn't match");
-            }
-         }
+         CompareMeshes(expected, actual);
       }
-
-      static ANIM8OR LoadAn8File(String file)
-      {
-         ANIM8OR an8;
-
-         using ( Stream stream = File.Open(file, FileMode.Open) )
-         {
-            An8Serializer deserializer = new An8Serializer(typeof(ANIM8OR));
-            an8 = (ANIM8OR)deserializer.Deserialize(stream);
-         }
-
-         return an8;
-      }
-
-      const Double TOLERANCE = 0.001;
    }
 }

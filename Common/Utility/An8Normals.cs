@@ -38,7 +38,7 @@ namespace Anim8orTransl8or.Utility
          Double cosAngle = Math.Cos(smoothAngle * Math.PI / 180);
          LinkedNode[] members = new LinkedNode[m.points.point.Length];
 
-         for ( Int64 i = 0; i < m.faces.facedata.Length; i++ )
+         for ( Int32 i = 0; i < m.faces.facedata.Length; i++ )
          {
             facedata f = m.faces.facedata[i];
 
@@ -51,24 +51,24 @@ namespace Anim8orTransl8or.Utility
             }
          }
 
-         for ( Int64 i = 0; i < m.points.point.Length; i++ )
+         for ( Int32 i = 0; i < m.points.point.Length; i++ )
          {
             LinkedNode node = members[i];
 
             point average = new point();
-            Int64 avg = 0;
+            Int32 avg = 0;
 
             while ( node != null )
             {
                // Only average if the angle between the two faces is less than
                // the threshold angle
-               Double dot = facetNormals[(Int32)node.FaceIndex].Dot(
-                  facetNormals[(Int32)members[i].FaceIndex]);
+               Double dot = facetNormals[node.FaceIndex].Dot(
+                  facetNormals[members[i].FaceIndex]);
 
                if ( dot > cosAngle )
                {
                   node.Averaged = true;
-                  average = average + facetNormals[(Int32)node.FaceIndex];
+                  average = average + facetNormals[node.FaceIndex];
                   avg = 1;
                }
 
@@ -91,7 +91,7 @@ namespace Anim8orTransl8or.Utility
 
                if ( node.Averaged )
                {
-                  for ( Int64 j = 0; j < pointdata.Length; j++ )
+                  for ( Int32 j = 0; j < pointdata.Length; j++ )
                   {
                      // If this node was averaged, use the average normal
                      if ( pointdata[j].pointindex == i )
@@ -104,7 +104,7 @@ namespace Anim8orTransl8or.Utility
                else
                {
                   // If this node wasn't averaged, use the facet normal
-                  for ( Int64 j = 0; j < pointdata.Length; j++ )
+                  for ( Int32 j = 0; j < pointdata.Length; j++ )
                   {
                      // If this node was averaged, use the average normal
                      if ( pointdata[j].pointindex == i )
@@ -128,7 +128,7 @@ namespace Anim8orTransl8or.Utility
 
       class LinkedNode
       {
-         public Int64 FaceIndex;
+         public Int32 FaceIndex;
          public Boolean Averaged; // or Smoothed?
          public LinkedNode Next;
       }

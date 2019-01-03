@@ -1,0 +1,37 @@
+header {
+  version { "1.00" }
+  build { "2017.5.29" }
+}
+environment {
+  grid { 1 10 50 50 }
+  lighting {
+    intensity { 1 }
+    ambientintensity { 0.20000 }
+  }
+  framerate { 30 }
+  limitplayback { }
+  film {
+    size { 400 300 }
+    ratio { 4 3 }
+  }
+}
+object { "object01"
+  mesh {
+    name { "geo01" }
+    material { " -- default --" }
+    smoothangle { 45 }
+    /* 6 points, 0 faces, 15 uvCoords */
+    materiallist {
+      materialname { " -- default --" }
+    }
+    points {
+      (0 0.50000 0) (0 -0.50000 0) (0 0 0.50000) (0 0 -0.50000) (0.50000 0 0) 
+      (-0.50000 0 0)
+    }
+    texcoords {
+      (0 1) (0.12500 1) (0.37500 1) (0.62500 1) (0.87500 1) (0 0) (0.12500 0) 
+      (0.37500 0) (0.62500 0) (0.87500 0) (0.75000 0.50000) (0.25000 0.50000) 
+      (0 0.50000) (1 0.50000) (0.50000 0.50000)
+    }
+  }
+}

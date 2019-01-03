@@ -58,9 +58,13 @@
   <ItemGroup>
     <Compile Include="An8Cube\TestAn8Cube.cs" />
     <Compile Include="An8Cylinder\TestAn8Cylinder.cs" />
+    <Compile Include="An8Sphere\TestAn8Sphere.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestBase.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="An8Cube\Cube_Edge_Case.an8" />
+    <None Include="An8Cube\Cube_Edge_Case_Mesh.an8" />
     <None Include="An8Cube\Cube_X13_Y11_Z7.an8" />
     <None Include="An8Cube\Cube_X13_Y11_Z7_Mesh.an8" />
     <None Include="An8Cube\Cube_X1_Y1_Z1.an8" />
@@ -71,6 +75,8 @@
     <None Include="An8Cylinder\Cone_Lon4_Lat2_Mesh.an8" />
     <None Include="An8Cylinder\Cone_Lon5_Lat2.an8" />
     <None Include="An8Cylinder\Cone_Lon5_Lat2_Mesh.an8" />
+    <None Include="An8Cylinder\Cylinder_Edge_Case.an8" />
+    <None Include="An8Cylinder\Cylinder_Edge_Case_Mesh.an8" />
     <None Include="An8Cylinder\Cylinder_Lon11_Lat7.an8" />
     <None Include="An8Cylinder\Cylinder_Lon11_Lat7_Mesh.an8" />
     <None Include="An8Cylinder\Cylinder_Lon3_Lat1.an8" />
@@ -79,6 +85,26 @@
     <None Include="An8Cylinder\Cylinder_Lon4_Lat5_Mesh.an8" />
     <None Include="An8Cylinder\Cylinder_Lon6_Lat6.an8" />
     <None Include="An8Cylinder\Cylinder_Lon6_Lat6_Mesh.an8" />
+    <None Include="An8Sphere\Geo_1.an8" />
+    <None Include="An8Sphere\Geo_1_Mesh.an8" />
+    <None Include="An8Sphere\Geo_2.an8" />
+    <None Include="An8Sphere\Geo_2_Mesh.an8" />
+    <None Include="An8Sphere\Geo_6.an8" />
+    <None Include="An8Sphere\Geo_6_Mesh.an8" />
+    <None Include="An8Sphere\Geo_Edge_Case.an8" />
+    <None Include="An8Sphere\Geo_Edge_Case_Mesh.an8" />
+    <None Include="An8Sphere\Sphere_Edge_Case.an8" />
+    <None Include="An8Sphere\Sphere_Edge_Case2.an8" />
+    <None Include="An8Sphere\Sphere_Edge_Case2_Mesh.an8" />
+    <None Include="An8Sphere\Sphere_Edge_Case3.an8" />
+    <None Include="An8Sphere\Sphere_Edge_Case3_Mesh.an8" />
+    <None Include="An8Sphere\Sphere_Edge_Case_Mesh.an8" />
+    <None Include="An8Sphere\Sphere_Lon11_Lat7.an8" />
+    <None Include="An8Sphere\Sphere_Lon11_Lat7_Mesh.an8" />
+    <None Include="An8Sphere\Sphere_Lon3_Lat2.an8" />
+    <None Include="An8Sphere\Sphere_Lon3_Lat2_Mesh.an8" />
+    <None Include="An8Sphere\Sphere_Lon4_Lat6.an8" />
+    <None Include="An8Sphere\Sphere_Lon4_Lat6_Mesh.an8" />
     <None Include="Properties\Key.snk.pfx" />
   </ItemGroup>
   <ItemGroup>

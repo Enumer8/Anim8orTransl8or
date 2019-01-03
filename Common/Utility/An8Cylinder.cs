@@ -37,11 +37,11 @@ namespace Anim8orTransl8or.Utility
          List<facedata> facedatas = new List<facedata>();
 
          // Note: These defaults and limits were reversed engineered.
-         Double length = (c?.length?.text ?? 1).LimitTo(0);
-         Double startDiameter = (c?.diameter?.text ?? 1).LimitTo(0);
-         Double endDiameter = (c?.topdiameter?.text ?? 1).LimitTo(0);
-         Int32 longitude = (Int32)(c?.longlat?.longitude ?? 12).LimitTo(3, 100);
-         Int32 latitude = (Int32)(c?.longlat?.latitude ?? 8).LimitTo(1, 100);
+         Double length = (c?.length?.text ?? 1).Limit(0);
+         Double startDiameter = (c?.diameter?.text ?? 1).Limit(0);
+         Double endDiameter = (c?.topdiameter?.text ?? 1).Limit(0);
+         Int32 longitude = (Int32)(c?.longlat?.longitude ?? 12).Limit(3, 100);
+         Int32 latitude = (Int32)(c?.longlat?.latitude ?? 8).Limit(1, 100);
          Boolean bottomFace = c?.capstart != null && startDiameter > 0;
          Boolean topFace = c?.capend != null && endDiameter > 0;
 
@@ -49,43 +49,40 @@ namespace Anim8orTransl8or.Utility
          {
             if ( c?.length != null && c.length.text != length )
             {
-               callback($"The \"{c.name?.text}\" cylinders's length of {c.length.text} has been limited to {length}.");
+               callback($"The \"{c.name?.text}\" cylinder's length of {c.length.text} has been limited to {length}.");
             }
 
             if ( c?.diameter != null && c.diameter.text != startDiameter )
             {
-               callback($"The \"{c.name?.text}\" cylinders's diameter of {c.diameter.text} has been limited to {startDiameter}.");
+               callback($"The \"{c.name?.text}\" cylinder's diameter of {c.diameter.text} has been limited to {startDiameter}.");
             }
 
             if ( c?.topdiameter != null && c.topdiameter.text != endDiameter )
             {
-               callback($"The \"{c.name?.text}\" cylinders's top diameter of {c.topdiameter.text} has been limited to {endDiameter}.");
+               callback($"The \"{c.name?.text}\" cylinder's top diameter of {c.topdiameter.text} has been limited to {endDiameter}.");
             }
 
             if ( c?.longlat != null )
             {
                if ( c.longlat.longitude != longitude )
                {
-                  callback($"The \"{c.name?.text}\" cylinders's longitude of {c.longlat.longitude} has been limited to {longitude}.");
+                  callback($"The \"{c.name?.text}\" cylinder's longitude of {c.longlat.longitude} has been limited to {longitude}.");
                }
 
                if ( c.longlat.latitude != latitude )
                {
-                  callback($"The \"{c.name?.text}\" cylinders's latitude of {c.longlat.latitude} has been limited to {latitude}.");
+                  callback($"The \"{c.name?.text}\" cylinder's latitude of {c.longlat.latitude} has been limited to {latitude}.");
                }
             }
          }
 
-         Double stepY = length / latitude;
-         Double startRadius = startDiameter / 2;
-         Double stepRadius = (endDiameter - startDiameter) / (2 * latitude);
          facedataenum flags = facedataenum.hastexture;
 
          if ( c?.capstart == null || c?.capend == null )
          {
-            // Show the back if one or more end caps are missing.
+            // Show the back face if at least one end cap is missing
             // Note: Presumably, you only need to show the back face when one
-            // of the cylinder ends is "open". Anim8or v1.00 is smart enough to
+            // of the cylinder ends is "open". Anim8or is smart enough to
             // detect that it does not need to draw a zero-sized face when an
             // end diameter is zero, but for some reason, it still wants to
             // draw the back face.
@@ -93,17 +90,17 @@ namespace Anim8orTransl8or.Utility
          }
 
          //
-         //   5*---3*
-         //   /      \
-         // 7*       1*
-         //  |\      /|
-         //  |9*--11* |
-         //  | |    | |          Y
-         //  |4|---2| |          |
-         //  |/|    |\|          |
-         // 6* |    |0*          *------X
-         //   \|    |/          /
-         //   8*--10*          Z
+         //   5*----3*
+         //   /       \
+         // 7*        1*
+         //  |\       /|
+         //  |9*---11* |
+         //  | |     | |          Y
+         //  |4|----2| |          |
+         //  |/|     |\|          |
+         // 6* |     |0*          *------X
+         //   \|     |/          /
+         //   8*---10*          Z
          //
          for ( Int32 ix = 0; ix <= longitude; ix++ )
          {
@@ -113,12 +110,12 @@ namespace Anim8orTransl8or.Utility
 
             for ( Int32 iy = 0; iy <= latitude; iy++ )
             {
-               Double y = stepY * iy;
-               Double radius = startRadius + stepRadius * iy;
+               Double y = (Double)iy / latitude * length;
                Double v = (Double)iy / latitude;
+               Double radius = (endDiameter * v + startDiameter * (1 - v)) / 2;
 
-               // Don't create the last column of points, since they are the
-               // same as the first column of points.
+               // Don't create the last vertical slice of points, since they
+               // are the same as the first
                if ( ix < longitude )
                {
                   points.Add(new point(x * radius, y, z * radius));
@@ -133,13 +130,13 @@ namespace Anim8orTransl8or.Utility
          {
             // This builds the faces from bottom to top.
             //
-            //  *------*
-            //  |      |
-            //  |   1  |
-            //  *------*
-            //  |      |
-            //  |   0  |
-            //  *------*
+            //  *-----*
+            //  |     |
+            //  |  1  |
+            //  *-----*
+            //  |     |
+            //  |  0  |
+            //  *-----*
             for ( Int32 iy = 0; iy < latitude; iy++ )
             {
                pointdata leftTop = new pointdata();
@@ -162,26 +159,26 @@ namespace Anim8orTransl8or.Utility
                leftBottom.normalindex = 0;
                leftBottom.texcoordindex = leftBottom.pointindex;
 
-               pointdata[] pointdata;
-
                if ( ix >= longitude - 1 )
                {
-                  // When building the last column of faces, make sure the
-                  // right side connects to the first column of points. The tex
-                  // coords do not need to be adjusted, since they have an
-                  // extra column.
+                  // When building the last vertical slice of faces, make sure
+                  // the right side connects to the first vertical slice of
+                  // points. The tex coords do not need to be adjusted, since
+                  // they have an extra vertical slice.
                   rightBottom.pointindex = iy;
                   rightTop.pointindex = iy + 1;
                }
+
+               pointdata[] pointdata;
 
                if ( endDiameter <= startDiameter )
                {
                   // Build the vertices clockwise starting at the right bottom
                   //
-                  // 2*-----3*
-                  //  |      |
-                  //  |      |
-                  // 1*-----0*
+                  // 2*----3*
+                  //  |     |
+                  //  |     |
+                  // 1*----0*
                   pointdata = new pointdata[]
                   {
                      rightBottom,
@@ -194,10 +191,10 @@ namespace Anim8orTransl8or.Utility
                {
                   // Builds the vertices clockwise starting at the left bottom
                   //
-                  // 1*-----2*
-                  //  |      |
-                  //  |      |
-                  // 0*-----3*
+                  // 1*----2*
+                  //  |     |
+                  //  |     |
+                  // 0*----3*
                   pointdata = new pointdata[]
                   {
                      leftBottom,
@@ -207,59 +204,66 @@ namespace Anim8orTransl8or.Utility
                   };
                }
 
-               facedata f = new facedata();
-               f.numpoints = pointdata.Length;
-               f.flags = flags;
-               f.matno = 0;
-               f.flatnormalno = -1;
-               f.pointdata = pointdata;
+               facedata facedata = new facedata();
+               facedata.numpoints = pointdata.Length;
+               facedata.flags = flags;
+               facedata.matno = 0;
+               facedata.flatnormalno = -1;
+               facedata.pointdata = pointdata;
 
-               facedatas.Add(f);
+               facedatas.Add(facedata);
             }
          }
 
          // Create the top faces
          if ( topFace )
          {
-            // Disc top
-            facedata f = new facedata();
-            f.numpoints = longitude;
-            f.flags = flags;
-            f.matno = 0;
-            f.flatnormalno = -1;
-            f.pointdata = new pointdata[f.numpoints];
+            pointdata[] pointdata = new pointdata[longitude];
 
-            for ( Int64 i = 0; i < longitude; i++ )
+            for ( Int32 ix = 0; ix < longitude; ix++ )
             {
-               pointdata index = new pointdata();
-               index.pointindex = (longitude - 1 - i) * (latitude + 1) + latitude;//indices[longitude - 1 - i, latitude];
-               index.texcoordindex = index.pointindex;//texcoords.Count - longitude - i * (latitude + 1);
-               f.pointdata[i] = index;
+               pointdata data = new pointdata();
+               data.pointindex =
+                  (longitude - 1 - ix) * (latitude + 1) + latitude;
+               data.normalindex = 0;
+               data.texcoordindex = data.pointindex;
+
+               pointdata[ix] = data;
             }
 
-            facedatas.Add(f);
+            facedata facedata = new facedata();
+            facedata.numpoints = pointdata.Length;
+            facedata.flags = flags;
+            facedata.matno = 0;
+            facedata.flatnormalno = -1;
+            facedata.pointdata = pointdata;
+
+            facedatas.Add(facedata);
          }
 
          // Create the bottom faces
          if ( bottomFace )
          {
-            // Disc base
-            facedata f = new facedata();
-            f.numpoints = longitude;
-            f.flags = flags;
-            f.matno = 0;
-            f.flatnormalno = -1;
-            f.pointdata = new pointdata[f.numpoints];
+            pointdata[] pointdata = new pointdata[longitude];
 
-            for ( Int64 i = 0; i < longitude; i++ )
+            for ( Int32 ix = 0; ix < longitude; ix++ )
             {
-               pointdata index = new pointdata();
-               index.pointindex = i * (latitude + 1);//indices[i, 0];
-               index.texcoordindex = index.pointindex;//i * (latitude + 1);
-               f.pointdata[i] = index;
+               pointdata data = new pointdata();
+               data.pointindex = ix * (latitude + 1);
+               data.normalindex = 0;
+               data.texcoordindex = data.pointindex;
+
+               pointdata[ix] = data;
             }
 
-            facedatas.Add(f);
+            facedata facedata = new facedata();
+            facedata.numpoints = pointdata.Length;
+            facedata.flags = flags;
+            facedata.matno = 0;
+            facedata.flatnormalno = -1;
+            facedata.pointdata = pointdata;
+
+            facedatas.Add(facedata);
          }
 
          m.points = new points();

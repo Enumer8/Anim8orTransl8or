@@ -28,7 +28,7 @@ namespace Anim8orTransl8or
          }
       }
 
-      internal static Double LimitTo(
+      internal static Double Limit(
          this Double d,
          Double minimum,
          Double maximum = Double.MaxValue)
@@ -36,7 +36,7 @@ namespace Anim8orTransl8or
          return Math.Min(Math.Max(!Double.IsNaN(d) ? d : 0, minimum), maximum);
       }
 
-      internal static Int64 LimitTo(
+      internal static Int64 Limit(
          this Int64 i,
          Int64 minimum,
          Int64 maximum = Int64.MaxValue)

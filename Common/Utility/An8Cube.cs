@@ -35,12 +35,12 @@ namespace Anim8orTransl8or.Utility
          List<facedata> facedatas = new List<facedata>();
 
          // Note: These defaults and limits were reversed engineered.
-         Double scaleX = (c?.scale?.x ?? 10).LimitTo(0);
-         Double scaleY = (c?.scale?.y ?? 10).LimitTo(0);
-         Double scaleZ = (c?.scale?.z ?? 10).LimitTo(0);
-         Int32 divisionsX = (Int32)(c?.divisions?.x ?? 1).LimitTo(1, 100);
-         Int32 divisionsY = (Int32)(c?.divisions?.y ?? 1).LimitTo(1, 100);
-         Int32 divisionsZ = (Int32)(c?.divisions?.z ?? 1).LimitTo(1, 100);
+         Double scaleX = (c?.scale?.x ?? 10).Limit(0);
+         Double scaleY = (c?.scale?.y ?? 10).Limit(0);
+         Double scaleZ = (c?.scale?.z ?? 10).Limit(0);
+         Int32 divisionsX = (Int32)(c?.divisions?.x ?? 1).Limit(1, 100);
+         Int32 divisionsY = (Int32)(c?.divisions?.y ?? 1).Limit(1, 100);
+         Int32 divisionsZ = (Int32)(c?.divisions?.z ?? 1).Limit(1, 100);
 
          if ( callback != null )
          {
@@ -80,15 +80,6 @@ namespace Anim8orTransl8or.Utility
                }
             }
          }
-
-         Double minX = scaleX / -2;
-         Double minY = scaleY / -2;
-         Double minZ = scaleZ / -2;
-         Double stepX = scaleX / divisionsX;
-         Double stepY = scaleY / divisionsY;
-         Double stepZ = scaleZ / divisionsZ;
-         Double stepU = 1.0 / divisionsX;
-         Double stepV = 1.0 / divisionsY;
 
          // This contains the indices of the right side.
          //
@@ -184,17 +175,17 @@ namespace Anim8orTransl8or.Utility
          //
          for ( Int32 ix = 0; ix <= divisionsX; ix++ )
          {
-            Double x = minX + stepX * ix;
-            Double u = stepU * ix;
+            Double x = ((Double)ix / divisionsX - 0.5) * scaleX;
+            Double u = (Double)ix / divisionsX;
 
             for ( Int32 iy = 0; iy <= divisionsY; iy++ )
             {
-               Double y = minY + stepY * iy;
-               Double v = stepV * iy;
+               Double y = ((Double)iy / divisionsY - 0.5) * scaleY;
+               Double v = (Double)iy / divisionsY;
 
                for ( Int32 iz = 0; iz <= divisionsZ; iz += divisionsZ )
                {
-                  Double z = minZ + stepZ * iz;
+                  Double z = ((Double)iz / divisionsZ - 0.5) * scaleZ;
 
                   #region Save indices for later
                   if ( ix == 0 )
@@ -250,17 +241,17 @@ namespace Anim8orTransl8or.Utility
          //
          for ( Int32 iy = 0; iy <= divisionsY; iy++ )
          {
-            Double y = minY + stepY * iy;
-            Double v = stepV * iy;
+            Double y = ((Double)iy / divisionsY - 0.5) * scaleY;
+            Double v = (Double)iy / divisionsY;
 
             for ( Int32 iz = 1; iz < divisionsZ; iz++ )
             {
-               Double z = minZ + stepZ * iz;
+               Double z = ((Double)iz / divisionsZ - 0.5) * scaleZ;
 
                for ( Int32 ix = 0; ix <= divisionsX; ix += divisionsX )
                {
-                  Double x = minX + stepX * ix;
-                  Double u = stepU * ix;
+                  Double x = ((Double)ix / divisionsX - 0.5) * scaleX;
+                  Double u = (Double)ix / divisionsX;
 
                   #region Save indices for later
                   if ( ix == 0 )
@@ -306,17 +297,17 @@ namespace Anim8orTransl8or.Utility
          //
          for ( Int32 ix = 1; ix < divisionsX; ix++ )
          {
-            Double x = minX + stepX * ix;
-            Double u = stepU * ix;
+            Double x = ((Double)ix / divisionsX - 0.5) * scaleX;
+            Double u = (Double)ix / divisionsX;
 
             for ( Int32 iz = 1; iz < divisionsZ; iz++ )
             {
-               Double z = minZ + stepZ * iz;
+               Double z = ((Double)iz / divisionsZ - 0.5) * scaleZ;
 
                for ( Int32 iy = 0; iy <= divisionsY; iy += divisionsY )
                {
-                  Double y = minY + stepY * iy;
-                  Double v = stepV * iy;
+                  Double y = ((Double)iy / divisionsY - 0.5) * scaleY;
+                  Double v = (Double)iy / divisionsY;
 
                   #region Save indices for later
                   if ( iy == 0 )

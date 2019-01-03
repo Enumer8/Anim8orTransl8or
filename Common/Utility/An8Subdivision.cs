@@ -6,7 +6,6 @@ namespace Anim8orTransl8or.Utility
    {
       internal static mesh Calculate(subdivision s)
       {
-         // Convert the subdivision to a mesh
          // TODO: Do we need to actually subdivide using 'working' or
          // 'divisions'? How do we do it?
          mesh m = new mesh();
