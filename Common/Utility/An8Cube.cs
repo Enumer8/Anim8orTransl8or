@@ -110,10 +110,10 @@ namespace Anim8orTransl8or.Utility
          // This contains the indices of the bottom side.
          //
          // [0,0]  [1,0]  [2,0]
-         //   *------*------*          Z
-         //   |      |      |          | Y
-         // [0,1]  [1,1]  [2,1]        |/
-         //   *------*------*          *------X
+         //   *------*------*               Z
+         //   |      |      |               | Y
+         // [0,1]  [1,1]  [2,1]             |/
+         //   *------*------*               *------X
          //   |      |      |
          // [0,2]  [1,2]  [2,2]
          //   *------*------*
@@ -126,10 +126,10 @@ namespace Anim8orTransl8or.Utility
          //   *------*------*
          //   |      |      |
          // [0,1]  [1,1]  [2,1]
-         //   *------*------*          *------X
-         //   |      |      |         /|
-         // [0,2]  [1,2]  [2,2]      Y |
-         //   *------*------*          Z
+         //   *------*------*               *------X
+         //   |      |      |              /|
+         // [0,2]  [1,2]  [2,2]           Y |
+         //   *------*------*               Z
          //
          Int32[,] topIndices = new Int32[divisionsX + 1, divisionsZ + 1];
 
@@ -149,26 +149,26 @@ namespace Anim8orTransl8or.Utility
          // This contains the indices of the front side.
          //
          // [0,0]  [1,0]  [2,0]
-         //   *------*------*          Y
-         //   |      |      |          |
-         // [0,1]  [1,1]  [2,1]        |
-         //   *------*------*          *------X
-         //   |      |      |         /
-         // [0,2]  [1,2]  [2,2]      Z
+         //   *------*------*               Y
+         //   |      |      |               |
+         // [0,1]  [1,1]  [2,1]             |
+         //   *------*------*               *------X
+         //   |      |      |              /
+         // [0,2]  [1,2]  [2,2]           Z
          //   *------*------*
          //
          Int32[,] frontIndices = new Int32[divisionsX + 1, divisionsY + 1];
 
-         // Create all back side and front side points (interleaved).
+         // This creates all back side and front side points (interleaved).
          //
          //     4*----10*----16* (back)
          //      |      |      |
-         //      |      |      |          Y
-         //     2*-----8*----14*          |
-         // 5*----11*----17*   |          |
-         //  |   |  |   |  |   |          *------X
-         //  |  0*--|--6*--|-12*         /
-         // 3*-----9*----15*            Z
+         //      |      |      |            Y
+         //     2*-----8*----14*            |
+         // 5*----11*----17*   |            |
+         //  |   |  |   |  |   |            *------X
+         //  |  0*--|--6*--|-12*           /
+         // 3*-----9*----15*              Z
          //  |      |      |
          //  |      |      |
          // 1*-----7*----13* (front)
@@ -224,17 +224,17 @@ namespace Anim8orTransl8or.Utility
             }
          }
 
-         // Create the right side and left side points (interleaved) except
-         // for the back and front side points already created.
+         // This creates the right side and left side points except for the
+         // back and front side points already created.
          //
          //      * (right)     * (left)
          //     /|            /|
-         //   4* |          5* |          Y
-         //   /| *          /| *          |
-         //  * |/|         * |/|          |
-         //  |2* |         |3* |          *------X
-         //  |/| *         |/| *         /
-         //  * |/          * |/         Z
+         //   4* |          5* |            Y
+         //   /| *          /| *            |
+         //  * |/|         * |/|            |
+         //  |2* |         |3* |            *------X
+         //  |/| *         |/| *           /
+         //  * |/          * |/           Z
          //  |0*           |1*
          //  |/            |/
          //  *             *
@@ -280,17 +280,17 @@ namespace Anim8orTransl8or.Utility
             }
          }
 
-         // Create the bottom side and top side points (interleaved) except
-         // for right, left, back, and front side points already created.
+         // This creates the bottom side and top side points except for right,
+         // left, back, and front side points already created.
          //
          //      *------*------* (top)
          //     /      /      /
-         //    *-----1*------*            Y
-         //   /      /      /             |
-         //  *------*------*              |
-         //                               *------X
-         //      *------*------*         /
-         //     /      /      /         Z
+         //    *-----1*------*              Y
+         //   /      /      /               |
+         //  *------*------*                |
+         //                                 *------X
+         //      *------*------*           /
+         //     /      /      /           Z
          //    *-----0*------*
          //   /      /      /
          //  *------*------* (bottom)
@@ -326,42 +326,42 @@ namespace Anim8orTransl8or.Utility
             }
          }
 
-         // Create the back side faces
+         // This creates the back side faces.
          AddFaces(
             facedatas,
             backIndices,
             BuildSideFrom.BottomToTopRightToLeft,
             BuildFaceStartingAt.RightBottom);
 
-         // Create the front side faces
+         // This creates the front side faces.
          AddFaces(
             facedatas,
             frontIndices,
             BuildSideFrom.BottomToTopLeftToRight,
             BuildFaceStartingAt.LeftBottom);
 
-         // Create the right side faces
+         // This creates the right side faces.
          AddFaces(
             facedatas,
             rightIndices,
             BuildSideFrom.LeftToRightBottomToTop,
             BuildFaceStartingAt.LeftBottom);
 
-         // Create the left side faces
+         // This creates the left side faces.
          AddFaces(
             facedatas,
             leftIndices,
             BuildSideFrom.RightToLeftBottomToTop,
             BuildFaceStartingAt.RightBottom);
 
-         // Create the top side faces
+         // This creates the top side faces.
          AddFaces(
             facedatas,
             topIndices,
             BuildSideFrom.TopToBottomLeftToRight,
             BuildFaceStartingAt.LeftTop);
 
-         // Create the bottom side faces
+         // This creates the bottom side faces.
          AddFaces(
             facedatas,
             bottomIndices,
@@ -380,127 +380,107 @@ namespace Anim8orTransl8or.Utility
 
       enum BuildSideFrom
       {
-         // This builds the faces top to bottom from left to right.
+         // This builds the faces of the side left to right from top to bottom.
          //
-         //  *------*------*
-         //  |      |      |
-         //  |   0  |   2  |
-         //  *------*------*
-         //  |      |      |
-         //  |   1  |   3  |
-         //  *------*------*
-         TopToBottomLeftToRight,
-
-         // This builds the faces top to bottom from right to left.
-         //
-         //  *------*------*
-         //  |      |      |
-         //  |   2  |   0  |
-         //  *------*------*
-         //  |      |      |
-         //  |   3  |   1  |
-         //  *------*------*
-         TopToBottomRightToLeft,
-
-         // This builds the faces bottom to top from left to right.
-         //
-         //  *------*------*
-         //  |      |      |
-         //  |   1  |   3  |
-         //  *------*------*
-         //  |      |      |
-         //  |   0  |   2  |
-         //  *------*------*
-         BottomToTopLeftToRight,
-
-         // This builds the faces bottom to top from right to left.
-         //
-         //  *------*------*
-         //  |      |      |
-         //  |   3  |   1  |
-         //  *------*------*
-         //  |      |      |
-         //  |   2  |   0  |
-         //  *------*------*
-         BottomToTopRightToLeft,
-
-         // This builds the faces left to right from top to bottom.
-         //
-         //  *------*------*
-         //  |      |      |
-         //  |   0  |   1  |
-         //  *------*------*
-         //  |      |      |
-         //  |   2  |   3  |
-         //  *------*------*
+         //  *---*---*
+         //  | 0 | 1 |
+         //  *---*---*
+         //  | 2 | 3 |
+         //  *---*---*
          LeftToRightTopToBottom,
 
-         // This builds the faces left to right from bottom to top.
+         // This builds the faces of the side left to right from bottom to top.
          //
-         //  *------*------*
-         //  |      |      |
-         //  |   2  |   3  |
-         //  *------*------*
-         //  |      |      |
-         //  |   0  |   1  |
-         //  *------*------*
+         //  *---*---*
+         //  | 2 | 3 |
+         //  *---*---*
+         //  | 0 | 1 |
+         //  *---*---*
          LeftToRightBottomToTop,
 
-         // This builds the faces right to left from top to bottom.
+         // This builds the faces of the side right to left from top to bottom.
          //
-         //  *------*------*
-         //  |      |      |
-         //  |   1  |   0  |
-         //  *------*------*
-         //  |      |      |
-         //  |   3  |   2  |
-         //  *------*------*
+         //  *---*---*
+         //  | 1 | 0 |
+         //  *---*---*
+         //  | 3 | 2 |
+         //  *---*---*
          RightToLeftTopToBottom,
 
-         // This builds the faces right to left from bottom to top.
+         // This builds the faces of the side right to left from bottom to top.
          //
-         //  *------*------*
-         //  |      |      |
-         //  |   3  |   2  |
-         //  *------*------*
-         //  |      |      |
-         //  |   1  |   0  |
-         //  *------*------*
+         //  *---*---*
+         //  | 3 | 2 |
+         //  *---*---*
+         //  | 1 | 0 |
+         //  *---*---*
          RightToLeftBottomToTop,
+
+         // This builds the faces of the side top to bottom from left to right.
+         //
+         //  *---*---*
+         //  | 0 | 2 |
+         //  *---*---*
+         //  | 1 | 3 |
+         //  *---*---*
+         TopToBottomLeftToRight,
+
+         // This builds the faces of the side top to bottom from right to left.
+         //
+         //  *---*---*
+         //  | 2 | 0 |
+         //  *---*---*
+         //  | 3 | 1 |
+         //  *---*---*
+         TopToBottomRightToLeft,
+
+         // This builds the faces of the side bottom to top from left to right.
+         //
+         //  *---*---*
+         //  | 1 | 3 |
+         //  *---*---*
+         //  | 0 | 2 |
+         //  *---*---*
+         BottomToTopLeftToRight,
+
+         // This builds the faces of the side bottom to top from right to left.
+         //
+         //  *---*---*
+         //  | 3 | 1 |
+         //  *---*---*
+         //  | 2 | 0 |
+         //  *---*---*
+         BottomToTopRightToLeft,
       }
 
       enum BuildFaceStartingAt
       {
          // This builds the vertices clockwise starting at the left top.
          //
-         // 0*-----1*
-         //  |      |
-         //  |      |
-         // 3*-----2*
+         // 0*---*1
+         //  |   |
+         // 3*---*2
          LeftTop,
 
          // This builds the vertices clockwise starting at the right top.
          //
-         // 3*-----0*
-         //  |      |
-         //  |      |
-         // 2*-----1*
+         // 3*---*0
+         //  |   |
+         // 2*---*1
          RightTop,
 
          // This builds the vertices clockwise starting at the right bottom.
          //
-         // 2*-----3*
-         //  |      |
-         //  |      |
-         // 1*-----0*
+         // 2*---*3
+         //  |   |
+         // 1*---*0
          RightBottom,
 
          // This builds the vertices clockwise starting at the left bottom.
          //
-         // 1*-----2*
-         //  |      |
-         //  |      |
-         // 0*-----3*
+         // 1*---*2
+         //  |   |
+         // 0*---*3
          LeftBottom,
       }
 
@@ -512,44 +492,8 @@ namespace Anim8orTransl8or.Utility
       {
          switch ( buildSideFrom )
          {
-         case BuildSideFrom.TopToBottomLeftToRight:
-         default:
-            for ( Int32 i = 0; i < indices.GetLength(0) - 1; i++ )
-            {
-               for ( Int32 j = 0; j < indices.GetLength(1) - 1; j++ )
-               {
-                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
-               }
-            }
-            break;
-         case BuildSideFrom.TopToBottomRightToLeft:
-            for ( Int32 i = indices.GetLength(0) - 2; i >= 0; i-- )
-            {
-               for ( Int32 j = 0; j < indices.GetLength(1) - 1; j++ )
-               {
-                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
-               }
-            }
-            break;
-         case BuildSideFrom.BottomToTopLeftToRight:
-            for ( Int32 i = 0; i < indices.GetLength(0) - 1; i++ )
-            {
-               for ( Int32 j = indices.GetLength(1) - 2; j >= 0; j-- )
-               {
-                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
-               }
-            }
-            break;
-         case BuildSideFrom.BottomToTopRightToLeft:
-            for ( Int32 i = indices.GetLength(0) - 2; i >= 0; i-- )
-            {
-               for ( Int32 j = indices.GetLength(1) - 2; j >= 0; j-- )
-               {
-                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
-               }
-            }
-            break;
          case BuildSideFrom.LeftToRightTopToBottom:
+         default:
             for ( Int32 j = 0; j < indices.GetLength(1) - 1; j++ )
             {
                for ( Int32 i = 0; i < indices.GetLength(0) - 1; i++ )
@@ -580,6 +524,42 @@ namespace Anim8orTransl8or.Utility
             for ( Int32 j = indices.GetLength(1) - 2; j >= 0; j-- )
             {
                for ( Int32 i = indices.GetLength(0) - 2; i >= 0; i-- )
+               {
+                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
+               }
+            }
+            break;
+         case BuildSideFrom.TopToBottomLeftToRight:
+            for ( Int32 i = 0; i < indices.GetLength(0) - 1; i++ )
+            {
+               for ( Int32 j = 0; j < indices.GetLength(1) - 1; j++ )
+               {
+                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
+               }
+            }
+            break;
+         case BuildSideFrom.TopToBottomRightToLeft:
+            for ( Int32 i = indices.GetLength(0) - 2; i >= 0; i-- )
+            {
+               for ( Int32 j = 0; j < indices.GetLength(1) - 1; j++ )
+               {
+                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
+               }
+            }
+            break;
+         case BuildSideFrom.BottomToTopLeftToRight:
+            for ( Int32 i = 0; i < indices.GetLength(0) - 1; i++ )
+            {
+               for ( Int32 j = indices.GetLength(1) - 2; j >= 0; j-- )
+               {
+                  AddFace(facedatas, indices, buildFaceStartingAt, i, j);
+               }
+            }
+            break;
+         case BuildSideFrom.BottomToTopRightToLeft:
+            for ( Int32 i = indices.GetLength(0) - 2; i >= 0; i-- )
+            {
+               for ( Int32 j = indices.GetLength(1) - 2; j >= 0; j-- )
                {
                   AddFace(facedatas, indices, buildFaceStartingAt, i, j);
                }
