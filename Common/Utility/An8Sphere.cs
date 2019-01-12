@@ -955,8 +955,7 @@ namespace Anim8orTransl8or.Utility
             for ( Int32 h = 1; h < v; h++ )
             {
                point p = end * ((Double)h / v) + start * (1.0 - (Double)h / v);
-               p = p.Normalize();
-               p = p * (diameter / 2);
+               p = p.Normalize() * diameter / 2;
 
                level[h, v] = points.Count;
                points.Add(p);

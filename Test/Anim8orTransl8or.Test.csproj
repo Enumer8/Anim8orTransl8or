@@ -58,7 +58,13 @@
   <ItemGroup>
     <Compile Include="An8Cube\TestAn8Cube.cs" />
     <Compile Include="An8Cylinder\TestAn8Cylinder.cs" />
+    <Compile Include="An8Image\TestAn8Image.cs" />
+    <Compile Include="An8Normals\TestAn8Normals.cs" />
+    <Compile Include="An8PathCom\TestAn8PathCom.cs" />
     <Compile Include="An8Sphere\TestAn8Sphere.cs" />
+    <Compile Include="An8Subdivision\TestAn8Subdivision.cs" />
+    <Compile Include="An8TextCom\TestAn8TextCom.cs" />
+    <Compile Include="An8Weights\TestAn8Weights.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestBase.cs" />
   </ItemGroup>
@@ -85,6 +91,9 @@
     <None Include="An8Cylinder\Cylinder_Lon4_Lat5_Mesh.an8" />
     <None Include="An8Cylinder\Cylinder_Lon6_Lat6.an8" />
     <None Include="An8Cylinder\Cylinder_Lon6_Lat6_Mesh.an8" />
+    <None Include="An8Normals\Normals_Fully_Smooth.an8" />
+    <None Include="An8Normals\Normals_Not_Smooth.an8" />
+    <None Include="An8Normals\Normals_Partially_Smooth.an8" />
     <None Include="An8Sphere\Geo_1.an8" />
     <None Include="An8Sphere\Geo_1_Mesh.an8" />
     <None Include="An8Sphere\Geo_2.an8" />
@@ -110,6 +119,7 @@
   <ItemGroup>
     <Content Include="Properties\Anim8orTransl8or.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\common\Anim8orTransl8or.projitems" Label="Shared" />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

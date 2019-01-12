@@ -346,7 +346,10 @@ namespace Anim8orTransl8or
          Double scale = 1)
       {
          // Calculate normals if they are missing
-         mesh = An8Normals.Calculate(mesh);
+         if ( mesh?.normals?.point == null )
+         {
+            mesh = An8Normals.Calculate(mesh);
+         }
 
          String name = MakeUnique(mesh.name?.text);
          point origin = mesh.@base?.origin?.point ?? new point();

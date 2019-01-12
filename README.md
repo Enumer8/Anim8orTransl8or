@@ -77,8 +77,6 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
  * ANIM8OR "texture"
  * ANIM8OR "material"
  * ANIM8OR "subdivision", "pathcom", "textcom", "modifier", and "image"
- * ANIM8OR "sphere", "cylinder", and "cube" skinning
- * ANIM8OR "sequence"
  * ANIM8OR "scene"
  * Configuration/optimization. Everything will be converted as faithfully as possible.
  * Error handling. The program will just crash if it does not like something.
@@ -87,11 +85,11 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
  * Converting ANIM8OR (\*.an8) to other formats besides COLLADA (\*.dae).
 
 ## Limitations
-There are a handful of things that Anim8or calculates internally that are somewhat challenging to reproduce. For instance, Anim8or supports sphere, cylinder, and cube objects defined by a few parameters. The exact object vertices, however, are needed when creating the COLLADA file. Anim8or Transl8or has preliminary support for generating the vertices, but if there are issues, you can select the sphere, cylinder, and cube objects in Anim8or and click Build->Convert to Mesh. This forces Anim8or to output the exact vertices.
+There are a handful of things that Anim8or calculates internally that are somewhat challenging to reproduce. For instance, Anim8or supports spheres, cylinders, and cubes. The exact points and texture coordinates, however, are needed when creating the COLLADA file. Anim8or Transl8or has been unit tested and should exactly match Anim8or v1.00's output. If there are issues, you can select the object in Anim8or and click Build->Convert to Mesh. This forces Anim8or to output the exact points. The other types of objects (i.e. subdivision, pathcom, textcom, modifier, and image) are not supported by Anim8or Transl8or at this time. You must click Convert to Mesh to use those.
 
-Also, object normals are usually automatically calculated by Anim8or and not stored in the file. Anim8or Transl8or has preliminary support for generating the normals, but if there are issues, you can check Options->Debug->Output Normals in Anim8or. This forces Anim8or to output the exact normals.
+Also, Anim8or automatically calculates normals and does not normally store them in the file. Anim8or Transl8or can also calculate the normals, and they were designed to match what Anim8or calculates, but the normals could possibly be different. The simple cases have been confirmed with unit tests (the normals themselves match, but the normal indices do not). If there are issues, you can check Options->Debug->Output Normals in Anim8or. This forces Anim8or to output the exact normals.
 
-Finally, Anim8or supports weighting vertices using bone influences. Anim8or uses the bone envelopes to internally calculate the vertex weights. Anim8or Transl8or has preliminary support for generating the weights, but if there are issues, you can double-click all figures that are weighted and choose Weights instead of Bone Influences. This forces Anim8or to output the exact weights.
+Finally, Anim8or supports weighting points using bone influences. Anim8or uses bone envelopes to internally calculate the point weights. Anim8or Transl8or has preliminary support for generating the weights, but if there are issues, you can double-click the figure and choose Weights instead of Bone Influences. This forces Anim8or to output the exact weights.
 
 ANIM8OR files support multiple independent sequences in the same file. I haven't figured out how to do the same thing with COLLADA. I think I will generate them all to separate files in a future release.
 

@@ -13,7 +13,7 @@ namespace Anim8orTransl8or.Test
       {
          // Make sure nulls do not cause a crash
          An8Sphere.Calculate(null);
-         An8Sphere.Calculate(new sphere());
+         An8Sphere.Calculate(new sphere(), null);
 
          // Test a sphere with a couple invalid settings
          sphere sphere = new sphere();

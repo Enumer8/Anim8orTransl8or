@@ -25,10 +25,16 @@ namespace Anim8orTransl8or.Test
             actual?.materiallist?.materialname?.Length,
             "Mesh's material list length doesn't match.");
 
-         Assert.AreEqual(
-            expected?.materiallist?.materialname[0]?.text,
-            actual?.materiallist?.materialname[0]?.text,
-            "Mesh's material list doesn't match.");
+         for (
+            Int32 i = 0;
+            i < expected?.materiallist?.materialname.Length;
+            i++ )
+         {
+            Assert.AreEqual(
+               expected.materiallist.materialname[i]?.text,
+               actual.materiallist.materialname[i]?.text,
+               "Mesh's material list {i}'s name doesn't match.");
+         }
 
          Assert.AreEqual(
             expected?.points?.point?.Length,
@@ -91,7 +97,7 @@ namespace Anim8orTransl8or.Test
          Assert.AreEqual(
             expected?.texcoords?.texcoord?.Length,
             actual?.texcoords?.texcoord?.Length,
-            "Mesh's tex coords list doesn't match");
+            "Mesh's tex coords length doesn't match");
 
          for ( Int32 i = 0; i < expected?.texcoords?.texcoord?.Length; i++ )
          {
@@ -114,7 +120,7 @@ namespace Anim8orTransl8or.Test
          Assert.AreEqual(
             expected?.faces?.facedata?.Length,
             actual?.faces?.facedata?.Length,
-            "Mesh's faces list doesn't match");
+            "Mesh's faces length doesn't match");
 
          for ( Int32 i = 0; i < expected?.faces?.facedata?.Length; i++ )
          {
@@ -144,7 +150,7 @@ namespace Anim8orTransl8or.Test
             Assert.AreEqual(
                expectedFacedata?.pointdata?.Length,
                actualFacedata?.pointdata?.Length,
-               $"Mesh's face {i}'s points list doesn't match");
+               $"Mesh's face {i}'s data length doesn't match");
 
             for ( Int32 j = 0; j < expectedFacedata?.pointdata?.Length; j++ )
             {

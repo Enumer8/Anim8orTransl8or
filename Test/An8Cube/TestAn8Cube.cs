@@ -13,7 +13,7 @@ namespace Anim8orTransl8or.Test
       {
          // Make sure nulls do not cause a crash
          An8Cube.Calculate(null);
-         An8Cube.Calculate(new cube());
+         An8Cube.Calculate(new cube(), null);
 
          // Test a cube with a couple invalid settings
          cube cube = new cube();

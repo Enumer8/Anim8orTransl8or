@@ -13,7 +13,7 @@ namespace Anim8orTransl8or.Test
       {
          // Make sure nulls do not cause a crash
          An8Cylinder.Calculate(null);
-         An8Cylinder.Calculate(new cylinder());
+         An8Cylinder.Calculate(new cylinder(), null);
 
          // Test a cylinder with a couple invalid settings
          cylinder cylinder = new cylinder();
