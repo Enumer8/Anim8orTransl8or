@@ -33,16 +33,16 @@ namespace Anim8orTransl8or.Gui
 
       void PickOutputFileButton_Click(Object sender, EventArgs e)
       {
-         if ( mOutputFileDialog.ShowDialog() == DialogResult.OK )
+         if ( mOutputFolderDialog.ShowDialog() == DialogResult.OK )
          {
-            mOutputFile.Text = mOutputFileDialog.FileName;
+            mOutputFile.Text = mOutputFolderDialog.SelectedPath;
          }
       }
 
       void ConvertButton_Click(Object sender, EventArgs e)
       {
          String inFile = mInputFile.Text;
-         String outFile = mOutputFile.Text;
+         String outFolder = mOutputFile.Text;
 
          ANIM8OR an8;
 
@@ -52,12 +52,20 @@ namespace Anim8orTransl8or.Gui
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         COLLADA dae = FormatConverter.Convert(an8);
+         // One An8 file can result in multiple Dae files
+         Directory.CreateDirectory(outFolder);
 
-         using ( Stream stream = File.Create(outFile) )
+         foreach ( Converter.Result result in Converter.Convert(an8) )
          {
-            XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
-            serializer.Serialize(stream, dae);
+            String outFile = Path.Combine(
+               outFolder,
+               $"{result.Mode}_{result.Name}.dae");
+
+            using ( Stream stream = File.Create(outFile) )
+            {
+               XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
+               serializer.Serialize(stream, result.Dae);
+            }
          }
       }
    }

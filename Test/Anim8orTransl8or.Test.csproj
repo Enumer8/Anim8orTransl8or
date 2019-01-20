@@ -114,6 +114,8 @@
     <None Include="An8Sphere\Sphere_Lon3_Lat2_Mesh.an8" />
     <None Include="An8Sphere\Sphere_Lon4_Lat6.an8" />
     <None Include="An8Sphere\Sphere_Lon4_Lat6_Mesh.an8" />
+    <None Include="An8Weights\Weights_Complex.an8" />
+    <None Include="An8Weights\Weights_Simple.an8" />
     <None Include="Properties\Key.snk.pfx" />
   </ItemGroup>
   <ItemGroup>

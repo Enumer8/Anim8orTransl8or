@@ -214,7 +214,7 @@ namespace Anim8orTransl8or.Utility
          return m2;
       }
 
-      internal static faces RemoveNormals(faces faces)
+      static faces RemoveNormals(faces faces)
       {
          faces f;
 
@@ -240,7 +240,7 @@ namespace Anim8orTransl8or.Utility
          return f;
       }
 
-      internal static facedata RemoveNormals(facedata facedata)
+      static facedata RemoveNormals(facedata facedata)
       {
          facedata fd;
 
@@ -271,7 +271,7 @@ namespace Anim8orTransl8or.Utility
          return fd;
       }
 
-      internal static pointdata RemoveNormals(pointdata pointdata)
+      static pointdata RemoveNormals(pointdata pointdata)
       {
          pointdata pd;
 

@@ -13,7 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)An8\V100\ANIM8OR.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Dae\V141\COLLADA.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)FormatConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cube.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cylinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Image.cs" />

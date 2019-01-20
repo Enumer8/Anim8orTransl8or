@@ -5,6 +5,14 @@ Anim8or Transl8or converts ANIM8OR (\*.an8) files into COLLADA (\*.dae) files.
 
 (For more information on COLLADA, please visit https://www.khronos.org/collada/)
 
+Anim8or Transl8or converts each object, figure, and sequence in an ANIM8OR file into a separate COLLADA file. For instance, the Walk sequence in Cat.an8:
+
+![Walk Sequence Before](Before.png "Walk Sequence Before")
+
+Becomes Sequence_Walk.dae:
+
+![Walk Sequence After](After.png "Walk Sequence After")
+
 ## Prerequisites
 Anim8or Transl8or requires .NET Framework 4.0. It is most likely already installed on your system if you are using Windows XP or later. Otherwise, it can be installed from here: https://www.microsoft.com/en-us/download/details.aspx?id=17851.
 
@@ -13,15 +21,15 @@ Anim8or Transl8or may also run on other operating systems using Mono (https://ww
 ## Graphical User Interface (GUI)
 1. Double-click Anim8orTransl8or.Gui.exe
 1. Browse for the input ANIM8OR (\*.an8) file
-1. Choose the path for the output COLLADA (\*.dae) file
+1. Choose the path for the output COLLADA (\*.dae) files
 1. Click Convert
 
 ## Command Line Interface (CLI)
 ~~~
-Anim8orTransl8or.Cli.exe input.an8 output.dae
+Anim8orTransl8or.Cli.exe input.an8 output\
 ~~~
 
-Note: "input.an8" is the name of the input ANIM8OR (\*.an8) file and "output.dae" is the name of the output COLLADA (\*.dae) file.
+Note: "input.an8" is the name of the input ANIM8OR (\*.an8) file and "output\\" is the path of the output COLLADA (\*.dae) files.
 
 ## Dynamically Linked Library (DLL)
 ~~~
@@ -40,7 +48,7 @@ namespace User
       static void Main(String[] args)
       {
          String inFile = args[0];
-         String outFile = args[1];
+         String outFolder = args[1];
 
          ANIM8OR an8;
 
@@ -50,12 +58,20 @@ namespace User
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         COLLADA dae = FormatConverter.Convert(an8);
+         // One An8 file can result in multiple Dae files
+         Directory.CreateDirectory(outFolder);
 
-         using ( Stream stream = File.Create(outFile) )
+         foreach ( Converter.Result result in Converter.Convert(an8) )
          {
-            XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
-            serializer.Serialize(stream, dae);
+            String outFile = Path.Combine(
+               outFolder,
+               $"{result.Mode}_{result.Name}.dae");
+
+            using ( Stream stream = File.Create(outFile) )
+            {
+               XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
+               serializer.Serialize(stream, result.Dae);
+            }
          }
       }
    }
@@ -87,11 +103,9 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
 ## Limitations
 There are a handful of things that Anim8or calculates internally that are somewhat challenging to reproduce. For instance, Anim8or supports spheres, cylinders, and cubes. The exact points and texture coordinates, however, are needed when creating the COLLADA file. Anim8or Transl8or has been unit tested and should exactly match Anim8or v1.00's output. If there are issues, you can select the object in Anim8or and click Build->Convert to Mesh. This forces Anim8or to output the exact points. The other types of objects (i.e. subdivision, pathcom, textcom, modifier, and image) are not supported by Anim8or Transl8or at this time. You must click Convert to Mesh to use those.
 
-Also, Anim8or automatically calculates normals and does not normally store them in the file. Anim8or Transl8or can also calculate the normals, and they were designed to match what Anim8or calculates, but the normals could possibly be different. The simple cases have been confirmed with unit tests (the normals themselves match, but the normal indices do not). If there are issues, you can check Options->Debug->Output Normals in Anim8or. This forces Anim8or to output the exact normals.
+Also, Anim8or automatically calculates normals. Anim8or Transl8or can also calculate normals, and they were designed to match what Anim8or calculates, but the normals do not match in all cases right now. The simple cases have been confirmed with unit tests (the normals themselves match, but the normal indices do not). If there are issues, you can check Options->Debug->Output Normals in Anim8or. This forces Anim8or to output the exact normals.
 
-Finally, Anim8or supports weighting points using bone influences. Anim8or uses bone envelopes to internally calculate the point weights. Anim8or Transl8or has preliminary support for generating the weights, but if there are issues, you can double-click the figure and choose Weights instead of Bone Influences. This forces Anim8or to output the exact weights.
-
-ANIM8OR files support multiple independent sequences in the same file. I haven't figured out how to do the same thing with COLLADA. I think I will generate them all to separate files in a future release.
+Finally, Anim8or supports weighting points using bone influences. Anim8or uses bone envelopes to internally calculate the point weights. Anim8or Transl8or has been unit tested and should exactly match Anim8or v1.00's output. If there are issues, you can double-click the figure and choose Weights instead of Bone Influences. This forces Anim8or to output the exact weights.
 
 ## Report Problems
 Anim8or Transl8or is very immature, and the ANIM8OR (\*.an8) format is not completely documented, so there will be problems and incompatibilities. Please enter issues on GitHub (https://github.com/Enumer8/Anim8orTransl8or/issues). Please don't enter issues about things that are [not supported yet](#not-supported-yet). For the best chance at fixing the issue, please attach or link to the ANIM8OR (\*.an8) file that causes the problem.
@@ -105,6 +119,13 @@ Anim8or Transl8or is open source software. User contributions are appreciated. P
  * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
+ * Anim8orTransl8or v0.5.0
+   * Multiple COLLADA files are created for one ANIM8OR file
+   * Calculation of ANIM8OR "sphere", "cylinder", "cube" should now exactly match Anim8or v1.00
+   * Calculation of normals are improved, but do not exactly match Anim8or v1.00 yet
+   * Calculation of weights should now exactly match Anim8or v1.00
+   * Added unit tests for calculation of meshes, normals, and weights
+   * Added example ANIM8OR file
  * Anim8orTransl8or v0.4.0
    * Added conversion for ANIM8OR "sequence"
    * Added automatic weight calculation

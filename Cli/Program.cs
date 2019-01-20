@@ -12,7 +12,7 @@ namespace Anim8orTransl8or.Cli
       static void Main(String[] args)
       {
          String inFile = args[0];
-         String outFile = args[1];
+         String outFolder = args[1];
 
          ANIM8OR an8;
 
@@ -22,12 +22,20 @@ namespace Anim8orTransl8or.Cli
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         COLLADA dae = FormatConverter.Convert(an8);
+         // One An8 file can result in multiple Dae files
+         Directory.CreateDirectory(outFolder);
 
-         using ( Stream stream = File.Create(outFile) )
+         foreach ( Converter.Result result in Converter.Convert(an8) )
          {
-            XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
-            serializer.Serialize(stream, dae);
+            String outFile = Path.Combine(
+               outFolder,
+               $"{result.Mode}_{result.Name}.dae");
+
+            using ( Stream stream = File.Create(outFile) )
+            {
+               XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
+               serializer.Serialize(stream, result.Dae);
+            }
          }
       }
    }

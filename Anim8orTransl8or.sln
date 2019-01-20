@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anim8orTransl8or.Gui", "Gui
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BE2C387D-917B-4448-8F84-79744E564875}"
 	ProjectSection(SolutionItems) = preProject
+		Examples\Cat.an8 = Examples\Cat.an8
+		Examples\Fur.png = Examples\Fur.png
 		README.md = README.md
 	EndProjectSection
 EndProject

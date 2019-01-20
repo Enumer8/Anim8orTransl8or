@@ -487,7 +487,7 @@ namespace Anim8orTransl8or.An8
       public matrix(
          point p,
          quaternion q,
-         Double scale)
+         Double scale = 1)
          : this(p, q, scale, scale, scale)
       {
       }
@@ -575,7 +575,7 @@ namespace Anim8orTransl8or.An8
             {
                Double e = 0;
 
-               for ( Int32 i = 0; i < 4; i++ )
+               for ( Int32 i = 0; i < COLS; i++ )
                {
                   e += this[row, i] * m[i, col];
                }
@@ -585,6 +585,35 @@ namespace Anim8orTransl8or.An8
          }
 
          return matrix;
+      }
+
+      // 4row x 4col multiply 4row x 1col
+      // ROWS = 4, COLS = 4, COLS = 1
+      public point Multiply(point p)
+      {
+         const Int32 COL2 = 1;
+
+         point point = new point();
+
+         for ( Int32 row = 0; row < ROWS; row++ )
+         {
+            for ( Int32 col = 0; col < COL2; col++ )
+            {
+               Double e = 0;
+
+               for ( Int32 i = 0; i < COLS; i++ )
+               {
+                  e += this[row, i] * (i < COLS - 1 ? p[i/*, col*/] : 1);
+               }
+
+               if ( row < COLS - 1 )
+               {
+                  point[row/*, col*/] = e;
+               }
+            }
+         }
+
+         return point;
       }
 
       public matrix Inverse()

@@ -7,196 +7,240 @@ namespace Anim8orTransl8or.Utility
 {
    static class An8Weights
    {
+      /// <summary>
+      /// This will produce the same weights as if the user had clicked Weights
+      /// in Anim8or v1.00.
+      /// </summary>
+      /// <param name="n">the named object</param>
+      /// <param name="ms">the meshes to weight</param>
+      /// <param name="s">the skeleton that owns the named object</param>
+      /// <param name="callback">the callback for warnings</param>
+      /// <returns>the named object with weights</returns>
       internal static namedobject Calculate(
-         namedobject namedobject,
-         @object[] objects,
-         bone1 bone,
-         bone1 skeleton)
+         namedobject n,
+         mesh[] ms,
+         bone1 s,
+         Action<String> callback = null)
       {
+         namedobject n2 = new namedobject();
+         n2.objectname = n?.objectname;
+         n2.name = n?.name;
+         n2.@base = n?.@base;
+         n2.pivot = n?.pivot;
+         n2.material = n?.material;
+         n2.scale = n?.scale;
+         n2.weightedby = n?.weightedby;
+         n2.weights = null;
+
+         // Calculate the absolute transformations of the skeleton
          List<SkeletonNode> skeletonNodes = new List<SkeletonNode>();
-         CalculateSkeleton(skeleton, skeletonNodes);
+         CalculateSkeleton(skeletonNodes, s);
 
-         // Find the "base" of the bone that owns the object
-         point boneOrigin;
-         quaternion boneOrientation;
-
-         SkeletonNode parentNode = skeletonNodes.Find(n => n.Bone == bone);
-
-         if ( parentNode != null )
+         // Find the absolute transformation of the bone that owns the object
+         SkeletonNode parentNode = skeletonNodes.Find((SkeletonNode sn) =>
          {
-            boneOrigin = parentNode.AbsoluteOrigin;
-            boneOrientation = parentNode.AbsoluteOrientation;
-         }
-         else
-         {
-            boneOrigin = new point();
-            boneOrientation = quaternion.IDENTITY;
-         }
+            foreach ( namedobject no in sn.Bone?.namedobject ??
+               new namedobject[0] )
+            {
+               if ( no == n )
+               {
+                  return true;
+               }
+            }
 
-         // Sort the bones that weight the object
-         for ( Int32 i = 0; i < namedobject.weightedby?.Length; i++ )
+            return false;
+         });
+
+         matrix boneMatrix = new matrix(
+            parentNode?.AbsoluteOrigin ?? new point(),
+            parentNode?.AbsoluteOrientation ?? quaternion.IDENTITY);
+
+         matrix objectMatrix = boneMatrix.Multiply(new matrix(
+            n2.@base?.origin?.point ?? new point(),
+            n2.@base?.orientation?.quaternion ?? quaternion.IDENTITY,
+            n2.scale?.text ?? 1));
+
+         // Sort the skeleton nodes that weight the object
+         for ( Int32 i = 0; i < n2.weightedby?.Length; i++ )
          {
-            String boneName = namedobject.weightedby[i].text;
+            String boneName = n2.weightedby[i]?.text;
 
             for ( Int32 j = 0; j < skeletonNodes.Count; j++ )
             {
-               if ( skeletonNodes[j].Bone.name == boneName )
+               if ( skeletonNodes[j].Bone?.name == boneName )
                {
-                  SkeletonNode temp = skeletonNodes[i];
+                  SkeletonNode sn = skeletonNodes[i];
                   skeletonNodes[i] = skeletonNodes[j];
-                  skeletonNodes[j] = temp;
+                  skeletonNodes[j] = sn;
                   break;
                }
             }
          }
 
-         // Remove bones that do not weight the object
-         if ( skeletonNodes.Count > namedobject.weightedby?.Length )
+         // Remove skeleton nodes that do not weight the object
+         if ( skeletonNodes.Count > n2.weightedby?.Length )
          {
             skeletonNodes.RemoveRange(
-               namedobject.weightedby.Length,
-               skeletonNodes.Count - namedobject.weightedby.Length);
-         }
-
-         @object @object = null;
-
-         // Find the named object
-         foreach ( @object o in objects ?? new @object[0] )
-         {
-            if ( o.name == namedobject.objectname )
-            {
-               @object = o;
-               break;
-            }
+               n2.weightedby.Length,
+               skeletonNodes.Count - n2.weightedby.Length);
          }
 
          // Calculate the weights for each mesh
-         foreach ( mesh mesh in @object?.mesh ?? new mesh[0] )
+         foreach ( mesh m in ms ?? new mesh[0] )
          {
-            Boolean missing = true;
+            matrix meshMatrix = objectMatrix.Multiply(new matrix(
+               m?.@base?.origin?.point ?? new point(),
+               m?.@base?.orientation?.quaternion ?? quaternion.IDENTITY));
 
-            foreach ( weights weights in namedobject.weights ??
-               new weights[0] )
+            weights weights = new weights();
+            n2.weights = n2.weights.Append(weights);
+
+            weights.meshname = m?.name?.text;
+
+            weightdata[] weightdata = new weightdata[
+               m?.points?.point?.Length ?? 0];
+            weights.weightdata = weightdata;
+
+            for ( Int32 i = 0; i < weightdata.Length; i++ )
             {
-               if ( weights.meshname == mesh.name?.text )
+               weightdata wd = new weightdata();
+               weightdata[i] = wd;
+
+               // Transform the point to its final location
+               point point = meshMatrix.Multiply(m.points.point[i]);
+
+               CalculateWeight(skeletonNodes, wd, point);
+
+               // Add the default weight if none were found
+               wd.bonedata = wd.bonedata ?? new bonedata[]
                {
-                  missing = false;
-                  break;
-               }
-            }
+                  new bonedata() { boneindex = 0, boneweight = 1 },
+               };
 
-            if ( missing )
-            {
-               weights weights = new weights();
-               namedobject.weights = namedobject.weights.Append(weights);
+               wd.numweights = wd.bonedata.Length;
 
-               weights.meshname = mesh.name?.text;
+               // Normalize the weights
+               Double totalWeight = 0;
 
-               weightdata[] weightdata = new weightdata[
-                  mesh.points?.point?.Length ?? 0];
-               weights.weightdata = weightdata;
-
-               Double objectScale = namedobject.scale?.text ?? 1;
-               point objectOrigin = boneOrigin + boneOrientation.Rotate(
-                  namedobject.@base?.origin?.point ?? new point());
-               quaternion objectOrientation = boneOrientation.Rotate(
-                  namedobject.@base?.orientation?.quaternion ??
-                  quaternion.IDENTITY).Normalize();
-
-               point meshOrigin = mesh.@base?.origin?.point ?? new point();
-               quaternion meshOrientation =
-                  mesh.@base?.orientation?.quaternion.Normalize() ??
-                  quaternion.IDENTITY;
-
-               for ( Int32 i = 0; i < weightdata.Length; i++ )
+               for ( Int32 j = 0; j < wd.bonedata.Length; j++ )
                {
-                  weightdata wd = new weightdata();
-                  weightdata[i] = wd;
-
-                  point meshPoint = meshOrientation.Rotate(mesh.points.point[i]) + meshOrigin;
-                  point objectPoint = objectOrientation.Rotate(meshPoint * objectScale) + objectOrigin;
-                  point bonePoint = boneOrientation.Rotate(objectPoint) + boneOrigin;
-
-                  CalculateWeight(wd, bonePoint, skeletonNodes);
-
-                  wd.numweights = wd.bonedata?.Length ?? 0;
-
-                  // Normalize the weights
-                  Double totalWeight = 0;
-                  for ( Int32 j = 0; j < wd.numweights; j++ )
-                  {
-                     totalWeight += wd.bonedata[j].boneweight;
-                  }
-                  totalWeight = 1 / totalWeight;
-                  for ( Int32 j = 0; j < wd.numweights; j++ )
-                  {
-                     wd.bonedata[j].boneweight *= totalWeight;
-                  }
+                  totalWeight += wd.bonedata[j].boneweight;
                }
+
+               for ( Int32 j = 0; j < wd.bonedata.Length; j++ )
+               {
+                  wd.bonedata[j].boneweight /= totalWeight;
+               }
+
+               // Sort the weights
+               Array.Sort(
+                  wd.bonedata,
+                  (bonedata b1, bonedata b2) =>
+                  {
+                     if ( b1.boneweight != b2.boneweight )
+                     {
+                        // Sort larger weights first
+                        return b2.boneweight.CompareTo(b1.boneweight);
+                     }
+                     else
+                     {
+                        // If the weights match, sort lower indices first
+                        return b1.boneindex.CompareTo(b2.boneindex);
+                     }
+                  });
             }
          }
 
-         return namedobject;
+         return n2;
       }
 
       static void CalculateWeight(
+         List<SkeletonNode> skeletonNodes,
          weightdata wd,
-         point point,
-         List<SkeletonNode> skeletonNodes)
+         point point)
       {
          for ( Int32 i = 0; i < skeletonNodes.Count; i++ )
          {
             SkeletonNode skeletonNode = skeletonNodes[i];
-            Double boneWeight;
 
-            if ( skeletonNode.Bone?.influence == null )
+            // Note: Anim8or v1.00 doesn't ignore the root bone's length when
+            // calculating the influences (only when calculating the positions
+            // of the other bones).
+            Double length = skeletonNode.Bone?.length?.text ?? 0;
+            point origin = skeletonNode.AbsoluteOrigin;
+            quaternion orientation = skeletonNode.AbsoluteOrientation;
+            influence influence = skeletonNode.Bone?.influence;
+
+            if ( influence == null )
             {
-               continue;
+               // Note: These defaults were reversed engineered.
+               influence = new influence();
+               influence.center0 = 0.25;
+               influence.inradius0 = 0.15 * length;
+               influence.outradius0 = 0.4 * length;
+               influence.center1 = 0.75;
+               influence.inradius1 = influence.inradius0;
+               influence.outradius1 = influence.outradius0;
             }
 
-            point boneVector = skeletonNode.AbsoluteOrientation.Rotate(new point(0, skeletonNode.Length, 0));
-            point start = skeletonNode.AbsoluteOrigin + boneVector * skeletonNode.Bone.influence.center0;
-            point end = skeletonNode.AbsoluteOrigin + boneVector * skeletonNode.Bone.influence.center1;
-            point startToPoint = point - start;
-            point b = end - start;
-            Double d = b.GetLength();
-            b = b.Normalize();
-            Double t = b.Dot(startToPoint);
+            point boneVector = orientation.Rotate(new point(0, length, 0));
+            point influenceStart = origin + boneVector * influence.center0;
+            point influenceEnd = origin + boneVector * influence.center1;
+            point influenceVector = influenceEnd - influenceStart;
+            Double influenceLength = influenceVector.GetLength();
+            influenceVector = influenceVector.Normalize();
+
+            point startToPoint = point - influenceStart;
+            Double t = influenceVector.Dot(startToPoint);
 
             Double distance, inRadius, outRadius;
 
+            // If the point is "before" the start point
             if ( t < 0 )
             {
                distance = startToPoint.GetLength();
-               inRadius = skeletonNode.Bone.influence.inradius0;
-               outRadius = skeletonNode.Bone.influence.outradius0;
+               inRadius = influence.inradius0;
+               outRadius = influence.outradius0;
             }
-            else if ( t > d )
+            // If the point is "after" the end point
+            else if ( t > influenceLength )
             {
-               point endToPoint = point - end;
+               point endToPoint = point - influenceEnd;
 
                distance = endToPoint.GetLength();
-               inRadius = skeletonNode.Bone.influence.inradius1;
-               outRadius = skeletonNode.Bone.influence.outradius1;
+               inRadius = influence.inradius1;
+               outRadius = influence.outradius1;
             }
+            // If the point is between the start and end
             else
             {
-               point middleToPoint = point - (start + b * t);
+               Double percent = t / influenceLength;
+
+               point middleToPoint = point -
+                  (influenceStart + influenceVector * t);
 
                distance = middleToPoint.GetLength();
-               Double percent = t / d;
-               inRadius = percent * (skeletonNode.Bone.influence.inradius1 - skeletonNode.Bone.influence.inradius0) + skeletonNode.Bone.influence.inradius0;
-               outRadius = percent * (skeletonNode.Bone.influence.outradius1 - skeletonNode.Bone.influence.outradius0) + skeletonNode.Bone.influence.outradius0;
+
+               inRadius = percent * influence.inradius1 +
+                  (1 - percent) * influence.inradius0;
+
+               outRadius = percent * influence.outradius1 +
+                  (1 - percent) * influence.outradius0;
             }
 
-            if ( distance >= outRadius )
-            {
-               boneWeight = 0.0;
-            }
-            else if ( distance <= inRadius )
+            Double boneWeight;
+
+            // If the distance is inside the inner radius
+            if ( distance <= inRadius )
             {
                boneWeight = 1.0;
             }
+            // If the distance is outside the outer radius
+            else if ( distance >= outRadius )
+            {
+               boneWeight = 0.0;
+            }
+            // If the distance is between the inner and outer radius
             else
             {
                boneWeight = (outRadius - distance) / (outRadius - inRadius);
@@ -223,8 +267,8 @@ namespace Anim8orTransl8or.Utility
       }
 
       static void CalculateSkeleton(
-         bone1 bone,
          List<SkeletonNode> skeletonNodes,
+         bone1 bone,
          SkeletonNode parentNode = null)
       {
          SkeletonNode node = new SkeletonNode();
@@ -232,7 +276,7 @@ namespace Anim8orTransl8or.Utility
 
          if ( parentNode != null )
          {
-            node.Length = bone.length?.text ?? 0.0;
+            node.Length = bone?.length?.text ?? 0.0;
             node.AbsoluteOrigin = parentNode.AbsoluteOrigin +
                parentNode.AbsoluteOrientation.Rotate(
                   new point(0, parentNode.Length, 0));
@@ -243,15 +287,15 @@ namespace Anim8orTransl8or.Utility
          else
          {
             // Note: Anim8or v1.00 ignores the root bone's length
-            node.AbsoluteOrientation = bone.orientation?.quaternion ??
+            node.AbsoluteOrientation = bone?.orientation?.quaternion ??
                quaternion.IDENTITY;
          }
 
          skeletonNodes.Add(node);
 
-         foreach ( bone1 childBone in bone.bone ?? new bone1[0] )
+         foreach ( bone1 childBone in bone?.bone ?? new bone1[0] )
          {
-            CalculateSkeleton(childBone, skeletonNodes, node);
+            CalculateSkeleton(skeletonNodes, childBone, node);
          }
       }
    }

@@ -35,6 +35,13 @@ namespace Anim8orTransl8or.Test
          CompareNormals(@"..\..\An8Normals\Normals_Fully_Smooth.an8");
       }
 
+      // TODO: Will the normal calculation ever be good enough to enable this?
+      //[TestMethod]
+      public void Example()
+      {
+         CompareNormals(@"..\..\..\Examples\Cat.an8");
+      }
+
       static void CompareNormals(String normalFile)
       {
          Int32 warnings = 0;

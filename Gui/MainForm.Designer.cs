@@ -37,7 +37,7 @@
          this.mPickInputFileButton = new System.Windows.Forms.Button();
          this.mPickOutputFileButton = new System.Windows.Forms.Button();
          this.mInputFileDialog = new System.Windows.Forms.OpenFileDialog();
-         this.mOutputFileDialog = new System.Windows.Forms.SaveFileDialog();
+         this.mOutputFolderDialog = new System.Windows.Forms.FolderBrowserDialog();
          this.SuspendLayout();
          // 
          // mInputFileLabel
@@ -63,9 +63,9 @@
          this.mOutputFileLabel.AutoSize = true;
          this.mOutputFileLabel.Location = new System.Drawing.Point(13, 56);
          this.mOutputFileLabel.Name = "mOutputFileLabel";
-         this.mOutputFileLabel.Size = new System.Drawing.Size(140, 13);
+         this.mOutputFileLabel.Size = new System.Drawing.Size(153, 13);
          this.mOutputFileLabel.TabIndex = 0;
-         this.mOutputFileLabel.Text = "Output COLLADA (.dae) file:";
+         this.mOutputFileLabel.Text = "Output COLLADA (.dae) folder:";
          // 
          // mOutputFile
          // 
@@ -113,10 +113,6 @@
          // 
          this.mInputFileDialog.Filter = "ANIM8OR (*.an8)|*.an8";
          // 
-         // mOutputFileDialog
-         // 
-         this.mOutputFileDialog.Filter = "COLLADA (*.dae)|*.dae";
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -148,7 +144,7 @@
       private System.Windows.Forms.Button mPickInputFileButton;
       private System.Windows.Forms.Button mPickOutputFileButton;
       private System.Windows.Forms.OpenFileDialog mInputFileDialog;
-      private System.Windows.Forms.SaveFileDialog mOutputFileDialog;
+      private System.Windows.Forms.FolderBrowserDialog mOutputFolderDialog;
    }
 }
 
