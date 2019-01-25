@@ -75,7 +75,7 @@ namespace Anim8orTransl8or.Utility
             parentNode?.AbsoluteOrigin ?? new point(),
             parentNode?.AbsoluteOrientation ?? quaternion.IDENTITY);
 
-         matrix objectMatrix = boneMatrix.Multiply(new matrix(
+         matrix objectMatrix = boneMatrix.Transform(new matrix(
             n2.@base?.origin?.point ?? new point(),
             n2.@base?.orientation?.quaternion ?? quaternion.IDENTITY,
             n2.scale?.text ?? 1));
@@ -108,7 +108,7 @@ namespace Anim8orTransl8or.Utility
          // Calculate the weights for each mesh
          foreach ( mesh m in ms ?? new mesh[0] )
          {
-            matrix meshMatrix = objectMatrix.Multiply(new matrix(
+            matrix meshMatrix = objectMatrix.Transform(new matrix(
                m?.@base?.origin?.point ?? new point(),
                m?.@base?.orientation?.quaternion ?? quaternion.IDENTITY));
 
@@ -127,7 +127,7 @@ namespace Anim8orTransl8or.Utility
                weightdata[i] = wd;
 
                // Transform the point to its final location
-               point point = meshMatrix.Multiply(m.points.point[i]);
+               point point = meshMatrix.Transform(m.points.point[i]);
 
                CalculateWeight(skeletonNodes, wd, point);
 

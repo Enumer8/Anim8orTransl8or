@@ -38,23 +38,29 @@ namespace Anim8orTransl8or.Cli
 
          using ( Stream stream = File.Open(inFile, FileMode.Open) )
          {
-            An8Serializer deserializer = new An8Serializer(typeof(ANIM8OR));
+            Serializer deserializer = new Serializer(typeof(ANIM8OR));
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         // One An8 file can result in multiple Dae files
+         // One An8 file can result in multiple files
          Directory.CreateDirectory(outFolder);
+         String cwd = Path.GetDirectoryName(inFile);
 
-         foreach ( Converter.Result result in Converter.Convert(an8) )
+         foreach ( Converter.Result result in Converter.Convert(an8, cwd) )
          {
-            String outFile = Path.Combine(
-               outFolder,
-               $"{result.Mode}_{result.Name}.dae");
+            String outFile = Path.Combine(outFolder, result.FileName);
 
-            using ( Stream stream = File.Create(outFile) )
+            if ( result.Dae != null )
             {
-               XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
-               serializer.Serialize(stream, result.Dae);
+               using ( Stream stream = File.Create(outFile) )
+               {
+                  XmlSerializer xml = new XmlSerializer(typeof(COLLADA));
+                  xml.Serialize(stream, result.Dae);
+               }
+            }
+            else if ( result.Png != null )
+            {
+               result.Png.Save(outFile);
             }
          }
       }

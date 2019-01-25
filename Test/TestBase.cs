@@ -201,7 +201,7 @@ namespace Anim8orTransl8or.Test
 
          using ( Stream stream = File.Open(file, FileMode.Open) )
          {
-            An8Serializer deserializer = new An8Serializer(typeof(ANIM8OR));
+            Serializer deserializer = new Serializer(typeof(ANIM8OR));
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 

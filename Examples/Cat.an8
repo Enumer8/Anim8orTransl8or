@@ -18,7 +18,7 @@ environment {
 texture { "FurTexture"
   file { "Fur.png" }
 }
-material { "FurTexture"
+material { "FurMaterial"
   surface {
     /* RGB chunk no longer used */
     rgb { 224 224 224 }
@@ -50,11 +50,11 @@ object { "CatObject"
       origin { (0 -5 -15) }
       orientation { (-0.70711 0 0 0.70711) }
     }
-    material { " -- default --" }
+    material { "FurMaterial" }
     smoothangle { 90 }
     /* 582 points, 983 faces, 82 uvCoords */
     materiallist {
-      materialname { " -- default --" }
+      materialname { "FurMaterial" }
     }
     points {
       (-11.39 -3.1486 30.736) (-11.781 -3.3416 19.148) (-9.026 -7.661 18.529) 

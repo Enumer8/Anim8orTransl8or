@@ -3,13 +3,60 @@
   <asset>
     <contributor>
       <author>Anim8or v1.00</author>
-      <authoring_tool>Anim8orTransl8or.Gui v0.5.0</authoring_tool>
+      <authoring_tool>Anim8orTransl8or.Cli v0.6.0</authoring_tool>
       <comments />
     </contributor>
-    <created>2019-01-20T15:20:52.7211282-06:00</created>
-    <modified>2019-01-20T15:20:52.7211282-06:00</modified>
+    <created>2019-01-24T22:34:56.5158272-06:00</created>
+    <modified>2019-01-24T22:34:56.5158272-06:00</modified>
     <unit />
   </asset>
+  <library_images>
+    <image id="FurTexture" name="FurTexture">
+      <init_from>file://Texture_FurTexture.png</init_from>
+    </image>
+  </library_images>
+  <library_effects>
+    <effect id="FurMaterial-effect" name="FurMaterial-effect">
+      <profile_COMMON>
+        <technique sid="standard">
+          <phong>
+            <emission>
+              <color sid="emissive">0.878431 0.878431 0.878431 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.878431 0.878431 0.878431 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="FurTexture" texcoord="CHANNEL0" />
+            </diffuse>
+            <specular>
+              <color sid="specular">1.000000 1.000000 1.000000 1.000000</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">32</float>
+            </shininess>
+            <reflective xsi:type="common_transparent_type">
+              <color sid="reflective">0.000000 0.000000 0.000000 1.000000</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">1</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">1.000000 1.000000 1.000000 1.000000</color>
+            </transparent>
+            <transparency>
+              <float sid="transparency">0</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="FurMaterial-material" name="FurMaterial-material">
+      <instance_effect url="#FurMaterial-effect" />
+    </material>
+  </library_materials>
   <library_geometries>
     <geometry id="CatMesh" name="CatMesh">
       <mesh>
@@ -881,6 +928,11 @@
                 <matrix sid="transform">1.000009 0.000000 0.000000 0.000000 0.000000 0.000000 1.000009 -5.000000 0.000000 -1.000009 0.000000 -15.000000 0.000000 0.000000 0.000000 1.000000</matrix>
                 <instance_controller url="#CatMesh-skin">
                   <skeleton>#Root</skeleton>
+                  <bind_material>
+                    <technique_common>
+                      <instance_material symbol="FurMaterial-material" target="#FurMaterial-material" />
+                    </technique_common>
+                  </bind_material>
                 </instance_controller>
               </node>
             </node>

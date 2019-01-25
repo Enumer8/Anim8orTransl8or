@@ -58,19 +58,24 @@ namespace User
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         // One An8 file can result in multiple Dae files
+         // One An8 file can result in multiple files
          Directory.CreateDirectory(outFolder);
 
          foreach ( Converter.Result result in Converter.Convert(an8) )
          {
-            String outFile = Path.Combine(
-               outFolder,
-               $"{result.Mode}_{result.Name}.dae");
+            String outFile = Path.Combine(outFolder, result.FileName);
 
-            using ( Stream stream = File.Create(outFile) )
+            if ( result.Dae != null )
             {
-               XmlSerializer serializer = new XmlSerializer(typeof(COLLADA));
-               serializer.Serialize(stream, result.Dae);
+               using ( Stream stream = File.Create(outFile) )
+               {
+                  XmlSerializer xml = new XmlSerializer(typeof(COLLADA));
+                  xml.Serialize(stream, result.Dae);
+               }
+            }
+            else if ( result.Texture != null )
+            {
+               result.Texture.Save(outFile);
             }
          }
       }
@@ -85,13 +90,13 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
  * Parsing/generating COLLADA (\*.dae) files that conform to version 1.4.1 of the specification
  * ANIM8OR "header" converts to COLLADA "author"
  * ANIM8OR "description" converts to COLLADA "comments"
+ * ANIM8OR "texture" converts to COLLADA "image"
+ * ANIM8OR "material" converts to COLLADA "effect"/"material"
  * ANIM8OR "mesh", "sphere", "cylinder", and "cube" convert to COLLADA "polylist"
  * ANIM8OR "figure" converts to COLLADA "controller"
  * ANIM8OR "sequence" converts to COLLADA "animation"
 
 ## Not Yet Supported
- * ANIM8OR "texture"
- * ANIM8OR "material"
  * ANIM8OR "subdivision", "pathcom", "textcom", "modifier", and "image"
  * ANIM8OR "scene"
  * Configuration/optimization. Everything will be converted as faithfully as possible.
@@ -119,6 +124,8 @@ Anim8or Transl8or is open source software. User contributions are appreciated. P
  * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
+ * Anim8orTransl8or v0.6.0 (Not Released Yet)
+   * Added conversion for ANIM8OR "texture" and "material"
  * Anim8orTransl8or v0.5.0
    * Multiple COLLADA files are created for one ANIM8OR file
    * Calculation of ANIM8OR "sphere", "cylinder", "cube" should now exactly match Anim8or v1.00

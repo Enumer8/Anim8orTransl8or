@@ -26,21 +26,21 @@ using System.Text;
 
 namespace Anim8orTransl8or.An8
 {
-   public class An8Serializer
+   public class Serializer
    {
       Type mType;
 
-      public An8Serializer(Type type)
+      public Serializer(Type t)
       {
-         mType = type;
+         mType = t;
       }
 
-      public Object Deserialize(Stream stream)
+      public Object Deserialize(Stream s)
       {
          Object o = Activator.CreateInstance(mType);
          FieldInfo[] fis = mType.GetFields();
 
-         using ( StreamReader sr = new StreamReader(stream) )
+         using ( StreamReader sr = new StreamReader(s) )
          {
             while ( !sr.EndOfStream )
             {
@@ -107,7 +107,7 @@ namespace Anim8orTransl8or.An8
          return o;
       }
 
-      public void Serialize(Stream stream, Object o)
+      public void Serialize(Stream s, Object o)
       {
          // TODO: Implement
          throw new NotImplementedException();
@@ -537,10 +537,10 @@ namespace Anim8orTransl8or.An8
          return sr.Peek() == '{';
       }
 
-      static Object ParseChunk(StreamReader sr, Type type)
+      static Object ParseChunk(StreamReader sr, Type t)
       {
-         Object o = Activator.CreateInstance(type);
-         FieldInfo[] fis = type.GetFields();
+         Object o = Activator.CreateInstance(t);
+         FieldInfo[] fis = t.GetFields();
          AssertChar(sr, (Char c) => IsChunkStart(sr));
          ParseWhiteSpace(sr);
 

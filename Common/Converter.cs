@@ -24,6 +24,8 @@ using Anim8orTransl8or.Dae.V141;
 using Anim8orTransl8or.Utility;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -33,8 +35,86 @@ namespace Anim8orTransl8or
 {
    public static class Converter
    {
-      public static IEnumerable<Result> Convert(ANIM8OR an8)
+      public static IEnumerable<Result> Convert(ANIM8OR an8, String cwd = null)
       {
+         List<String> fileNames = new List<String>();
+         List<TextureNode> textureNodes = new List<TextureNode>();
+         List<MaterialNode> materialNodes = new List<MaterialNode>();
+
+         // Create each texture as a separate png file
+         foreach ( texture texture in an8?.texture ?? new texture[0] )
+         {
+            TextureNode node = new TextureNode(texture);
+
+            foreach ( @string file in texture?.file ?? new @string[0] )
+            {
+               Bitmap png;
+
+               try
+               {
+                  png = new Bitmap(Path.Combine(cwd, file?.text));
+
+                  if ( texture?.invert != null )
+                  {
+                     png.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                  }
+               }
+               catch
+               {
+                  png = new Bitmap(16, 16);
+
+                  Color color = Color.FromArgb(224, 224, 224);
+
+                  using ( Graphics gfx = Graphics.FromImage(png) )
+                  {
+                     using ( SolidBrush brush = new SolidBrush(color) )
+                     {
+                        gfx.FillRectangle(brush, 0, 0, png.Width, png.Height);
+                     }
+                  }
+               }
+
+               foreach ( Int32 id in png.PropertyIdList )
+               {
+                  png.RemovePropertyItem(id);
+               }
+
+               Result result = new Result()
+               {
+                  Mode = Result.An8Mode.Texture,
+                  FileName = MakeUniqueFile(
+                     $"Texture_{texture?.name}.png",
+                     fileNames),
+                  Png = png,
+               };
+
+               node.FileNames.Add(result.FileName);
+
+               yield return result;
+            }
+
+            textureNodes.Add(node);
+         }
+
+         // Create each global material
+         foreach ( An8.V100.material material in an8?.material ??
+            new An8.V100.material[0] )
+         {
+            MaterialNode node = new MaterialNode(null, material);
+            materialNodes.Add(node);
+         }
+
+         // Create each object local material
+         foreach ( @object @object in an8?.@object ?? new @object[0] )
+         {
+            foreach ( An8.V100.material material in @object?.material ??
+               new An8.V100.material[0] )
+            {
+               MaterialNode node = new MaterialNode(@object, material);
+               materialNodes.Add(node);
+            }
+         }
+
          // Create each object as a separate dae file
          foreach ( @object @object in an8?.@object ?? new @object[0] )
          {
@@ -42,9 +122,13 @@ namespace Anim8orTransl8or
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
+            CreateLibraryImages(textureNodes, dae, usedNames);
+            CreateLibraryEffects(textureNodes, materialNodes, dae, usedNames);
+            CreateLibraryMaterials(materialNodes, dae, usedNames);
 
             VisualNode node = CreateLibraryGeometries(
                an8,
+               materialNodes,
                dae,
                usedNames,
                (@object o) => @object == o,
@@ -61,7 +145,9 @@ namespace Anim8orTransl8or
                yield return new Result()
                {
                   Mode = Result.An8Mode.Object,
-                  Name = @object.name ?? "Unnamed",
+                  FileName = MakeUniqueFile(
+                     $"Object_{@object.name}.dae",
+                     fileNames),
                   Dae = dae,
                };
             }
@@ -74,9 +160,13 @@ namespace Anim8orTransl8or
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
+            CreateLibraryImages(textureNodes, dae, usedNames);
+            CreateLibraryEffects(textureNodes, materialNodes, dae, usedNames);
+            CreateLibraryMaterials(materialNodes, dae, usedNames);
 
             VisualNode node = CreateLibraryGeometries(
                an8,
+               materialNodes,
                dae,
                usedNames,
                (@object o) => false,
@@ -95,7 +185,9 @@ namespace Anim8orTransl8or
                yield return new Result()
                {
                   Mode = Result.An8Mode.Figure,
-                  Name = figure.name ?? "Unnamed",
+                  FileName = MakeUniqueFile(
+                     $"Figure_{figure.name}.dae",
+                     fileNames),
                   Dae = dae,
                };
             }
@@ -108,9 +200,13 @@ namespace Anim8orTransl8or
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
+            CreateLibraryImages(textureNodes, dae, usedNames);
+            CreateLibraryEffects(textureNodes, materialNodes, dae, usedNames);
+            CreateLibraryMaterials(materialNodes, dae, usedNames);
 
             VisualNode node = CreateLibraryGeometries(
                an8,
+               materialNodes,
                dae,
                usedNames,
                (@object o) => false,
@@ -130,7 +226,9 @@ namespace Anim8orTransl8or
                yield return new Result()
                {
                   Mode = Result.An8Mode.Sequence,
-                  Name = sequence.name ?? "Unnamed",
+                  FileName = MakeUnique(
+                     $"Sequence_{sequence.name}.dae",
+                     fileNames),
                   Dae = dae,
                };
             }
@@ -161,9 +259,299 @@ namespace Anim8orTransl8or
       }
       #endregion
 
+      #region library_images
+      static void CreateLibraryImages(
+         List<TextureNode> textureNodes,
+         COLLADA dae,
+         List<String> usedNames)
+      {
+         library_images library = new library_images();
+         dae.Items = dae.Items.Append(library);
+
+         foreach ( TextureNode node in textureNodes )
+         {
+            node.Id = MakeUnique(node.Texture?.name, usedNames);
+
+            Dae.V141.image image = new Dae.V141.image();
+            library.image = library.image.Append(image);
+
+            image.id = node.Id;
+            image.name = node.Id;
+
+            // TODO: How do we handle multiple files?
+            String init_from = "file://" + node.FileNames[0];
+            image.Item = init_from;
+         }
+      }
+      #endregion
+
+      #region library_effects
+      static void CreateLibraryEffects(
+         List<TextureNode> textureNodes,
+         List<MaterialNode> materialNodes,
+         COLLADA dae,
+         List<String> usedNames)
+      {
+         library_effects library = new library_effects();
+         dae.Items = dae.Items.Append(library);
+
+         foreach ( MaterialNode materialNode in materialNodes )
+         {
+            materialNode.EffectId = MakeUnique(
+               materialNode.Material?.name + "-effect",
+               usedNames);
+
+            effect effect = new effect();
+            library.effect = library.effect.Append(effect);
+
+            effect.id = materialNode.EffectId;
+            effect.name = materialNode.EffectId;
+
+            effectFx_profile_abstractProfile_COMMON profile =
+               new effectFx_profile_abstractProfile_COMMON();
+
+            effect.Items = effect.Items.Append(profile);
+
+            effectFx_profile_abstractProfile_COMMONTechnique technique =
+               new effectFx_profile_abstractProfile_COMMONTechnique();
+
+            profile.technique = technique;
+
+            technique.sid = "standard";
+
+            effectFx_profile_abstractProfile_COMMONTechniquePhong phong =
+               new effectFx_profile_abstractProfile_COMMONTechniquePhong();
+
+            technique.Item = phong;
+
+            // TODO: What should we do with material.backsurface?
+            // TODO: What should we do with surface.brilliance?
+            // TODO: What should we do with surface.map?
+            surface surface = materialNode.Material?.surface;
+
+            common_color_or_texture_type emission = ConvertAmbient(
+               textureNodes,
+               surface?.emissive,
+               "emissive");
+
+            phong.emission = emission;
+
+            // TODO: How does lockambientdiffuse affect this?
+            common_color_or_texture_type ambient = ConvertAmbient(
+               textureNodes,
+               surface?.ambiant,
+               "ambient");
+
+            phong.ambient = ambient;
+
+            common_color_or_texture_type diffuse = ConvertAmbient(
+               textureNodes,
+               surface?.diffuse,
+               "diffuse");
+
+            phong.diffuse = diffuse;
+
+            common_color_or_texture_type specular = ConvertAmbient(
+               textureNodes,
+               surface?.specular,
+               "specular");
+
+            phong.specular = specular;
+
+            // Shininess
+            {
+               common_float_or_param_type shininess =
+                  new common_float_or_param_type();
+
+               phong.shininess = shininess;
+
+               common_float_or_param_typeFloat value =
+                  new common_float_or_param_typeFloat();
+
+               value.sid = "shininess";
+
+               // TODO: How to convert roughness to shininess?
+               // TODO: What are the limits, if any?
+               value.Value = surface?.phongsize?.text ?? 36;
+
+               shininess.Item = value;
+            }
+
+            // Reflective
+            {
+               common_transparent_type reflective =
+                  new common_transparent_type();
+
+               phong.reflective = reflective;
+
+               common_color_or_texture_typeColor color =
+                  new common_color_or_texture_typeColor();
+
+               reflective.Item = color;
+
+               color.sid = "reflective";
+
+               // TODO: How do we determine these values?
+               color.Values = new Double[]
+               {
+                  0,
+                  0,
+                  0,
+                  1,
+               };
+            }
+
+            // Reflectivity
+            {
+               common_float_or_param_type reflectivity =
+                  new common_float_or_param_type();
+
+               phong.reflectivity = reflectivity;
+
+               common_float_or_param_typeFloat value =
+                  new common_float_or_param_typeFloat();
+
+               value.sid = "reflectivity";
+
+               // TODO: How do we determine this value?
+               value.Value = 1;
+
+               reflectivity.Item = value;
+            }
+
+            // Transparent
+            {
+               common_transparent_type transparent =
+                  new common_transparent_type();
+
+               phong.transparent = transparent;
+
+               transparent.opaque = fx_opaque_enum.RGB_ZERO;
+
+               common_color_or_texture_typeColor color =
+                  new common_color_or_texture_typeColor();
+
+               transparent.Item = color;
+
+               color.sid = "transparent";
+
+               // TODO: How do we determine these values?
+               color.Values = new Double[]
+               {
+                  1,
+                  1,
+                  1,
+                  1,
+               };
+            }
+
+            // Transparency
+            {
+               common_float_or_param_type transparency =
+                  new common_float_or_param_type();
+
+               phong.transparency = transparency;
+
+               common_float_or_param_typeFloat value =
+                  new common_float_or_param_typeFloat();
+
+               value.sid = "transparency";
+
+               // TODO: Is this the correct place to use surface.alpha?
+               // Note: This converts an alpha to a transparency.
+               value.Value = 1 - (surface?.alpha?.text ?? 255).Limit(0, 255) /
+                  255.0;
+
+               transparency.Item = value;
+            }
+         }
+      }
+
+      static common_color_or_texture_type ConvertAmbient(
+         List<TextureNode> textureNodes,
+         ambiant ambient,
+         String sid)
+      {
+         // TODO: What should we do with ambiant.factor?
+         // TODO: What should we do with ambiant.textureparams?
+         common_color_or_texture_type result =
+            new common_color_or_texture_type();
+
+         if ( ambient?.texturename?.text != null )
+         {
+            foreach ( TextureNode textureNode in textureNodes )
+            {
+               if ( textureNode.Texture?.name == ambient?.texturename?.text )
+               {
+                  common_color_or_texture_typeTexture texture =
+                     new common_color_or_texture_typeTexture();
+
+                  result.Item = texture;
+
+                  texture.texture = textureNode.Id;
+
+                  // TODO: Is this how we support multiple textures?
+                  texture.texcoord = "CHANNEL0";
+                  break;
+               }
+            }
+         }
+         else
+         {
+            common_color_or_texture_typeColor color =
+               new common_color_or_texture_typeColor();
+
+            result.Item = color;
+
+            color.sid = sid;
+
+            color.Values = new Double[]
+            {
+               // Note: These defaults and limits were reversed engineered.
+               (ambient?.rgb?.red ?? 224).Limit(0, 255) / 255.0,
+               (ambient?.rgb?.green ?? 224).Limit(0, 255) / 255.0,
+               (ambient?.rgb?.blue ?? 224).Limit(0, 255) / 255.0,
+               1,
+            };
+         }
+
+         return result;
+      }
+      #endregion
+
+      #region library_materials
+      static void CreateLibraryMaterials(
+         List<MaterialNode> materialNodes,
+         COLLADA dae,
+         List<String> usedNames)
+      {
+         library_materials library = new library_materials();
+         dae.Items = dae.Items.Append(library);
+
+         foreach ( MaterialNode materialNode in materialNodes )
+         {
+            materialNode.MaterialId = MakeUnique(
+               materialNode.Material?.name + "-material",
+               usedNames);
+
+            Dae.V141.material material = new Dae.V141.material();
+            library.material = library.material.Append(material);
+
+            material.id = materialNode.MaterialId;
+            material.name = materialNode.MaterialId;
+
+            instance_effect instance = new instance_effect();
+            material.instance_effect = instance;
+
+            instance.url = "#" + materialNode.EffectId;
+         }
+      }
+      #endregion
+
       #region library_geometries
       static VisualNode CreateLibraryGeometries(
          ANIM8OR an8,
+         List<MaterialNode> materialNodes,
          COLLADA dae,
          List<String> usedNames,
          Func<@object, Boolean> includeObject = null,
@@ -196,7 +584,13 @@ namespace Anim8orTransl8or
             group.image = @object?.image;
             group.group = @object?.group;
 
-            VisualNode oNode = AddGroup(usedNames, library, group, @object);
+            VisualNode oNode = AddGroup(
+               materialNodes,
+               usedNames,
+               library,
+               group,
+               @object);
+
             node.Link(oNode);
          }
 
@@ -212,12 +606,18 @@ namespace Anim8orTransl8or
             group1 group = new group1();
             group.name = new @string() { text = figure?.name };
 
-            VisualNode fNode = AddGroup(usedNames, library, group, figure);
+            VisualNode fNode = AddGroup(
+               materialNodes,
+               usedNames,
+               library,
+               group,
+               figure);
 
             if ( figure?.bone != null )
             {
                VisualNode bNode = AddBoneGeometry(
                   an8,
+                  materialNodes,
                   usedNames,
                   library,
                   figure.bone,
@@ -234,6 +634,7 @@ namespace Anim8orTransl8or
       }
 
       static VisualNode AddGroup(
+         List<MaterialNode> materialNodes,
          List<String> usedNames,
          library_geometries library,
          group1 group,
@@ -249,7 +650,13 @@ namespace Anim8orTransl8or
 
          foreach ( An8.V100.mesh mesh in group.mesh ?? new An8.V100.mesh[0] )
          {
-            VisualNode mNode = AddMesh(usedNames, library, mesh, mesh);
+            VisualNode mNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               mesh);
+
             node.Link(mNode);
          }
 
@@ -257,7 +664,14 @@ namespace Anim8orTransl8or
             new An8.V100.sphere[0] )
          {
             An8.V100.mesh mesh = An8Sphere.Calculate(sphere);
-            VisualNode sNode = AddMesh(usedNames, library, mesh, sphere);
+
+            VisualNode sNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               sphere);
+
             node.Link(sNode);
          }
 
@@ -265,14 +679,28 @@ namespace Anim8orTransl8or
             new An8.V100.cylinder[0] )
          {
             An8.V100.mesh mesh = An8Cylinder.Calculate(cylinder);
-            VisualNode cNode = AddMesh(usedNames, library, mesh, cylinder);
+
+            VisualNode cNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               cylinder);
+
             node.Link(cNode);
          }
 
          foreach ( cube cube in group.cube ?? new cube[0] )
          {
             An8.V100.mesh mesh = An8Cube.Calculate(cube);
-            VisualNode cNode = AddMesh(usedNames, library, mesh, cube);
+
+            VisualNode cNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               cube);
+
             node.Link(cNode);
          }
 
@@ -280,21 +708,42 @@ namespace Anim8orTransl8or
             new subdivision[0] )
          {
             An8.V100.mesh mesh = An8Subdivision.Calculate(subdivision);
-            VisualNode sNode = AddMesh(usedNames, library, mesh, subdivision);
+
+            VisualNode sNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               subdivision);
+
             node.Link(sNode);
          }
 
          foreach ( pathcom pathcom in group.pathcom ?? new pathcom[0] )
          {
             An8.V100.mesh mesh = An8PathCom.Calculate(pathcom);
-            VisualNode pNode = AddMesh(usedNames, library, mesh, pathcom);
+
+            VisualNode pNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               pathcom);
+
             node.Link(pNode);
          }
 
          foreach ( textcom textcom in group.textcom ?? new textcom[0] )
          {
             An8.V100.mesh mesh = An8TextCom.Calculate(textcom);
-            VisualNode tNode = AddMesh(usedNames, library, mesh, textcom);
+
+            VisualNode tNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               textcom);
+
             node.Link(tNode);
          }
 
@@ -316,7 +765,13 @@ namespace Anim8orTransl8or
             group2.image = group2.image.Append(modifier?.image);
             group2.group = group2.group.Append(modifier?.group);
 
-            VisualNode mNode = AddGroup(usedNames, library, group2, modifier);
+            VisualNode mNode = AddGroup(
+               materialNodes,
+               usedNames,
+               library,
+               group2,
+               modifier);
+
             node.Link(mNode);
          }
 
@@ -324,13 +779,26 @@ namespace Anim8orTransl8or
             new An8.V100.image[0] )
          {
             An8.V100.mesh mesh = An8Image.Calculate(image);
-            VisualNode iNode = AddMesh(usedNames, library, mesh, image);
+
+            VisualNode iNode = AddMesh(
+               materialNodes,
+               usedNames,
+               library,
+               mesh,
+               image);
+
             node.Link(iNode);
          }
 
          foreach ( group1 group2 in group.group ?? new group1[0] )
          {
-            VisualNode gNode = AddGroup(usedNames, library, group2, group2);
+            VisualNode gNode = AddGroup(
+               materialNodes,
+               usedNames,
+               library,
+               group2,
+               group2);
+
             node.Link(gNode);
          }
 
@@ -338,6 +806,7 @@ namespace Anim8orTransl8or
       }
 
       static VisualNode AddMesh(
+         List<MaterialNode> materialNodes,
          List<String> usedNames,
          library_geometries library,
          An8.V100.mesh mesh,
@@ -358,6 +827,21 @@ namespace Anim8orTransl8or
          VisualNode node = new VisualNode(name, matrix, tag);
          node.Mesh = mesh;
          node.GeometryId = name;
+
+         // TODO: How do we support more than one material?
+         if ( mesh.materiallist?.materialname?.Length > 0 )
+         {
+            String materialName = mesh.materiallist.materialname[0]?.text;
+
+            foreach ( MaterialNode materialNode in materialNodes )
+            {
+               if ( materialNode.Material?.name == materialName )
+               {
+                  node.MaterialId = materialNode.MaterialId;
+                  break;
+               }
+            }
+         }
 
          geometry geometry = new geometry();
          library.geometry = library.geometry.Append(geometry);
@@ -683,6 +1167,7 @@ namespace Anim8orTransl8or
 
       static VisualNode AddBoneGeometry(
          ANIM8OR an8,
+         List<MaterialNode> materialNodes,
          List<String> usedNames,
          library_geometries library,
          bone1 bone,
@@ -709,7 +1194,13 @@ namespace Anim8orTransl8or
          group.image = bone.image;
          group.group = bone.group;
 
-         VisualNode node = AddGroup(usedNames, library, group, bone, scale);
+         VisualNode node = AddGroup(
+            materialNodes,
+            usedNames,
+            library,
+            group,
+            bone,
+            scale);
 
          foreach ( namedobject namedobject in bone.namedobject ??
             new namedobject[0] )
@@ -720,6 +1211,7 @@ namespace Anim8orTransl8or
             group2.@base = namedobject?.@base;
 
             VisualNode nNode = AddGroup(
+               materialNodes,
                usedNames,
                library,
                group2,
@@ -748,6 +1240,7 @@ namespace Anim8orTransl8or
                   group3.group = @object?.group;
 
                   VisualNode oNode = AddGroup(
+                     materialNodes,
                      usedNames,
                      library,
                      group3,
@@ -770,6 +1263,7 @@ namespace Anim8orTransl8or
          {
             VisualNode bNode = AddBoneGeometry(
                an8,
+               materialNodes,
                usedNames,
                library,
                bone2,
@@ -1468,7 +1962,7 @@ namespace Anim8orTransl8or
             An8.matrix sequenceMat = new An8.matrix(new point(), sequenceQuat, 1);
 
             Double time = frameNumber / framesPerSecond;
-            An8.matrix matrix = bNode.Matrix.Multiply(sequenceMat);
+            An8.matrix matrix = bNode.Matrix.Transform(sequenceMat);
 
             frames.Add(time, matrix);
          }
@@ -1569,6 +2063,22 @@ namespace Anim8orTransl8or
             node.instance_geometry = node.instance_geometry.Append(i);
 
             i.url = "#" + visualNode.GeometryId;
+
+            if ( visualNode.MaterialId != null )
+            {
+               bind_material bind_material = new bind_material();
+               i.bind_material = bind_material;
+
+               instance_material instance_material = new instance_material();
+
+               bind_material.technique_common = new instance_material[]
+               {
+                  instance_material,
+               };
+
+               instance_material.symbol = visualNode.MaterialId;
+               instance_material.target = "#" + visualNode.MaterialId;
+            }
          }
 
          if ( visualNode.ControllerId != null )
@@ -1581,6 +2091,22 @@ namespace Anim8orTransl8or
             if ( visualNode.SkeletonId != null )
             {
                i.skeleton = new String[] { "#" + visualNode.SkeletonId };
+            }
+
+            if ( visualNode.MaterialId != null )
+            {
+               bind_material bind_material = new bind_material();
+               i.bind_material = bind_material;
+
+               instance_material instance_material = new instance_material();
+
+               bind_material.technique_common = new instance_material[]
+               {
+                  instance_material,
+               };
+
+               instance_material.symbol = visualNode.MaterialId;
+               instance_material.target = "#" + visualNode.MaterialId;
             }
          }
 
@@ -1608,6 +2134,7 @@ namespace Anim8orTransl8or
       {
          public enum An8Mode
          {
+            Texture,
             Object,
             Figure,
             Sequence,
@@ -1615,8 +2142,36 @@ namespace Anim8orTransl8or
          }
 
          public An8Mode Mode;
-         public String Name;
+         public String FileName;
          public COLLADA Dae;
+         public Bitmap Png;
+      }
+
+      class TextureNode
+      {
+         public TextureNode(texture texture)
+         {
+            Texture = texture;
+            FileNames = new List<String>();
+         }
+
+         public String Id;
+         public texture Texture;
+         public List<String> FileNames;
+      }
+
+      class MaterialNode
+      {
+         public MaterialNode(@object @object, An8.V100.material material)
+         {
+            Object = @object;
+            Material = material;
+         }
+
+         public String EffectId;
+         public String MaterialId;
+         public @object Object;
+         public An8.V100.material Material;
       }
 
       class VisualNode
@@ -1642,7 +2197,7 @@ namespace Anim8orTransl8or
 
             while ( iterator != null )
             {
-               matrix = iterator.Matrix.Multiply(matrix);
+               matrix = iterator.Matrix.Transform(matrix);
 
                iterator = iterator.Parent;
             }
@@ -1692,6 +2247,7 @@ namespace Anim8orTransl8or
          public Object Tag;
          public An8.V100.mesh Mesh;
          public String GeometryId;
+         public String MaterialId;
          public String ControllerId;
          public String SkeletonId;
          public VisualNode Parent;
@@ -1727,6 +2283,23 @@ namespace Anim8orTransl8or
 
          usedNames.Add(name);
          return name;
+      }
+
+      static String MakeUniqueFile(String name, List<String> usedNames)
+      {
+         name = name ?? "Unnamed";
+         String ext = Path.GetExtension(name);
+         name = Path.GetFileNameWithoutExtension(name);
+
+         Int32 number = 0;
+
+         while ( usedNames.Contains(name + ext) )
+         {
+            name = $"{name.TrimEnd(NUM_CHARS)}{++number:00}";
+         }
+
+         usedNames.Add(name + ext);
+         return name + ext;
       }
       #endregion
    }
