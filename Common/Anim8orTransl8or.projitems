@@ -16,8 +16,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)An8\TexCoord.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)An8\V100\ANIM8OR.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ConverterResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Dae\V141\COLLADA.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LightNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MaterialNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TextureNode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cube.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cylinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Image.cs" />
@@ -28,5 +32,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8TextCom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Weights.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)VisualNode.cs" />
   </ItemGroup>
 </Project>

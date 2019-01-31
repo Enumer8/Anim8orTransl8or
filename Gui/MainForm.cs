@@ -76,7 +76,7 @@ namespace Anim8orTransl8or.Gui
          Directory.CreateDirectory(outFolder);
          String cwd = Path.GetDirectoryName(inFile);
 
-         foreach ( Converter.Result result in Converter.Convert(an8, cwd) )
+         foreach ( ConverterResult result in Converter.Convert(an8, cwd) )
          {
             String outFile = Path.Combine(outFolder, result.FileName);
 

@@ -22,6 +22,7 @@ using Anim8orTransl8or.An8;
 using Anim8orTransl8or.An8.V100;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Anim8orTransl8or.Utility
 {
@@ -63,8 +64,6 @@ namespace Anim8orTransl8or.Utility
 
          if ( callback != null )
          {
-            callback($"The \"{m2.name?.text}\" mesh's calculated normals will not exactly match what Anim8or would generate, though they will be close. Please output normals from Anim8or if they need to be exact.");
-
             if ( m2.points?.point == null || m2.points.point.Length == 0 )
             {
                callback($"The \"{m2.name?.text}\" mesh does not have any points, so no normals can be calculated.");
@@ -86,9 +85,9 @@ namespace Anim8orTransl8or.Utility
 
             if ( f?.pointdata?.Length >= 3 )
             {
-               indexA = f.pointdata[0].pointindex;
-               indexB = f.pointdata[1].pointindex;
-               indexC = f.pointdata[2].pointindex;
+               indexA = f.pointdata[0]?.pointindex ?? -1;
+               indexB = f.pointdata[1]?.pointindex ?? -1;
+               indexC = f.pointdata[2]?.pointindex ?? -1;
             }
 
             if ( indexA >= 0 &&
@@ -113,115 +112,115 @@ namespace Anim8orTransl8or.Utility
                normals.Add(new point(0, 1, 0));
             }
 
-            foreach ( pointdata p in m2.faces.facedata[i]?.pointdata ??
-               new pointdata[0] )
+            foreach ( pointdata p in f?.pointdata ?? new pointdata[0] )
             {
-               PointLink l = new PointLink();
-               l.Next = pointLinks[p.pointindex];
-               l.FaceIndex = i;
-               l.SmoothGroup = -1;
-               pointLinks[p.pointindex] = l;
+               Int64 index = p?.pointindex ?? -1;
+
+               if ( index >= 0 && index < pointCount )
+               {
+                  PointLink pointLink = pointLinks[index];
+
+                  if ( pointLink == null )
+                  {
+                     pointLinks[index] = pointLink = new PointLink();
+                  }
+
+                  pointLink.SmoothingGroups.Add(new SmoothingGroup
+                  {
+                     FaceIndices = { i }
+                  });
+               }
             }
          }
 
-         // Create the minimum number of smooth groups
-         for ( Int32 i = 0; i < pointCount; i++ )
+         // Merge groups
+         foreach ( PointLink pointLink in pointLinks )
          {
-            PointLink thisPointLink = pointLinks[i];
-            Int32 maxSmoothGroup = -1;
+            Int32 count = pointLink?.SmoothingGroups.Count ?? 0;
 
-            while ( thisPointLink != null )
+            for ( Int32 i = count - 1; i >= 0; i-- )
             {
-               if ( thisPointLink.SmoothGroup < 0 )
+               SmoothingGroup groupA = pointLink.SmoothingGroups[i];
+
+               for ( Int32 j = i - 1; j >= 0; j-- )
                {
-                  thisPointLink.SmoothGroup = ++maxSmoothGroup;
+                  SmoothingGroup groupB = pointLink.SmoothingGroups[j];
 
-                  List<Int32> facesInGroup = new List<Int32>();
-                  facesInGroup.Add(thisPointLink.FaceIndex);
+                  // If any face in groupA should smooth with any face in
+                  // groupB, then combine the groups.
+                  Boolean shouldMerge = false;
 
-                  Boolean addedNewMember = true;
-
-                  while ( addedNewMember )
+                  foreach ( Int32 faceAIndex in groupA.FaceIndices )
                   {
-                     addedNewMember = false;
-
-                     PointLink thatPointLink = thisPointLink.Next;
-
-                     while ( thatPointLink != null )
+                     foreach ( Int32 faceBIndex in groupB.FaceIndices )
                      {
-                        if ( thatPointLink.SmoothGroup !=
-                           thisPointLink.SmoothGroup )
+                        if ( IsSmooth(
+                           m2.edges?.edge,
+                           m2.faces?.facedata,
+                           normals,
+                           cosAngle,
+                           faceAIndex,
+                           faceBIndex) )
                         {
-                           Boolean inGroup = false;
-
-                           foreach ( Int32 faceIndex in facesInGroup )
-                           {
-                              Double dot = normals[faceIndex].Dot(
-                                 normals[thatPointLink.FaceIndex]);
-
-                              if ( dot >= cosAngle )
-                              {
-                                 inGroup = true;
-                                 break;
-                              }
-                           }
-
-                           if ( inGroup )
-                           {
-                              facesInGroup.Add(thatPointLink.FaceIndex);
-                              addedNewMember = true;
-                              thatPointLink.SmoothGroup =
-                                 thisPointLink.SmoothGroup;
-                           }
+                           shouldMerge = true;
+                           break;
                         }
+                     }
 
-                        thatPointLink = thatPointLink.Next;
+                     if ( shouldMerge )
+                     {
+                        break;
                      }
                   }
-               }
 
-               thisPointLink = thisPointLink.Next;
+                  if ( shouldMerge )
+                  {
+                     groupB.FaceIndices.AddRange(groupA.FaceIndices);
+                     pointLink.SmoothingGroups.RemoveAt(i);
+                     break;
+                  }
+               }
             }
          }
 
-         // Calculate the normals for each point in each face
-         for ( Int32 i = 0; i < faceCount; i++ )
+         // Note: Rearrange the groups to match Anim8or v1.00's order.
+         foreach ( PointLink pointLink in pointLinks )
          {
-            foreach ( pointdata p in m2.faces.facedata[i]?.pointdata ??
-               new pointdata[0] )
+            if ( pointLink?.SmoothingGroups.Count > 2 )
             {
-               // Find the smooth group of this point in this face
-               Int32 smoothGroup = -1;
-               PointLink pointLink = pointLinks[p.pointindex];
+               pointLink.SmoothingGroups.Reverse(
+                  1,
+                  pointLink.SmoothingGroups.Count - 1);
+            }
+         }
 
-               while ( pointLink != null )
-               {
-                  if ( pointLink.FaceIndex == i )
-                  {
-                     smoothGroup = pointLink.SmoothGroup;
-                     pointLink = null;
-                  }
-                  else
-                  {
-                     pointLink = pointLink.Next;
-                  }
-               }
+         // Calculate the smooth normals for each group
+         for ( Int32 i = 0; i < pointCount; i++ )
+         {
+            PointLink pointLink = pointLinks[i];
 
+            foreach ( SmoothingGroup smoothingGroup in
+               pointLink?.SmoothingGroups ??
+               new List<SmoothingGroup>() )
+            {
                point smoothNormal = new point();
-               pointLink = pointLinks[p.pointindex];
 
-               while ( pointLink != null )
+               foreach ( Int32 faceIndex in smoothingGroup.FaceIndices )
                {
-                  if ( pointLink.SmoothGroup == smoothGroup )
+                  foreach ( pointdata p in
+                     m2.faces.facedata[faceIndex].pointdata )
                   {
-                     smoothNormal += normals[pointLink.FaceIndex];
+                     if ( p.pointindex == i )
+                     {
+                        p.normalindex = normals.Count;
+                     }
                   }
 
-                  pointLink = pointLink.Next;
+                  smoothNormal += normals[faceIndex];
                }
 
-               p.normalindex = normals.Count;
-               normals.Add(smoothNormal.Normalize());
+               smoothNormal = smoothNormal.Normalize();
+               normals.Add(smoothNormal);
             }
          }
 
@@ -311,11 +310,86 @@ namespace Anim8orTransl8or.Utility
          return pd;
       }
 
+      static Boolean IsSmooth(
+         edge[] edges,
+         facedata[] faces,
+         List<point> normals,
+         Double cosAngle,
+         Int32 faceAIndex,
+         Int32 faceBIndex)
+      {
+         Int32 facesLength = faces?.Length ?? 0;
+
+         if ( faceAIndex >= 0 && faceAIndex < facesLength &&
+              faceBIndex >= 0 && faceBIndex < facesLength )
+         {
+            facedata faceA = faces[faceAIndex];
+            facedata faceB = faces[faceBIndex];
+
+            List<Int64> indicesA = new List<Int64>();
+            List<Int64> indicesB = new List<Int64>();
+
+            foreach ( pointdata p in faceA?.pointdata ?? new pointdata[0] )
+            {
+               if ( p != null )
+               {
+                  indicesA.Add(p.pointindex);
+               }
+            }
+
+            foreach ( pointdata p in faceB?.pointdata ?? new pointdata[0] )
+            {
+               if ( p != null )
+               {
+                  indicesB.Add(p.pointindex);
+               }
+            }
+
+            List<Int64> indices = indicesA.Intersect(indicesB).ToList();
+
+            if ( indices.Count == 2 )
+            {
+               indices.Sort();
+
+               Boolean creasedEdge = false;
+
+               foreach ( edge edge in edges ?? new edge[0] )
+               {
+                  if ( indices[0] == edge?.startpointindex &&
+                       indices[1] == edge?.endpointindex )
+                  {
+                     if ( edge?.sharpness < 0 )
+                     {
+                        creasedEdge = true;
+                     }
+                     break;
+                  }
+               }
+
+               if ( !creasedEdge )
+               {
+                  Double dot = normals[faceAIndex].Dot(normals[faceBIndex]);
+
+                  if ( dot >= cosAngle )
+                  {
+                     return true;
+                  }
+               }
+            }
+         }
+
+         return false;
+      }
+
       class PointLink
       {
-         public PointLink Next;
-         public Int32 FaceIndex;
-         public Int32 SmoothGroup;
+         public List<SmoothingGroup> SmoothingGroups =
+            new List<SmoothingGroup>();
+      }
+
+      class SmoothingGroup
+      {
+         public List<Int32> FaceIndices = new List<Int32>();
       }
    }
 }

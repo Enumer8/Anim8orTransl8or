@@ -3,7 +3,7 @@ Anim8or Transl8or converts ANIM8OR (\*.an8) files into COLLADA (\*.dae) files.
 
 (For more information on Anim8or®, please visit http://www.anim8or.com/)
 
-(For more information on COLLADA, please visit https://www.khronos.org/collada/)
+(For more information on COLLADA™, please visit https://www.khronos.org/collada/)
 
 Anim8or Transl8or converts each object, figure, and sequence in an ANIM8OR file into a separate COLLADA file. For instance, the Walk sequence in Cat.an8:
 
@@ -61,7 +61,7 @@ namespace User
          // One An8 file can result in multiple files
          Directory.CreateDirectory(outFolder);
 
-         foreach ( Converter.Result result in Converter.Convert(an8) )
+         foreach ( ConverterResult result in Converter.Convert(an8) )
          {
             String outFile = Path.Combine(outFolder, result.FileName);
 
@@ -103,20 +103,66 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
  * Error handling. The program will just crash if it does not like something.
  * Generating ANIM8OR (\*.an8) files.
  * Converting COLLADA (\*.dae) to ANIM8OR (\*.an8).
- * Converting ANIM8OR (\*.an8) to other formats besides COLLADA (\*.dae).
+ * Converting ANIM8OR (\*.an8) to other formats, like \*.gltf and \*.glb.
 
 ## Limitations
-There are a handful of things that Anim8or calculates internally that are somewhat challenging to reproduce. For instance, Anim8or supports spheres, cylinders, and cubes. The exact points and texture coordinates, however, are needed when creating the COLLADA file. Anim8or Transl8or has been unit tested and should exactly match Anim8or v1.00's output. If there are issues, you can select the object in Anim8or and click Build->Convert to Mesh. This forces Anim8or to output the exact points. The other types of objects (i.e. subdivision, pathcom, textcom, modifier, and image) are not supported by Anim8or Transl8or at this time. You must click Convert to Mesh to use those.
+#### Materials
+ANIM8OR supports some material parameters that do not seem to be supported by
+COLLADA (at least in a commonly supported way).
 
-Also, Anim8or automatically calculates normals. Anim8or Transl8or can also calculate normals, and they were designed to match what Anim8or calculates, but the normals do not match in all cases right now. The simple cases have been confirmed with unit tests (the normals themselves match, but the normal indices do not). If there are issues, you can check Options->Debug->Output Normals in Anim8or. This forces Anim8or to output the exact normals.
+#### Multiple Objects/Figures/Sequences/Scenes
+ANIM8OR can store completely independent objects, figures, sequences, and
+scenes in the same file. There doesn't seem to be a good way to do the same in
+a COLLADA file. Some possible workarounds, such as combining all sequences into
+the same timeline, are not appealing, so Anim8or Transl8or splits each object,
+figure, sequence, and scene into a separate COLLADA file. GL Transmission
+Format is very promising in this regard (see https://www.khronos.org/gltf/), so
+it may be supported as an alternate output format some day.
 
-Finally, Anim8or supports weighting points using bone influences. Anim8or uses bone envelopes to internally calculate the point weights. Anim8or Transl8or has been unit tested and should exactly match Anim8or v1.00's output. If there are issues, you can double-click the figure and choose Weights instead of Bone Influences. This forces Anim8or to output the exact weights.
+#### Procedural Meshes
+ANIM8OR supports spheres, cylinders, and cubes that are calculated
+procedurally. The exact points and texture coordinates, however, are needed
+when creating the COLLADA file (and the order of the points must also be exact
+if the mesh is explicitly weighted). Anim8or Transl8or's procedure has been
+reverse engineered from Anim8or v1.00's output and has been unit tested to
+match. However, if there are issues, Anim8or v1.00 can be forced to output the
+exact points by selecting the object in Anim8or and clicking Build->Convert to
+Mesh. If a specific type of object is not supported by Anim8or Transl8or (i.e.
+subdivision, pathcom, textcom, modifier, and image) it can also be enabled by
+clicking Convert to Mesh.
+
+#### Implicit Normals
+The normals of all ANIM8OR meshes are automatically recalculated even if they
+are present in the file. Anim8or Transl8or's calculation has been reverse
+engineered from Anim8or v1.00's output and has been unit tested to match.
+However, if there are issues, Anim8or v1.00 can be forced to output the exact
+normals by clicking Options->Debug->Output Normals.
+
+#### Implicit Weights
+ANIM8OR supports weighting points using bone influences. Bone envelopes are
+used to internally calculate the point weights. Anim8or Transl8or's calculation
+has been reverse engineered from Anim8or v1.00's output and has been unit
+tested to match. However, if there are issues, Anim8or v1.00 can be forced to
+output the exact weights by double-clicking the figure and choosing Weights
+instead of Bone Influences.
 
 ## Report Problems
-Anim8or Transl8or is very immature, and the ANIM8OR (\*.an8) format is not completely documented, so there will be problems and incompatibilities. Please enter issues on GitHub (https://github.com/Enumer8/Anim8orTransl8or/issues). Please don't enter issues about things that are [not supported yet](#not-supported-yet). For the best chance at fixing the issue, please attach or link to the ANIM8OR (\*.an8) file that causes the problem.
+Anim8or Transl8or is immature, the ANIM8OR (\*.an8) format is not completely
+documented, and not all COLLADA (\*.dae) importers are perfect, so there will
+be problems and incompatibilities. Please enter issues on GitHub
+(https://github.com/Enumer8/Anim8orTransl8or/issues). Please don't enter issues
+about things that are [not supported yet](#not-supported-yet). For the best
+chance at fixing the issue, please attach or link to the ANIM8OR (\*.an8) file
+that causes the problem.
 
 ## Contribute
-Anim8or Transl8or is open source software. User contributions are appreciated. Please create a pull request on GitHub (https://github.com/Enumer8/Anim8orTransl8or/pulls). Please focus on developing things that are [not supported yet](#not-supported-yet) and be sure to test your changes. Visual Studio 2017 is recommended for development.
+Anim8or Transl8or is open source software. User contributions are appreciated.
+Please create a pull request on GitHub
+(https://github.com/Enumer8/Anim8orTransl8or/pulls). Please focus on developing
+things that are [not supported yet](#not-supported-yet) and be sure to test
+your changes. Visual Studio 2017 is recommended for development. Otherwise,
+uploading example ANIM8OR files, explaining how to convert something more
+accurately, or creating unit tests are also appreciated.
 
 ## Acknowledgements
  * Thanks, R. Steven Glanville, for making Anim8or!
@@ -126,6 +172,7 @@ Anim8or Transl8or is open source software. User contributions are appreciated. P
 ## Change log
  * Anim8orTransl8or v0.6.0 (Not Released Yet)
    * Added conversion for ANIM8OR "texture" and "material"
+   * Calculation of normals should now exactly match Anim8or v1.00
  * Anim8orTransl8or v0.5.0
    * Multiple COLLADA files are created for one ANIM8OR file
    * Calculation of ANIM8OR "sphere", "cylinder", "cube" should now exactly match Anim8or v1.00

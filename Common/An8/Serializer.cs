@@ -132,14 +132,27 @@ namespace Anim8orTransl8or.An8
          }
       }
 
+      static Boolean IsWhiteSpace(StreamReader sr)
+      {
+         return Char.IsWhiteSpace((Char)sr.Peek());
+      }
+
       /// <summary>
       /// Reads all continguous whitespace.
+      /// Note: For simplicity, slash star comments are skipped as well.
       /// </summary>
       static void ParseWhiteSpace(StreamReader sr)
       {
-         while ( Char.IsWhiteSpace((Char)sr.Peek()) )
+         while ( IsSlashStarCommentStart(sr) || IsWhiteSpace(sr) )
          {
-            sr.Read();
+            if ( IsSlashStarCommentStart(sr) )
+            {
+               ParseSlashStarComment(sr);
+            }
+            else
+            {
+               sr.Read();
+            }
          }
       }
 
@@ -425,6 +438,36 @@ namespace Anim8orTransl8or.An8
       }
 
       #region Special Case
+      static Boolean IsEdgeStart(StreamReader sr)
+      {
+         return sr.Peek() == '(';
+      }
+
+      /// <summary>
+      /// Reads an An8 edge, e.g. "(3 7 -1)".
+      /// </summary>
+      static V100.edge ParseEdge(StreamReader sr)
+      {
+         V100.edge edge = new V100.edge();
+         AssertChar(sr, (Char c) => IsPointStart(sr));
+         ParseWhiteSpace(sr);
+
+         edge.startpointindex = ParseInt(sr);
+         ParseWhiteSpace(sr);
+
+         edge.endpointindex = ParseInt(sr);
+         ParseWhiteSpace(sr);
+
+         if ( sr.Peek() != ')' )
+         {
+            edge.sharpness = ParseInt(sr);
+            ParseWhiteSpace(sr);
+         }
+
+         AssertChar(sr, (Char c) => c == ')');
+         return edge;
+      }
+
       static Boolean IsFaceDataStart(StreamReader sr)
       {
          return IsIntStart(sr);
@@ -675,6 +718,25 @@ namespace Anim8orTransl8or.An8
 
                fi.SetValue(o, quaternions.ToArray());
             }
+            #region Special Case - parsing edges
+            else if ( fi.FieldType == typeof(V100.edge) )
+            {
+               fi.SetValue(o, ParseEdge(sr));
+               ParseWhiteSpace(sr);
+            }
+            else if ( fi.FieldType == typeof(V100.edge[]) )
+            {
+               List<V100.edge> edges = new List<V100.edge>();
+
+               while ( IsEdgeStart(sr) )
+               {
+                  edges.Add(ParseEdge(sr));
+                  ParseWhiteSpace(sr);
+               }
+
+               fi.SetValue(o, edges.ToArray());
+            }
+            #endregion
             #region Special Case - parsing facedata
             else if ( fi.FieldType == typeof(V100.facedata) )
             {
@@ -718,13 +780,6 @@ namespace Anim8orTransl8or.An8
          // Read chunk fields
          while ( sr.Peek() != '}' )
          {
-            // TODO: How often do we need to check for comments?
-            if ( IsSlashStarCommentStart(sr) )
-            {
-               String comment = ParseSlashStarComment(sr);
-               ParseWhiteSpace(sr);
-            }
-
             String chunkName = ParseIdentifier(sr);
             ParseWhiteSpace(sr);
 

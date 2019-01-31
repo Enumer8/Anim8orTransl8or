@@ -53,6 +53,16 @@ namespace Anim8orTransl8or.An8
          w = cosine;
       }
 
+      public quaternion(point originalPoint, point rotatedPoint)
+      {
+         Double cosTheta = originalPoint.Normalize().Dot(
+            rotatedPoint.Normalize());
+
+         Double angle = Math.Acos(cosTheta);
+         point axis = originalPoint.Cross(rotatedPoint).Normalize();
+         this = new quaternion(axis, angle);
+      }
+
       public override String ToString()
       {
          return $"<{x:0.000}, {y:0.000}, {z:0.000}, {w:0.000}>";

@@ -35,19 +35,91 @@ namespace Anim8orTransl8or
 {
    public static class Converter
    {
-      public static IEnumerable<Result> Convert(ANIM8OR an8, String cwd = null)
+      public static IEnumerable<ConverterResult> Convert(
+         ANIM8OR an8,
+         String cwd = null)
       {
          List<String> fileNames = new List<String>();
+         List<LightNode> lightNodes = new List<LightNode>();
          List<TextureNode> textureNodes = new List<TextureNode>();
          List<MaterialNode> materialNodes = new List<MaterialNode>();
+
+         // Create the default lights
+         {
+            // Note: These defaults and limits were reversed engineered.
+            An8.V100.light frontLight = new An8.V100.light();
+            LightNode frontLightNode = new LightNode(frontLight);
+            lightNodes.Add(frontLightNode);
+
+            frontLight.name = "FrontLight";
+            frontLight.loc = new loc() { point = new point() };
+
+            // TODO: How is the light oriented according to Anim8or? This
+            // represents rotating from COLLADA's default vector (0, 0, -1)
+            // to the vector that represents looking at all negative axes.
+            frontLight.orientation = new orientation()
+            {
+               quaternion = new quaternion(
+                  new point(0, 0, -1),
+                  new point(-1, -1, -1)),
+            };
+
+            frontLight.color = new color()
+            {
+               red = 255,
+               green = 255,
+               blue = 255,
+            };
+
+            frontLight.infinite = new empty();
+
+            frontLightNode.Matrix = new An8.matrix(
+               frontLight.loc?.point ?? new point(),
+               frontLight.orientation?.quaternion ?? quaternion.IDENTITY);
+
+            // Note: These defaults and limits were reversed engineered.
+            An8.V100.light backLight = new An8.V100.light();
+            LightNode backLightNode = new LightNode(backLight);
+            lightNodes.Add(backLightNode);
+
+            backLight.name = "BackLight";
+            backLight.loc = new loc() { point = new point() };
+
+            // TODO: How is the light oriented according to Anim8or? This
+            // represents rotating from COLLADA's default vector (0, 0, -1)
+            // to the vector that represents looking at all positive axes.
+            backLight.orientation = new orientation()
+            {
+               quaternion = new quaternion(
+                  new point(0, 0, -1),
+                  new point(1, 1, 1)),
+            };
+
+            backLight.color = new color()
+            {
+               red = 255,
+               green = 255,
+               blue = 178, // Note: This number is just a guess.
+            };
+
+            backLight.infinite = new empty();
+
+            backLightNode.Matrix = new An8.matrix(
+               backLight.loc?.point ?? new point(),
+               backLight.orientation?.quaternion ?? quaternion.IDENTITY);
+         }
 
          // Create each texture as a separate png file
          foreach ( texture texture in an8?.texture ?? new texture[0] )
          {
-            TextureNode node = new TextureNode(texture);
+            TextureNode textureNode = new TextureNode(texture);
+            textureNodes.Add(textureNode);
 
             foreach ( @string file in texture?.file ?? new @string[0] )
             {
+               textureNode.FileNames.Add(
+                  MakeUnique($"Texture_{texture?.name}", ".png", fileNames));
+
                Bitmap png;
 
                try
@@ -79,29 +151,21 @@ namespace Anim8orTransl8or
                   png.RemovePropertyItem(id);
                }
 
-               Result result = new Result()
+               yield return new ConverterResult()
                {
-                  Mode = Result.An8Mode.Texture,
-                  FileName = MakeUniqueFile(
-                     $"Texture_{texture?.name}.png",
-                     fileNames),
+                  Mode = ConverterResult.An8Mode.Texture,
+                  FileName = textureNode.FileNames.Last(),
                   Png = png,
                };
-
-               node.FileNames.Add(result.FileName);
-
-               yield return result;
             }
-
-            textureNodes.Add(node);
          }
 
          // Create each global material
          foreach ( An8.V100.material material in an8?.material ??
             new An8.V100.material[0] )
          {
-            MaterialNode node = new MaterialNode(null, material);
-            materialNodes.Add(node);
+            MaterialNode materialNode = new MaterialNode(null, material);
+            materialNodes.Add(materialNode);
          }
 
          // Create each object local material
@@ -110,8 +174,8 @@ namespace Anim8orTransl8or
             foreach ( An8.V100.material material in @object?.material ??
                new An8.V100.material[0] )
             {
-               MaterialNode node = new MaterialNode(@object, material);
-               materialNodes.Add(node);
+               MaterialNode materialNode = new MaterialNode(@object, material);
+               materialNodes.Add(materialNode);
             }
          }
 
@@ -122,6 +186,7 @@ namespace Anim8orTransl8or
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
+            CreateLibraryLights(lightNodes, dae, usedNames);
             CreateLibraryImages(textureNodes, dae, usedNames);
             CreateLibraryEffects(textureNodes, materialNodes, dae, usedNames);
             CreateLibraryMaterials(materialNodes, dae, usedNames);
@@ -131,6 +196,7 @@ namespace Anim8orTransl8or
                materialNodes,
                dae,
                usedNames,
+               lightNodes,
                (@object o) => @object == o,
                (figure f) => false);
 
@@ -142,11 +208,12 @@ namespace Anim8orTransl8or
                CreateLibraryVisualScenes(an8, dae, oNode);
                CreateScene(dae, an8, oNode);
 
-               yield return new Result()
+               yield return new ConverterResult()
                {
-                  Mode = Result.An8Mode.Object,
-                  FileName = MakeUniqueFile(
-                     $"Object_{@object.name}.dae",
+                  Mode = ConverterResult.An8Mode.Object,
+                  FileName = MakeUnique(
+                     $"Object_{@object.name}",
+                     ".dae",
                      fileNames),
                   Dae = dae,
                };
@@ -160,6 +227,7 @@ namespace Anim8orTransl8or
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
+            CreateLibraryLights(lightNodes, dae, usedNames);
             CreateLibraryImages(textureNodes, dae, usedNames);
             CreateLibraryEffects(textureNodes, materialNodes, dae, usedNames);
             CreateLibraryMaterials(materialNodes, dae, usedNames);
@@ -169,6 +237,7 @@ namespace Anim8orTransl8or
                materialNodes,
                dae,
                usedNames,
+               lightNodes,
                (@object o) => false,
                (figure f) => figure == f);
 
@@ -182,11 +251,12 @@ namespace Anim8orTransl8or
                CreateLibraryVisualScenes(an8, dae, fNode);
                CreateScene(dae, an8, fNode);
 
-               yield return new Result()
+               yield return new ConverterResult()
                {
-                  Mode = Result.An8Mode.Figure,
-                  FileName = MakeUniqueFile(
-                     $"Figure_{figure.name}.dae",
+                  Mode = ConverterResult.An8Mode.Figure,
+                  FileName = MakeUnique(
+                     $"Figure_{figure.name}",
+                     ".dae",
                      fileNames),
                   Dae = dae,
                };
@@ -200,6 +270,7 @@ namespace Anim8orTransl8or
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
+            CreateLibraryLights(lightNodes, dae, usedNames);
             CreateLibraryImages(textureNodes, dae, usedNames);
             CreateLibraryEffects(textureNodes, materialNodes, dae, usedNames);
             CreateLibraryMaterials(materialNodes, dae, usedNames);
@@ -209,6 +280,7 @@ namespace Anim8orTransl8or
                materialNodes,
                dae,
                usedNames,
+               lightNodes,
                (@object o) => false,
                (figure f) => sequence.figure?.text == f.name);
 
@@ -223,11 +295,12 @@ namespace Anim8orTransl8or
                CreateLibraryVisualScenes(an8, dae, fNode);
                CreateScene(dae, an8, fNode);
 
-               yield return new Result()
+               yield return new ConverterResult()
                {
-                  Mode = Result.An8Mode.Sequence,
+                  Mode = ConverterResult.An8Mode.Sequence,
                   FileName = MakeUnique(
-                     $"Sequence_{sequence.name}.dae",
+                     $"Sequence_{sequence.name}",
+                     ".dae",
                      fileNames),
                   Dae = dae,
                };
@@ -259,6 +332,56 @@ namespace Anim8orTransl8or
       }
       #endregion
 
+      #region library_lights
+      static void CreateLibraryLights(
+         List<LightNode> lightNodes,
+         COLLADA dae,
+         List<String> usedNames)
+      {
+         library_lights library = new library_lights();
+         dae.Items = dae.Items.Append(library);
+
+         foreach ( LightNode lightNode in lightNodes )
+         {
+            lightNode.NodeId = MakeUnique(
+               lightNode.Light?.name,
+               null,
+               usedNames);
+
+            lightNode.LightId = MakeUnique(
+               lightNode.NodeId,
+               "-light",
+               usedNames);
+
+            Dae.V141.light light = new Dae.V141.light();
+            library.light = library.light.Append(light);
+
+            light.id = lightNode.LightId;
+            light.name = lightNode.LightId;
+
+            lightTechnique_common technique = new lightTechnique_common();
+            light.technique_common = technique;
+
+            // TODO: Support more than just directional lights.
+            lightTechnique_commonDirectional directional =
+               new lightTechnique_commonDirectional();
+
+            technique.Item = directional;
+
+            TargetableFloat3 color = new TargetableFloat3();
+            directional.color = color;
+
+            color.Values = new Double[]
+            {
+               // Note: These defaults and limits were reversed engineered.
+               (lightNode.Light?.color?.red ?? 255).Limit(0, 255) / 255.0,
+               (lightNode.Light?.color?.green ?? 255).Limit(0, 255) / 255.0,
+               (lightNode.Light?.color?.blue ?? 255).Limit(0, 255) / 255.0,
+            };
+         }
+      }
+      #endregion
+
       #region library_images
       static void CreateLibraryImages(
          List<TextureNode> textureNodes,
@@ -268,18 +391,23 @@ namespace Anim8orTransl8or
          library_images library = new library_images();
          dae.Items = dae.Items.Append(library);
 
-         foreach ( TextureNode node in textureNodes )
+         foreach ( TextureNode textureNode in textureNodes )
          {
-            node.Id = MakeUnique(node.Texture?.name, usedNames);
+            textureNode.ImageId = MakeUnique(
+               textureNode.Texture?.name,
+               "-image",
+               usedNames);
 
             Dae.V141.image image = new Dae.V141.image();
             library.image = library.image.Append(image);
 
-            image.id = node.Id;
-            image.name = node.Id;
+            image.id = textureNode.ImageId;
+            image.name = textureNode.ImageId;
 
             // TODO: How do we handle multiple files?
-            String init_from = "file://" + node.FileNames[0];
+            String init_from =
+               $"file://{textureNode.FileNames.FirstOrDefault()}";
+
             image.Item = init_from;
          }
       }
@@ -297,8 +425,14 @@ namespace Anim8orTransl8or
 
          foreach ( MaterialNode materialNode in materialNodes )
          {
+            materialNode.MaterialId = MakeUnique(
+               materialNode.Material?.name,
+               null,
+               usedNames);
+
             materialNode.EffectId = MakeUnique(
-               materialNode.Material?.name + "-effect",
+               materialNode.MaterialId,
+               "-effect",
                usedNames);
 
             effect effect = new effect();
@@ -317,7 +451,7 @@ namespace Anim8orTransl8or
 
             profile.technique = technique;
 
-            technique.sid = "standard";
+            technique.sid = "common";
 
             effectFx_profile_abstractProfile_COMMONTechniquePhong phong =
                new effectFx_profile_abstractProfile_COMMONTechniquePhong();
@@ -336,10 +470,10 @@ namespace Anim8orTransl8or
 
             phong.emission = emission;
 
-            // TODO: How does lockambientdiffuse affect this?
             common_color_or_texture_type ambient = ConvertAmbient(
                textureNodes,
-               surface?.ambiant,
+               surface?.lockambientdiffuse == null ?
+                  surface?.ambiant : surface?.diffuse,
                "ambient");
 
             phong.ambient = ambient;
@@ -371,8 +505,7 @@ namespace Anim8orTransl8or
                value.sid = "shininess";
 
                // TODO: How to convert roughness to shininess?
-               // TODO: What are the limits, if any?
-               value.Value = surface?.phongsize?.text ?? 36;
+               value.Value = (surface?.phongsize?.text ?? 36) / 8;
 
                shininess.Item = value;
             }
@@ -457,8 +590,6 @@ namespace Anim8orTransl8or
 
                value.sid = "transparency";
 
-               // TODO: Is this the correct place to use surface.alpha?
-               // Note: This converts an alpha to a transparency.
                value.Value = 1 - (surface?.alpha?.text ?? 255).Limit(0, 255) /
                   255.0;
 
@@ -472,7 +603,6 @@ namespace Anim8orTransl8or
          ambiant ambient,
          String sid)
       {
-         // TODO: What should we do with ambiant.factor?
          // TODO: What should we do with ambiant.textureparams?
          common_color_or_texture_type result =
             new common_color_or_texture_type();
@@ -488,7 +618,7 @@ namespace Anim8orTransl8or
 
                   result.Item = texture;
 
-                  texture.texture = textureNode.Id;
+                  texture.texture = textureNode.ImageId;
 
                   // TODO: Is this how we support multiple textures?
                   texture.texcoord = "CHANNEL0";
@@ -505,17 +635,60 @@ namespace Anim8orTransl8or
 
             color.sid = sid;
 
+            // Note: We have to bake the factor into the color, since COLLADA
+            // does not seem to support a separate factor. This means that,
+            // unfortunately, factor won't work with images (only colors).
+            Double factor = ambient?.factor?.text ?? DefaultFactor(sid);
+
+            Double red = ambient?.rgb?.red ?? DefaultRgb(sid);
+            Double green = ambient?.rgb?.green ?? DefaultRgb(sid);
+            Double blue = ambient?.rgb?.blue ?? DefaultRgb(sid);
+
             color.Values = new Double[]
             {
                // Note: These defaults and limits were reversed engineered.
-               (ambient?.rgb?.red ?? 224).Limit(0, 255) / 255.0,
-               (ambient?.rgb?.green ?? 224).Limit(0, 255) / 255.0,
-               (ambient?.rgb?.blue ?? 224).Limit(0, 255) / 255.0,
+               (red * factor).Limit(0, 255) / 255.0,
+               (green * factor).Limit(0, 255) / 255.0,
+               (blue * factor).Limit(0, 255) / 255.0,
                1,
             };
          }
 
          return result;
+      }
+
+      static Int64 DefaultRgb(String sid)
+      {
+         switch ( sid )
+         {
+         case "ambient":
+            return 224;
+         case "diffuse":
+            return 224;
+         case "emissive":
+            return 0;
+         case "specular":
+            return 255;
+         default:
+            return 255;
+         }
+      }
+
+      static Double DefaultFactor(String sid)
+      {
+         switch ( sid )
+         {
+         case "ambient":
+            return 0.3;
+         case "diffuse":
+            return 0.7;
+         case "emissive":
+            return 0;
+         case "specular":
+            return 0.2;
+         default:
+            return 1;
+         }
       }
       #endregion
 
@@ -530,10 +703,6 @@ namespace Anim8orTransl8or
 
          foreach ( MaterialNode materialNode in materialNodes )
          {
-            materialNode.MaterialId = MakeUnique(
-               materialNode.Material?.name + "-material",
-               usedNames);
-
             Dae.V141.material material = new Dae.V141.material();
             library.material = library.material.Append(material);
 
@@ -554,10 +723,12 @@ namespace Anim8orTransl8or
          List<MaterialNode> materialNodes,
          COLLADA dae,
          List<String> usedNames,
+         List<LightNode> lightNodes,
          Func<@object, Boolean> includeObject = null,
          Func<figure, Boolean> includeFigure = null)
       {
          VisualNode node = new VisualNode(null, An8.matrix.IDENTITY, null);
+         Boolean lightsAdded = false;
 
          library_geometries library = new library_geometries();
          dae.Items = dae.Items.Append(library);
@@ -592,6 +763,23 @@ namespace Anim8orTransl8or
                @object);
 
             node.Link(oNode);
+
+            if ( !lightsAdded )
+            {
+               foreach ( LightNode lightNode in lightNodes )
+               {
+                  VisualNode lNode = new VisualNode(
+                     lightNode.NodeId,
+                     lightNode.Matrix,
+                     lightNode.Light);
+
+                  lNode.LightId = lightNode.LightId;
+
+                  oNode.Link(lNode);
+               }
+
+               lightsAdded = true;
+            }
          }
 
          foreach ( figure figure in an8.figure ?? new figure[0] )
@@ -628,6 +816,23 @@ namespace Anim8orTransl8or
             }
 
             node.Link(fNode);
+
+            if ( !lightsAdded )
+            {
+               foreach ( LightNode lightNode in lightNodes )
+               {
+                  VisualNode lNode = new VisualNode(
+                     lightNode.NodeId,
+                     lightNode.Matrix,
+                     lightNode.Light);
+
+                  lNode.LightId = lightNode.LightId;
+
+                  fNode.Link(lNode);
+               }
+
+               lightsAdded = true;
+            }
          }
 
          return node;
@@ -641,12 +846,15 @@ namespace Anim8orTransl8or
          Object tag,
          Double scale = 1)
       {
-         String name = MakeUnique(group.name?.text, usedNames);
          point origin = group.@base?.origin?.point ?? new point();
          quaternion orientation = group.@base?.orientation?.quaternion ??
             quaternion.IDENTITY;
          An8.matrix matrix = new An8.matrix(origin, orientation, scale);
-         VisualNode node = new VisualNode(name, matrix, tag);
+
+         VisualNode node = new VisualNode(
+            MakeUnique(group.name?.text, null, usedNames),
+            matrix,
+            tag);
 
          foreach ( An8.V100.mesh mesh in group.mesh ?? new An8.V100.mesh[0] )
          {
@@ -819,14 +1027,18 @@ namespace Anim8orTransl8or
             mesh = An8Normals.Calculate(mesh);
          }
 
-         String name = MakeUnique(mesh.name?.text, usedNames);
          point origin = mesh.@base?.origin?.point ?? new point();
          quaternion orientation = mesh.@base?.orientation?.quaternion ??
             quaternion.IDENTITY;
          An8.matrix matrix = new An8.matrix(origin, orientation, scale);
-         VisualNode node = new VisualNode(name, matrix, tag);
+
+         VisualNode node = new VisualNode(
+            MakeUnique(mesh.name?.text, null, usedNames),
+            matrix,
+            tag);
+
          node.Mesh = mesh;
-         node.GeometryId = name;
+         node.GeometryId = MakeUnique(node.NodeId, "-geometry", usedNames);
 
          // TODO: How do we support more than one material?
          if ( mesh.materiallist?.materialname?.Length > 0 )
@@ -846,8 +1058,8 @@ namespace Anim8orTransl8or
          geometry geometry = new geometry();
          library.geometry = library.geometry.Append(geometry);
 
-         geometry.id = name;
-         geometry.name = name;
+         geometry.id = node.GeometryId;
+         geometry.name = node.GeometryId;
 
          Dae.V141.mesh mesh2 = new Dae.V141.mesh();
          geometry.Item = mesh2;
@@ -859,13 +1071,13 @@ namespace Anim8orTransl8or
             source source = new source();
             mesh2.source = mesh2.source.Append(source);
 
-            source.id = MakeUnique(geometry.id + "-positions", usedNames);
+            source.id = MakeUnique(geometry.id, "-positions", usedNames);
             pointsSourceId = source.id;
 
             float_array array = new float_array();
             source.Item = array;
 
-            array.id = MakeUnique(source.id + "-array", usedNames);
+            array.id = MakeUnique(source.id, "-array", usedNames);
 
             Double[] values = new Double[mesh.points.point.Length * 3];
             Int32 index = 0;
@@ -924,13 +1136,13 @@ namespace Anim8orTransl8or
             source source = new source();
             mesh2.source = mesh2.source.Append(source);
 
-            source.id = MakeUnique(geometry.id + "-normals", usedNames);
+            source.id = MakeUnique(geometry.id, "-normals", usedNames);
             normalsSourceId = source.id;
 
             float_array array = new float_array();
             source.Item = array;
 
-            array.id = MakeUnique(source.id + "-array", usedNames);
+            array.id = MakeUnique(source.id, "-array", usedNames);
 
             Double[] values = new Double[mesh.normals.point.Length * 3];
             Int32 index = 0;
@@ -989,13 +1201,13 @@ namespace Anim8orTransl8or
             source source = new source();
             mesh2.source = mesh2.source.Append(source);
 
-            source.id = MakeUnique(geometry.id + "-map-0", usedNames);
+            source.id = MakeUnique(geometry.id, "-texcoords", usedNames);
             texcoordsSourceId = source.id;
 
             float_array array = new float_array();
             source.Item = array;
 
-            array.id = MakeUnique(source.id + "-array", usedNames);
+            array.id = MakeUnique(source.id, "-array", usedNames);
 
             Double[] values = new Double[mesh.texcoords.texcoord.Length * 2];
             Int32 index = 0;
@@ -1044,7 +1256,7 @@ namespace Anim8orTransl8or
             vertices vertices = new vertices();
             mesh2.vertices = vertices;
 
-            vertices.id = MakeUnique(geometry.id + "-vertices", usedNames);
+            vertices.id = MakeUnique(geometry.id, "-vertices", usedNames);
             verticesSourceId = vertices.id;
 
             InputLocal input = new InputLocal();
@@ -1350,7 +1562,11 @@ namespace Anim8orTransl8or
                   Dae.V141.controller controller = new Dae.V141.controller();
                   library.controller = library.controller.Append(controller);
 
-                  controller.id = MakeUnique(mNode.Id + "-skin", usedNames);
+                  controller.id = MakeUnique(
+                     mNode.NodeId,
+                     "-controller",
+                     usedNames);
+
                   controller.name = controller.id;
 
                   skin skin = new skin();
@@ -1367,7 +1583,7 @@ namespace Anim8orTransl8or
                   // Convert the geometry node to a controller node
                   mNode.GeometryId = null;
                   mNode.ControllerId = controller.id;
-                  mNode.SkeletonId = sNode.Id;
+                  mNode.SkeletonId = sNode.NodeId;
 
                   List<VisualNode> boneNodes = sNode.FindAll(
                      v => v.Tag is bone1).ToList();
@@ -1414,7 +1630,8 @@ namespace Anim8orTransl8or
                      skin.source = skin.source.Append(source);
 
                      source.id = MakeUnique(
-                        controller.id + "-joints",
+                        controller.id,
+                        "-joints",
                         usedNames);
 
                      jointsSourceId = source.id;
@@ -1422,13 +1639,13 @@ namespace Anim8orTransl8or
                      Name_array array = new Name_array();
                      source.Item = array;
 
-                     array.id = MakeUnique(source.id + "-array", usedNames);
+                     array.id = MakeUnique(source.id, "-array", usedNames);
 
                      String[] values = new String[boneNodes.Count];
 
                      for ( Int32 i = 0; i < boneNodes.Count; i++ )
                      {
-                        values[i] = boneNodes[i].Id;
+                        values[i] = boneNodes[i].NodeId;
                      }
 
                      array.count = (UInt64)values.Length;
@@ -1460,7 +1677,8 @@ namespace Anim8orTransl8or
                      skin.source = skin.source.Append(source);
 
                      source.id = MakeUnique(
-                        controller.id + "-bind_poses",
+                        controller.id,
+                        "-transforms",
                         usedNames);
 
                      bindPosesSourceId = source.id;
@@ -1468,7 +1686,7 @@ namespace Anim8orTransl8or
                      float_array array = new float_array();
                      source.Item = array;
 
-                     array.id = MakeUnique(source.id + "-array", usedNames);
+                     array.id = MakeUnique(source.id, "-array", usedNames);
 
                      Double[] values = new Double[boneNodes.Count * 16];
                      Int32 index = 0;
@@ -1512,7 +1730,8 @@ namespace Anim8orTransl8or
                      skin.source = skin.source.Append(source);
 
                      source.id = MakeUnique(
-                        controller.id + "-weights",
+                        controller.id,
+                        "-weights",
                         usedNames);
 
                      weightsSourceId = source.id;
@@ -1520,7 +1739,7 @@ namespace Anim8orTransl8or
                      float_array array = new float_array();
                      source.Item = array;
 
-                     array.id = MakeUnique(source.id + "-array", usedNames);
+                     array.id = MakeUnique(source.id, "-array", usedNames);
 
                      List<Double> values = new List<Double>();
 
@@ -1716,7 +1935,7 @@ namespace Anim8orTransl8or
             animation animation = new animation();
             library.animation = library.animation.Append(animation);
 
-            animation.id = MakeUnique(node.Id + "_pose_matrix", usedNames);
+            animation.id = MakeUnique(node.NodeId, "-animation", usedNames);
 
             // Add source for input
             String inputSourceId = null;
@@ -1725,13 +1944,13 @@ namespace Anim8orTransl8or
                source source = new source();
                animation.Items = animation.Items.Append(source);
 
-               source.id = MakeUnique(animation.id + "-input", usedNames);
+               source.id = MakeUnique(animation.id, "-times", usedNames);
                inputSourceId = source.id;
 
                float_array array = new float_array();
                source.Item = array;
 
-               array.id = MakeUnique(source.id + "-array", usedNames);
+               array.id = MakeUnique(source.id, "-array", usedNames);
                Double[] values = new Double[frames.Count];
                Int32 index = 0;
 
@@ -1769,13 +1988,13 @@ namespace Anim8orTransl8or
                source source = new source();
                animation.Items = animation.Items.Append(source);
 
-               source.id = MakeUnique(animation.id + "-output", usedNames);
+               source.id = MakeUnique(animation.id, "-transforms", usedNames);
                outputSourceId = source.id;
 
                float_array array = new float_array();
                source.Item = array;
 
-               array.id = MakeUnique(source.id + "-array", usedNames);
+               array.id = MakeUnique(source.id, "-array", usedNames);
                Double[] values = new Double[frames.Count * 16];
                Int32 index = 0;
 
@@ -1816,13 +2035,17 @@ namespace Anim8orTransl8or
                source source = new source();
                animation.Items = animation.Items.Append(source);
 
-               source.id = MakeUnique(animation.id + "-interpolation", usedNames);
+               source.id = MakeUnique(
+                  animation.id,
+                  "-interpolations",
+                  usedNames);
+
                interpolationSourceId = source.id;
 
                Name_array array = new Name_array();
                source.Item = array;
 
-               array.id = MakeUnique(source.id + "-array", usedNames);
+               array.id = MakeUnique(source.id, "-array", usedNames);
                String[] values = new String[frames.Count];
                Int32 index = 0;
 
@@ -1861,7 +2084,7 @@ namespace Anim8orTransl8or
                sampler sampler = new sampler();
                animation.Items = animation.Items.Append(sampler);
 
-               sampler.id = MakeUnique(animation.id + "-sampler", usedNames);
+               sampler.id = MakeUnique(animation.id, "-sampler", usedNames);
                samplerId = sampler.id;
 
                // Add input input
@@ -1902,7 +2125,7 @@ namespace Anim8orTransl8or
                animation.Items = animation.Items.Append(channel);
 
                channel.source = "#" + samplerId;
-               channel.target = node.Id + "/transform";
+               channel.target = node.NodeId + "/transform";
             }
          }
 
@@ -2028,8 +2251,8 @@ namespace Anim8orTransl8or
          visual_scene scene = new visual_scene();
          library.visual_scene = library.visual_scene.Append(scene);
 
-         scene.id = parentNode.Id;
-         scene.name = parentNode.Id;
+         scene.id = parentNode.NodeId;
+         scene.name = parentNode.NodeId;
 
          foreach ( VisualNode childNode in parentNode.Children )
          {
@@ -2041,9 +2264,9 @@ namespace Anim8orTransl8or
       static node ConvertNode(VisualNode visualNode)
       {
          node node = new node();
-         node.id = visualNode.Id;
-         node.name = visualNode.Id;
-         node.sid = visualNode.Id;
+         node.id = visualNode.NodeId;
+         node.name = visualNode.NodeId;
+         node.sid = visualNode.NodeId;
          node.type = visualNode.Tag is bone1 ? NodeType.JOINT : NodeType.NODE;
 
          Dae.V141.matrix matrix = new Dae.V141.matrix();
@@ -2054,8 +2277,16 @@ namespace Anim8orTransl8or
 
          node.ItemsElementName = new ItemsChoiceType7[]
          {
-               ItemsChoiceType7.matrix,
+            ItemsChoiceType7.matrix,
          };
+
+         if ( visualNode.LightId != null )
+         {
+            InstanceWithExtra i = new InstanceWithExtra();
+            node.instance_light = new InstanceWithExtra[] { i };
+
+            i.url = "#" + visualNode.LightId;
+         }
 
          if ( visualNode.GeometryId != null )
          {
@@ -2125,135 +2356,11 @@ namespace Anim8orTransl8or
       {
          dae.scene = new COLLADAScene();
          dae.scene.instance_visual_scene = new InstanceWithExtra();
-         dae.scene.instance_visual_scene.url = "#" + parentNode.Id;
+         dae.scene.instance_visual_scene.url = "#" + parentNode.NodeId;
       }
       #endregion
 
       #region common
-      public class Result
-      {
-         public enum An8Mode
-         {
-            Texture,
-            Object,
-            Figure,
-            Sequence,
-            Scene,
-         }
-
-         public An8Mode Mode;
-         public String FileName;
-         public COLLADA Dae;
-         public Bitmap Png;
-      }
-
-      class TextureNode
-      {
-         public TextureNode(texture texture)
-         {
-            Texture = texture;
-            FileNames = new List<String>();
-         }
-
-         public String Id;
-         public texture Texture;
-         public List<String> FileNames;
-      }
-
-      class MaterialNode
-      {
-         public MaterialNode(@object @object, An8.V100.material material)
-         {
-            Object = @object;
-            Material = material;
-         }
-
-         public String EffectId;
-         public String MaterialId;
-         public @object Object;
-         public An8.V100.material Material;
-      }
-
-      class VisualNode
-      {
-         public VisualNode(String id, An8.matrix matrix, Object tag)
-         {
-            Id = id;
-            Matrix = matrix;
-            Tag = tag;
-            Children = new List<VisualNode>();
-         }
-
-         public void Link(VisualNode child)
-         {
-            child.Parent = this;
-            Children.Add(child);
-         }
-
-         public An8.matrix BindMatrix()
-         {
-            An8.matrix matrix = Matrix;
-            VisualNode iterator = Parent;
-
-            while ( iterator != null )
-            {
-               matrix = iterator.Matrix.Transform(matrix);
-
-               iterator = iterator.Parent;
-            }
-
-            return matrix;
-         }
-
-         public VisualNode Find(Func<VisualNode, Boolean> condition)
-         {
-            if ( condition(this) )
-            {
-               return this;
-            }
-
-            foreach ( VisualNode child in Children )
-            {
-               VisualNode match = child.Find(condition);
-
-               if ( match != null )
-               {
-                  return match;
-               }
-            }
-
-            return null;
-         }
-
-         public IEnumerable<VisualNode> FindAll(
-            Func<VisualNode, Boolean> condition)
-         {
-            if ( condition(this) )
-            {
-               yield return this;
-            }
-
-            foreach ( VisualNode child in Children )
-            {
-               foreach ( VisualNode match in child.FindAll(condition) )
-               {
-                  yield return match;
-               }
-            }
-         }
-
-         public String Id;
-         public An8.matrix Matrix;
-         public Object Tag;
-         public An8.V100.mesh Mesh;
-         public String GeometryId;
-         public String MaterialId;
-         public String ControllerId;
-         public String SkeletonId;
-         public VisualNode Parent;
-         public List<VisualNode> Children;
-      }
-
       static readonly Char[] NUM_CHARS = new Char[]
       {
          '0',
@@ -2268,7 +2375,10 @@ namespace Anim8orTransl8or
          '9',
       };
 
-      static String MakeUnique(String name, List<String> usedNames)
+      static String MakeUnique(
+         String name,
+         String suffix,
+         List<String> usedNames)
       {
          // TODO: Autodesk seems to have problems with spaces. Should spaces
          // be allowed?
@@ -2276,30 +2386,13 @@ namespace Anim8orTransl8or
 
          Int32 number = 0;
 
-         while ( usedNames.Contains(name) )
+         while ( usedNames.Contains(name + suffix) )
          {
             name = $"{name.TrimEnd(NUM_CHARS)}{++number:00}";
          }
 
-         usedNames.Add(name);
-         return name;
-      }
-
-      static String MakeUniqueFile(String name, List<String> usedNames)
-      {
-         name = name ?? "Unnamed";
-         String ext = Path.GetExtension(name);
-         name = Path.GetFileNameWithoutExtension(name);
-
-         Int32 number = 0;
-
-         while ( usedNames.Contains(name + ext) )
-         {
-            name = $"{name.TrimEnd(NUM_CHARS)}{++number:00}";
-         }
-
-         usedNames.Add(name + ext);
-         return name + ext;
+         usedNames.Add(name + suffix);
+         return name + suffix;
       }
       #endregion
    }

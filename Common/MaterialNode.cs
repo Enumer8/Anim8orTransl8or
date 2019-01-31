@@ -19,54 +19,21 @@
 // IN THE SOFTWARE.
 
 using Anim8orTransl8or.An8.V100;
-using Anim8orTransl8or.Utility;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace Anim8orTransl8or.Test
+namespace Anim8orTransl8or
 {
-   [TestClass]
-   public class TestAn8Normals : TestBase
+   public class MaterialNode
    {
-      [TestMethod]
-      public void EdgeCases()
+      public MaterialNode(@object @object, material material)
       {
-         // Make sure nulls do not cause a crash
-         An8Normals.Calculate(null);
-         An8Normals.Calculate(new mesh(), null);
+         Object = @object;
+         Material = material;
       }
 
-      [TestMethod]
-      public void Not_Smooth()
-      {
-         CompareNormals(@"..\..\An8Normals\Normals_Fully_Smooth.an8");
-      }
-
-      [TestMethod]
-      public void Partially_Smooth()
-      {
-         CompareNormals(@"..\..\An8Normals\Normals_Partially_Smooth.an8");
-      }
-
-      [TestMethod]
-      public void Fully_Smooth()
-      {
-         CompareNormals(@"..\..\An8Normals\Normals_Fully_Smooth.an8");
-      }
-
-      static void CompareNormals(String normalFile)
-      {
-         Int32 warnings = 0;
-
-         ANIM8OR normal = LoadAn8File(normalFile);
-
-         mesh expected = normal.@object[0].mesh[0];
-
-         mesh actual = An8Normals.Calculate(
-            expected,
-            (String s) => warnings++);
-
-         CompareMeshes(expected, actual);
-      }
+      public String MaterialId;
+      public String EffectId;
+      public @object Object;
+      public material Material;
    }
 }
