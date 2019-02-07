@@ -24,6 +24,8 @@ using Anim8orTransl8or.Dae.V141;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
@@ -45,25 +47,125 @@ namespace Anim8orTransl8or.Gui
 
       void PickInputFileButton_Click(Object sender, EventArgs e)
       {
+         if ( File.Exists(mInputFile.Text) )
+         {
+            mInputFileDialog.InitialDirectory = Path.GetDirectoryName(
+               Path.GetFullPath(mInputFile.Text));
+
+            mInputFileDialog.FileName = Path.GetFileName(mInputFile.Text);
+         }
+
          if ( mInputFileDialog.ShowDialog() == DialogResult.OK )
          {
             mInputFile.Text = mInputFileDialog.FileName;
          }
       }
 
-      void PickOutputFileButton_Click(Object sender, EventArgs e)
+      void PickOutputFolderButton_Click(Object sender, EventArgs e)
       {
+         if ( Directory.Exists(mOutputFolder.Text) )
+         {
+            mOutputFolderDialog.SelectedPath = Path.GetDirectoryName(
+               mOutputFolder.Text.TrimEnd('\\') + '\\');
+         }
+
          if ( mOutputFolderDialog.ShowDialog() == DialogResult.OK )
          {
-            mOutputFile.Text = mOutputFolderDialog.SelectedPath;
+            mOutputFolder.Text =
+               mOutputFolderDialog.SelectedPath.TrimEnd('\\') + '\\';
          }
+      }
+
+      void CopyToClipboardButton_Click(Object sender, EventArgs e)
+      {
+         StringBuilder sb = new StringBuilder();
+
+         foreach ( Object line in mOutput.Items )
+         {
+            if ( line is String s )
+            {
+               sb.AppendLine(s);
+            }
+         }
+
+         Clipboard.SetText(sb.ToString());
       }
 
       void ConvertButton_Click(Object sender, EventArgs e)
       {
-         String inFile = mInputFile.Text;
-         String outFolder = mOutputFile.Text;
+         EnableForm(false);
 
+         mOutput.Items.Clear();
+
+         String inFile = mInputFile.Text;
+         String outFolder = mOutputFolder.Text;
+
+         Task.Factory.StartNew(() =>
+         {
+            try
+            {
+               Convert(inFile, outFolder);
+            }
+            catch ( Exception ex )
+            {
+               mOutput.Invoke(new Action(() =>
+                  mOutput.Items.Add(ex.Message)));
+            }
+
+            mOutput.Invoke(new Action(() => EnableForm(true)));
+         });
+      }
+
+      void ProgressTimer_Tick(Object sender, EventArgs e)
+      {
+         if ( mProgress.Value < 100 )
+         {
+            mProgress.Value++;
+         }
+         else
+         {
+            mProgress.Value = 0;
+         }
+      }
+
+      void EnableForm(Boolean enabled)
+      {
+         mInputFile.Enabled = enabled;
+         mPickInputFileButton.Enabled = enabled;
+         mOutputFolder.Enabled = enabled;
+         mPickOutputFolderButton.Enabled = enabled;
+         mOutput.Enabled = enabled;
+         mCopyToClipboardButton.Enabled = enabled;
+         mConvertButton.Enabled = enabled;
+
+         if ( enabled )
+         {
+            mProgressTimer.Enabled = false;
+            mProgress.Value = 0;
+            mProgress.Visible = false;
+         }
+         else
+         {
+            mProgressTimer.Enabled = true;
+            mProgress.Value = 0;
+            mProgress.Visible = true;
+         }
+      }
+
+      void AddOutput(String output)
+      {
+         if ( mOutput.InvokeRequired )
+         {
+            mOutput.Invoke(new Action(() => AddOutput(output)));
+         }
+         else
+         {
+            mOutput.Items.Add(output);
+         }
+      }
+
+      void Convert(String inFile, String outFolder)
+      {
          ANIM8OR an8;
 
          using ( Stream stream = File.Open(inFile, FileMode.Open) )
@@ -72,11 +174,12 @@ namespace Anim8orTransl8or.Gui
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         // One An8 file can result in multiple files
+         // One an8 file can result in multiple files
          Directory.CreateDirectory(outFolder);
          String cwd = Path.GetDirectoryName(inFile);
 
-         foreach ( ConverterResult result in Converter.Convert(an8, cwd) )
+         foreach ( ConverterResult result in
+            Converter.Convert(an8, AddOutput, cwd) )
          {
             String outFile = Path.Combine(outFolder, result.FileName);
 
@@ -87,10 +190,14 @@ namespace Anim8orTransl8or.Gui
                   XmlSerializer xml = new XmlSerializer(typeof(COLLADA));
                   xml.Serialize(stream, result.Dae);
                }
+
+               AddOutput($"Created {result.FileName}");
             }
             else if ( result.Png != null )
             {
                result.Png.Save(outFile);
+
+               AddOutput($"Created {result.FileName}");
             }
          }
       }

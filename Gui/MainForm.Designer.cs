@@ -48,22 +48,28 @@ namespace Anim8orTransl8or.Gui
       /// </summary>
       private void InitializeComponent()
       {
+         this.components = new System.ComponentModel.Container();
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
          this.mInputFileLabel = new System.Windows.Forms.Label();
          this.mInputFile = new System.Windows.Forms.TextBox();
          this.mOutputFileLabel = new System.Windows.Forms.Label();
-         this.mOutputFile = new System.Windows.Forms.TextBox();
+         this.mOutputFolder = new System.Windows.Forms.TextBox();
          this.mConvertButton = new System.Windows.Forms.Button();
          this.mPickInputFileButton = new System.Windows.Forms.Button();
-         this.mPickOutputFileButton = new System.Windows.Forms.Button();
+         this.mPickOutputFolderButton = new System.Windows.Forms.Button();
          this.mInputFileDialog = new System.Windows.Forms.OpenFileDialog();
          this.mOutputFolderDialog = new System.Windows.Forms.FolderBrowserDialog();
+         this.mOutputLabel = new System.Windows.Forms.Label();
+         this.mOutput = new System.Windows.Forms.ListBox();
+         this.mCopyToClipboardButton = new System.Windows.Forms.Button();
+         this.mProgress = new System.Windows.Forms.ProgressBar();
+         this.mProgressTimer = new System.Windows.Forms.Timer(this.components);
          this.SuspendLayout();
          // 
          // mInputFileLabel
          // 
          this.mInputFileLabel.AutoSize = true;
-         this.mInputFileLabel.Location = new System.Drawing.Point(13, 13);
+         this.mInputFileLabel.Location = new System.Drawing.Point(12, 9);
          this.mInputFileLabel.Name = "mInputFileLabel";
          this.mInputFileLabel.Size = new System.Drawing.Size(132, 13);
          this.mInputFileLabel.TabIndex = 0;
@@ -73,7 +79,7 @@ namespace Anim8orTransl8or.Gui
          // 
          this.mInputFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.mInputFile.Location = new System.Drawing.Point(12, 29);
+         this.mInputFile.Location = new System.Drawing.Point(12, 25);
          this.mInputFile.Name = "mInputFile";
          this.mInputFile.Size = new System.Drawing.Size(317, 20);
          this.mInputFile.TabIndex = 1;
@@ -81,20 +87,20 @@ namespace Anim8orTransl8or.Gui
          // mOutputFileLabel
          // 
          this.mOutputFileLabel.AutoSize = true;
-         this.mOutputFileLabel.Location = new System.Drawing.Point(13, 56);
+         this.mOutputFileLabel.Location = new System.Drawing.Point(12, 48);
          this.mOutputFileLabel.Name = "mOutputFileLabel";
          this.mOutputFileLabel.Size = new System.Drawing.Size(153, 13);
          this.mOutputFileLabel.TabIndex = 0;
          this.mOutputFileLabel.Text = "Output COLLADA (.dae) folder:";
          // 
-         // mOutputFile
+         // mOutputFolder
          // 
-         this.mOutputFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.mOutputFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.mOutputFile.Location = new System.Drawing.Point(12, 72);
-         this.mOutputFile.Name = "mOutputFile";
-         this.mOutputFile.Size = new System.Drawing.Size(317, 20);
-         this.mOutputFile.TabIndex = 3;
+         this.mOutputFolder.Location = new System.Drawing.Point(12, 64);
+         this.mOutputFolder.Name = "mOutputFolder";
+         this.mOutputFolder.Size = new System.Drawing.Size(317, 20);
+         this.mOutputFolder.TabIndex = 3;
          // 
          // mConvertButton
          // 
@@ -102,7 +108,7 @@ namespace Anim8orTransl8or.Gui
          this.mConvertButton.Location = new System.Drawing.Point(297, 326);
          this.mConvertButton.Name = "mConvertButton";
          this.mConvertButton.Size = new System.Drawing.Size(75, 23);
-         this.mConvertButton.TabIndex = 5;
+         this.mConvertButton.TabIndex = 7;
          this.mConvertButton.Text = "Convert";
          this.mConvertButton.UseVisualStyleBackColor = true;
          this.mConvertButton.Click += new System.EventHandler(this.ConvertButton_Click);
@@ -110,43 +116,93 @@ namespace Anim8orTransl8or.Gui
          // mPickInputFileButton
          // 
          this.mPickInputFileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.mPickInputFileButton.Location = new System.Drawing.Point(335, 27);
+         this.mPickInputFileButton.Location = new System.Drawing.Point(335, 24);
          this.mPickInputFileButton.Name = "mPickInputFileButton";
-         this.mPickInputFileButton.Size = new System.Drawing.Size(37, 23);
+         this.mPickInputFileButton.Size = new System.Drawing.Size(37, 22);
          this.mPickInputFileButton.TabIndex = 2;
          this.mPickInputFileButton.Text = "...";
          this.mPickInputFileButton.UseVisualStyleBackColor = true;
          this.mPickInputFileButton.Click += new System.EventHandler(this.PickInputFileButton_Click);
          // 
-         // mPickOutputFileButton
+         // mPickOutputFolderButton
          // 
-         this.mPickOutputFileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.mPickOutputFileButton.Location = new System.Drawing.Point(335, 70);
-         this.mPickOutputFileButton.Name = "mPickOutputFileButton";
-         this.mPickOutputFileButton.Size = new System.Drawing.Size(37, 23);
-         this.mPickOutputFileButton.TabIndex = 4;
-         this.mPickOutputFileButton.Text = "...";
-         this.mPickOutputFileButton.UseVisualStyleBackColor = true;
-         this.mPickOutputFileButton.Click += new System.EventHandler(this.PickOutputFileButton_Click);
+         this.mPickOutputFolderButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.mPickOutputFolderButton.Location = new System.Drawing.Point(335, 63);
+         this.mPickOutputFolderButton.Name = "mPickOutputFolderButton";
+         this.mPickOutputFolderButton.Size = new System.Drawing.Size(37, 22);
+         this.mPickOutputFolderButton.TabIndex = 4;
+         this.mPickOutputFolderButton.Text = "...";
+         this.mPickOutputFolderButton.UseVisualStyleBackColor = true;
+         this.mPickOutputFolderButton.Click += new System.EventHandler(this.PickOutputFolderButton_Click);
          // 
          // mInputFileDialog
          // 
          this.mInputFileDialog.Filter = "ANIM8OR (*.an8)|*.an8";
+         // 
+         // mOutputLabel
+         // 
+         this.mOutputLabel.AutoSize = true;
+         this.mOutputLabel.Location = new System.Drawing.Point(12, 131);
+         this.mOutputLabel.Name = "mOutputLabel";
+         this.mOutputLabel.Size = new System.Drawing.Size(42, 13);
+         this.mOutputLabel.TabIndex = 0;
+         this.mOutputLabel.Text = "Output:";
+         // 
+         // mOutput
+         // 
+         this.mOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.mOutput.FormattingEnabled = true;
+         this.mOutput.Location = new System.Drawing.Point(12, 147);
+         this.mOutput.Name = "mOutput";
+         this.mOutput.ScrollAlwaysVisible = true;
+         this.mOutput.Size = new System.Drawing.Size(360, 173);
+         this.mOutput.TabIndex = 5;
+         // 
+         // mCopyToClipboardButton
+         // 
+         this.mCopyToClipboardButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.mCopyToClipboardButton.Location = new System.Drawing.Point(12, 326);
+         this.mCopyToClipboardButton.Name = "mCopyToClipboardButton";
+         this.mCopyToClipboardButton.Size = new System.Drawing.Size(125, 23);
+         this.mCopyToClipboardButton.TabIndex = 6;
+         this.mCopyToClipboardButton.Text = "Copy To Clipboard";
+         this.mCopyToClipboardButton.UseVisualStyleBackColor = true;
+         this.mCopyToClipboardButton.Click += new System.EventHandler(this.CopyToClipboardButton_Click);
+         // 
+         // mProgress
+         // 
+         this.mProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.mProgress.Location = new System.Drawing.Point(12, 105);
+         this.mProgress.Name = "mProgress";
+         this.mProgress.Size = new System.Drawing.Size(360, 23);
+         this.mProgress.TabIndex = 8;
+         this.mProgress.Visible = false;
+         // 
+         // mProgressTimer
+         // 
+         this.mProgressTimer.Tick += new System.EventHandler(this.ProgressTimer_Tick);
          // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(384, 361);
-         this.Controls.Add(this.mPickOutputFileButton);
+         this.Controls.Add(this.mProgress);
+         this.Controls.Add(this.mCopyToClipboardButton);
+         this.Controls.Add(this.mOutputLabel);
+         this.Controls.Add(this.mOutput);
+         this.Controls.Add(this.mPickOutputFolderButton);
          this.Controls.Add(this.mPickInputFileButton);
          this.Controls.Add(this.mConvertButton);
-         this.Controls.Add(this.mOutputFile);
+         this.Controls.Add(this.mOutputFolder);
          this.Controls.Add(this.mOutputFileLabel);
          this.Controls.Add(this.mInputFile);
          this.Controls.Add(this.mInputFileLabel);
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-         this.MinimumSize = new System.Drawing.Size(400, 200);
+         this.MinimumSize = new System.Drawing.Size(400, 300);
          this.Name = "MainForm";
          this.Text = "MainForm";
          this.ResumeLayout(false);
@@ -159,12 +215,17 @@ namespace Anim8orTransl8or.Gui
       private System.Windows.Forms.Label mInputFileLabel;
       private System.Windows.Forms.TextBox mInputFile;
       private System.Windows.Forms.Label mOutputFileLabel;
-      private System.Windows.Forms.TextBox mOutputFile;
+      private System.Windows.Forms.TextBox mOutputFolder;
       private System.Windows.Forms.Button mConvertButton;
       private System.Windows.Forms.Button mPickInputFileButton;
-      private System.Windows.Forms.Button mPickOutputFileButton;
+      private System.Windows.Forms.Button mPickOutputFolderButton;
       private System.Windows.Forms.OpenFileDialog mInputFileDialog;
       private System.Windows.Forms.FolderBrowserDialog mOutputFolderDialog;
+      private System.Windows.Forms.Label mOutputLabel;
+      private System.Windows.Forms.ListBox mOutput;
+      private System.Windows.Forms.Button mCopyToClipboardButton;
+      private System.Windows.Forms.ProgressBar mProgress;
+      private System.Windows.Forms.Timer mProgressTimer;
    }
 }
 

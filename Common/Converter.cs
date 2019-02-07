@@ -35,8 +35,16 @@ namespace Anim8orTransl8or
 {
    public static class Converter
    {
+      /// <summary>
+      /// This will convert the an8 file into multiple png and dae files.
+      /// </summary>
+      /// <param name="an8">the an8 file</param>
+      /// <param name="callback">the callback for warnings</param>
+      /// <param name="cwd">the current working directory</param>
+      /// <returns>the converter results</returns>
       public static IEnumerable<ConverterResult> Convert(
          ANIM8OR an8,
+         Action<String> callback = null,
          String cwd = null)
       {
          List<String> fileNames = new List<String>();
@@ -183,6 +191,8 @@ namespace Anim8orTransl8or
          foreach ( @object @object in an8?.@object ?? new @object[0] )
          {
             COLLADA dae = new COLLADA();
+            dae.version = VersionType.Item141;
+
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
@@ -193,6 +203,7 @@ namespace Anim8orTransl8or
 
             VisualNode node = CreateLibraryGeometries(
                an8,
+               callback,
                materialNodes,
                dae,
                usedNames,
@@ -224,6 +235,8 @@ namespace Anim8orTransl8or
          foreach ( figure figure in an8?.figure ?? new figure[0] )
          {
             COLLADA dae = new COLLADA();
+            dae.version = VersionType.Item141;
+
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
@@ -234,6 +247,7 @@ namespace Anim8orTransl8or
 
             VisualNode node = CreateLibraryGeometries(
                an8,
+               callback,
                materialNodes,
                dae,
                usedNames,
@@ -241,7 +255,7 @@ namespace Anim8orTransl8or
                (@object o) => false,
                (figure f) => figure == f);
 
-            CreateLibraryControllers(an8, dae, usedNames, node);
+            CreateLibraryControllers(an8, callback, dae, usedNames, node);
 
             // The 'node' contains the figure node. To prevent unnecessary
             // nesting, just use the figure node instead.
@@ -267,6 +281,8 @@ namespace Anim8orTransl8or
          foreach ( sequence sequence in an8?.sequence ?? new sequence[0] )
          {
             COLLADA dae = new COLLADA();
+            dae.version = VersionType.Item141;
+
             List<String> usedNames = new List<String>();
 
             CreateAsset(an8, dae);
@@ -277,6 +293,7 @@ namespace Anim8orTransl8or
 
             VisualNode node = CreateLibraryGeometries(
                an8,
+               callback,
                materialNodes,
                dae,
                usedNames,
@@ -284,8 +301,14 @@ namespace Anim8orTransl8or
                (@object o) => false,
                (figure f) => sequence.figure?.text == f.name);
 
-            CreateLibraryControllers(an8, dae, usedNames, node);
-            CreateLibraryAnimations(an8, dae, usedNames, node);
+            CreateLibraryControllers(an8, callback, dae, usedNames, node);
+
+            CreateLibraryAnimations(
+               an8,
+               dae,
+               usedNames,
+               node,
+               (sequence s) => s == sequence);
 
             // The 'node' contains the figure node. To prevent unnecessary
             // nesting, just use the figure node instead.
@@ -446,6 +469,41 @@ namespace Anim8orTransl8or
 
             effect.Items = effect.Items.Append(profile);
 
+            foreach ( TextureNode textureNode in textureNodes )
+            {
+               common_newparam_type surfaceParam = new common_newparam_type();
+               profile.Items = profile.Items.Append(surfaceParam);
+
+               surfaceParam.ItemElementName = ItemChoiceType2.surface;
+               surfaceParam.sid = textureNode.ImageId + "-surface";
+
+               fx_surface_common surface2d = new fx_surface_common();
+               surfaceParam.Item = surface2d;
+
+               surface2d.type = fx_surface_type_enum.Item2D;
+
+               fx_surface_init_from_common surfaceInit =
+                  new fx_surface_init_from_common();
+
+               surface2d.init_from = new fx_surface_init_from_common[1]
+               {
+                  surfaceInit,
+               };
+
+               surfaceInit.Value = textureNode.ImageId;
+
+               common_newparam_type samplerParam = new common_newparam_type();
+               profile.Items = profile.Items.Append(samplerParam);
+
+               samplerParam.ItemElementName = ItemChoiceType2.sampler2D;
+               samplerParam.sid = textureNode.ImageId;
+
+               fx_sampler2D_common sampler2d = new fx_sampler2D_common();
+               samplerParam.Item = sampler2d;
+
+               sampler2d.source = surfaceParam.sid;
+            }
+
             effectFx_profile_abstractProfile_COMMONTechnique technique =
                new effectFx_profile_abstractProfile_COMMONTechnique();
 
@@ -559,7 +617,12 @@ namespace Anim8orTransl8or
 
                phong.transparent = transparent;
 
-               transparent.opaque = fx_opaque_enum.RGB_ZERO;
+               // TODO: In RGB_ZERO mode, Autodesk interprets 0 as opaque and 1
+               // as invisible. Blender interprets 1 as opaque and 0 as
+               // invisible. In A_ONE mode, Autodesk doesn't enable
+               // transparency and Blender interprets 1 as opaque and 0 as
+               // invisible. There doesn't seem to be a good option here...
+               transparent.opaque = fx_opaque_enum.A_ONE;
 
                common_color_or_texture_typeColor color =
                   new common_color_or_texture_typeColor();
@@ -590,7 +653,8 @@ namespace Anim8orTransl8or
 
                value.sid = "transparency";
 
-               value.Value = 1 - (surface?.alpha?.text ?? 255).Limit(0, 255) /
+               // TODO: See previous comment about A_ONE mode.
+               value.Value = (surface?.alpha?.text ?? 255).Limit(0, 255) /
                   255.0;
 
                transparency.Item = value;
@@ -720,6 +784,7 @@ namespace Anim8orTransl8or
       #region library_geometries
       static VisualNode CreateLibraryGeometries(
          ANIM8OR an8,
+         Action<String> callback,
          List<MaterialNode> materialNodes,
          COLLADA dae,
          List<String> usedNames,
@@ -756,6 +821,7 @@ namespace Anim8orTransl8or
             group.group = @object?.group;
 
             VisualNode oNode = AddGroup(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -795,6 +861,7 @@ namespace Anim8orTransl8or
             group.name = new @string() { text = figure?.name };
 
             VisualNode fNode = AddGroup(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -805,6 +872,7 @@ namespace Anim8orTransl8or
             {
                VisualNode bNode = AddBoneGeometry(
                   an8,
+                  callback,
                   materialNodes,
                   usedNames,
                   library,
@@ -839,6 +907,7 @@ namespace Anim8orTransl8or
       }
 
       static VisualNode AddGroup(
+         Action<String> callback,
          List<MaterialNode> materialNodes,
          List<String> usedNames,
          library_geometries library,
@@ -859,6 +928,7 @@ namespace Anim8orTransl8or
          foreach ( An8.V100.mesh mesh in group.mesh ?? new An8.V100.mesh[0] )
          {
             VisualNode mNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -871,9 +941,10 @@ namespace Anim8orTransl8or
          foreach ( An8.V100.sphere sphere in group.sphere ??
             new An8.V100.sphere[0] )
          {
-            An8.V100.mesh mesh = An8Sphere.Calculate(sphere);
+            An8.V100.mesh mesh = An8Sphere.Calculate(sphere, callback);
 
             VisualNode sNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -886,9 +957,10 @@ namespace Anim8orTransl8or
          foreach ( An8.V100.cylinder cylinder in group.cylinder ??
             new An8.V100.cylinder[0] )
          {
-            An8.V100.mesh mesh = An8Cylinder.Calculate(cylinder);
+            An8.V100.mesh mesh = An8Cylinder.Calculate(cylinder, callback);
 
             VisualNode cNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -900,9 +972,10 @@ namespace Anim8orTransl8or
 
          foreach ( cube cube in group.cube ?? new cube[0] )
          {
-            An8.V100.mesh mesh = An8Cube.Calculate(cube);
+            An8.V100.mesh mesh = An8Cube.Calculate(cube, callback);
 
             VisualNode cNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -915,9 +988,12 @@ namespace Anim8orTransl8or
          foreach ( subdivision subdivision in group.subdivision ??
             new subdivision[0] )
          {
-            An8.V100.mesh mesh = An8Subdivision.Calculate(subdivision);
+            An8.V100.mesh mesh = An8Subdivision.Calculate(
+               subdivision,
+               callback);
 
             VisualNode sNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -929,9 +1005,10 @@ namespace Anim8orTransl8or
 
          foreach ( pathcom pathcom in group.pathcom ?? new pathcom[0] )
          {
-            An8.V100.mesh mesh = An8PathCom.Calculate(pathcom);
+            An8.V100.mesh mesh = An8PathCom.Calculate(pathcom, callback);
 
             VisualNode pNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -943,9 +1020,10 @@ namespace Anim8orTransl8or
 
          foreach ( textcom textcom in group.textcom ?? new textcom[0] )
          {
-            An8.V100.mesh mesh = An8TextCom.Calculate(textcom);
+            An8.V100.mesh mesh = An8TextCom.Calculate(textcom, callback);
 
             VisualNode tNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -974,6 +1052,7 @@ namespace Anim8orTransl8or
             group2.group = group2.group.Append(modifier?.group);
 
             VisualNode mNode = AddGroup(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -986,9 +1065,10 @@ namespace Anim8orTransl8or
          foreach ( An8.V100.image image in group.image ??
             new An8.V100.image[0] )
          {
-            An8.V100.mesh mesh = An8Image.Calculate(image);
+            An8.V100.mesh mesh = An8Image.Calculate(image, callback);
 
             VisualNode iNode = AddMesh(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -1001,6 +1081,7 @@ namespace Anim8orTransl8or
          foreach ( group1 group2 in group.group ?? new group1[0] )
          {
             VisualNode gNode = AddGroup(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -1014,6 +1095,7 @@ namespace Anim8orTransl8or
       }
 
       static VisualNode AddMesh(
+         Action<String> callback,
          List<MaterialNode> materialNodes,
          List<String> usedNames,
          library_geometries library,
@@ -1024,7 +1106,7 @@ namespace Anim8orTransl8or
          // Calculate normals if they are missing
          if ( mesh.normals?.point == null )
          {
-            mesh = An8Normals.Calculate(mesh);
+            mesh = An8Normals.Calculate(mesh, callback);
          }
 
          point origin = mesh.@base?.origin?.point ?? new point();
@@ -1379,6 +1461,7 @@ namespace Anim8orTransl8or
 
       static VisualNode AddBoneGeometry(
          ANIM8OR an8,
+         Action<String> callback,
          List<MaterialNode> materialNodes,
          List<String> usedNames,
          library_geometries library,
@@ -1407,6 +1490,7 @@ namespace Anim8orTransl8or
          group.group = bone.group;
 
          VisualNode node = AddGroup(
+            callback,
             materialNodes,
             usedNames,
             library,
@@ -1423,6 +1507,7 @@ namespace Anim8orTransl8or
             group2.@base = namedobject?.@base;
 
             VisualNode nNode = AddGroup(
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -1452,6 +1537,7 @@ namespace Anim8orTransl8or
                   group3.group = @object?.group;
 
                   VisualNode oNode = AddGroup(
+                     callback,
                      materialNodes,
                      usedNames,
                      library,
@@ -1475,6 +1561,7 @@ namespace Anim8orTransl8or
          {
             VisualNode bNode = AddBoneGeometry(
                an8,
+               callback,
                materialNodes,
                usedNames,
                library,
@@ -1491,6 +1578,7 @@ namespace Anim8orTransl8or
       #region library_controllers
       static void CreateLibraryControllers(
          ANIM8OR an8,
+         Action<String> callback,
          COLLADA dae,
          List<String> usedNames,
          VisualNode parentNode)
@@ -1512,6 +1600,7 @@ namespace Anim8orTransl8or
                {
                   AddBoneController(
                      an8,
+                     callback,
                      usedNames,
                      library,
                      bNode,
@@ -1523,15 +1612,17 @@ namespace Anim8orTransl8or
 
       static void AddBoneController(
          ANIM8OR an8,
+         Action<String> callback,
          List<String> usedNames,
          library_controllers library,
          VisualNode sNode,
          VisualNode node)
       {
+         // Convert all named objects to controllers
          if ( node.Tag is namedobject namedobject )
          {
             // Calculate weights if they are missing
-            if ( namedobject?.weights == null )
+            if ( namedobject.weights == null )
             {
                // Find the named object
                VisualNode oNode = sNode.Find(
@@ -1548,7 +1639,8 @@ namespace Anim8orTransl8or
                namedobject = An8Weights.Calculate(
                   namedobject,
                   ms.ToArray(),
-                  sNode.Tag as bone1);
+                  sNode.Tag as bone1,
+                  callback);
             }
 
             foreach ( weights weights in namedobject.weights ??
@@ -1559,329 +1651,398 @@ namespace Anim8orTransl8or
 
                if ( mNode != null )
                {
-                  Dae.V141.controller controller = new Dae.V141.controller();
-                  library.controller = library.controller.Append(controller);
+                  ConvertToController(
+                     usedNames,
+                     library,
+                     sNode,
+                     namedobject.weightedby,
+                     weights,
+                     mNode);
 
-                  controller.id = MakeUnique(
-                     mNode.NodeId,
-                     "-controller",
-                     usedNames);
-
-                  controller.name = controller.id;
-
-                  skin skin = new skin();
-                  controller.Item = skin;
-
-                  skin.source1 = "#" + mNode.GeometryId;
-
-                  Double[] bindMatrix =
-                     mNode.BindMatrix().GetEnumerator().ToArray();
-
-                  skin.bind_shape_matrix =
-                     COLLADA.ConvertFromArray(bindMatrix);
-
-                  // Convert the geometry node to a controller node
-                  mNode.GeometryId = null;
-                  mNode.ControllerId = controller.id;
-                  mNode.SkeletonId = sNode.NodeId;
-
-                  List<VisualNode> boneNodes = sNode.FindAll(
-                     v => v.Tag is bone1).ToList();
-
-                  // TODO: These prevent warnings in Autodesk, but don't change
-                  // the displayed result. Are they needed?
+                  // Note: Blender has some trouble importing the geometry and
+                  // controllers when they are nested under the bones, so move
+                  // them to the same level as the root bone.
+                  if ( sNode.Parent != null && node.Parent != null )
                   {
-                     VisualNode namedObjectNode = node;
-                     VisualNode objectNode = node.Children.Find(
-                        v => v.Tag is @object);
+                     // Remove from old parent
+                     node.Parent.Children.Remove(node);
 
-                     if ( namedObjectNode != null )
-                     {
-                        boneNodes.Add(namedObjectNode);
-                     }
-
-                     if ( objectNode != null )
-                     {
-                        boneNodes.Add(objectNode);
-                     }
-                  }
-
-                  // Arrange the bone nodes in the "weighedby" order
-                  for ( Int32 i = 0; i < namedobject.weightedby?.Length; i++ )
-                  {
-                     String boneName = namedobject.weightedby[i].text;
-
-                     for ( Int32 j = 0; j < boneNodes.Count; j++ )
-                     {
-                        if ( (boneNodes[j].Tag as bone1)?.name == boneName )
-                        {
-                           VisualNode temp = boneNodes[i];
-                           boneNodes[i] = boneNodes[j];
-                           boneNodes[j] = temp;
-                           break;
-                        }
-                     }
-                  }
-
-                  // Add source for joints
-                  String jointsSourceId = null;
-                  {
-                     source source = new source();
-                     skin.source = skin.source.Append(source);
-
-                     source.id = MakeUnique(
-                        controller.id,
-                        "-joints",
-                        usedNames);
-
-                     jointsSourceId = source.id;
-
-                     Name_array array = new Name_array();
-                     source.Item = array;
-
-                     array.id = MakeUnique(source.id, "-array", usedNames);
-
-                     String[] values = new String[boneNodes.Count];
-
-                     for ( Int32 i = 0; i < boneNodes.Count; i++ )
-                     {
-                        values[i] = boneNodes[i].NodeId;
-                     }
-
-                     array.count = (UInt64)values.Length;
-                     array.Values = values;
-
-                     source.technique_common = new sourceTechnique_common();
-
-                     accessor accessor = new accessor();
-                     source.technique_common.accessor = accessor;
-
-                     accessor.source = "#" + array.id;
-                     accessor.count = (UInt64)values.Length;
-                     accessor.stride = 1;
-
-                     // Add joint param
-                     {
-                        param param = new param();
-                        accessor.param = accessor.param.Append(param);
-
-                        param.name = "JOINT";
-                        param.type = "name";
-                     }
-                  }
-
-                  // Add source for bind poses
-                  String bindPosesSourceId = null;
-                  {
-                     source source = new source();
-                     skin.source = skin.source.Append(source);
-
-                     source.id = MakeUnique(
-                        controller.id,
-                        "-transforms",
-                        usedNames);
-
-                     bindPosesSourceId = source.id;
-
-                     float_array array = new float_array();
-                     source.Item = array;
-
-                     array.id = MakeUnique(source.id, "-array", usedNames);
-
-                     Double[] values = new Double[boneNodes.Count * 16];
-                     Int32 index = 0;
-
-                     foreach ( VisualNode boneNode in boneNodes )
-                     {
-                        An8.matrix matrix = boneNode.BindMatrix().Inverse();
-
-                        foreach ( Double value in matrix.GetEnumerator() )
-                        {
-                           values[index++] = value;
-                        }
-                     }
-
-                     array.count = (UInt64)values.Length;
-                     array.Values = values;
-
-                     source.technique_common = new sourceTechnique_common();
-
-                     accessor accessor = new accessor();
-                     source.technique_common.accessor = accessor;
-
-                     accessor.source = "#" + array.id;
-                     accessor.count = (UInt64)values.Length / 16;
-                     accessor.stride = 16;
-
-                     // Add transform param
-                     {
-                        param param = new param();
-                        accessor.param = accessor.param.Append(param);
-
-                        param.name = "TRANSFORM";
-                        param.type = "float4x4";
-                     }
-                  }
-
-                  // Add source for weights
-                  String weightsSourceId = null;
-                  {
-                     source source = new source();
-                     skin.source = skin.source.Append(source);
-
-                     source.id = MakeUnique(
-                        controller.id,
-                        "-weights",
-                        usedNames);
-
-                     weightsSourceId = source.id;
-
-                     float_array array = new float_array();
-                     source.Item = array;
-
-                     array.id = MakeUnique(source.id, "-array", usedNames);
-
-                     List<Double> values = new List<Double>();
-
-                     foreach ( weightdata weightdata in weights.weightdata ??
-                        new weightdata[0] )
-                     {
-                        foreach ( bonedata bonedata in weightdata.bonedata ??
-                           new bonedata[0] )
-                        {
-                           values.Add(bonedata.boneweight);
-                        }
-                     }
-
-                     array.count = (UInt64)values.Count;
-                     array.Values = values.ToArray();
-
-                     source.technique_common = new sourceTechnique_common();
-
-                     accessor accessor = new accessor();
-                     source.technique_common.accessor = accessor;
-
-                     accessor.source = "#" + array.id;
-                     accessor.count = (UInt64)values.Count;
-                     accessor.stride = 1;
-
-                     // Add weight param
-                     {
-                        param param = new param();
-                        accessor.param = accessor.param.Append(param);
-
-                        param.name = "WEIGHT";
-                        param.type = "float";
-                     }
-                  }
-
-                  // Add joints
-                  {
-                     skinJoints joints = new skinJoints();
-                     skin.joints = joints;
-
-                     // Add joint input
-                     if ( jointsSourceId != null )
-                     {
-                        InputLocal input = new InputLocal();
-                        joints.input = joints.input.Append(input);
-
-                        input.semantic = "JOINT";
-                        input.source = "#" + jointsSourceId;
-                     }
-
-                     // Add bind pose input
-                     if ( bindPosesSourceId != null )
-                     {
-                        InputLocal input = new InputLocal();
-                        joints.input = joints.input.Append(input);
-
-                        input.semantic = "INV_BIND_MATRIX";
-                        input.source = "#" + bindPosesSourceId;
-                     }
-                  }
-
-                  // Add weights
-                  {
-                     skinVertex_weights weights2 = new skinVertex_weights();
-                     skin.vertex_weights = weights2;
-
-                     weights2.count = (UInt64)weights.weightdata?.Length;
-
-                     UInt64 offset = 0;
-
-                     // Add joint input
-                     if ( jointsSourceId != null )
-                     {
-                        InputLocalOffset input = new InputLocalOffset();
-                        weights2.input = weights2.input.Append(input);
-
-                        input.semantic = "JOINT";
-                        input.source = "#" + jointsSourceId;
-                        input.offset = offset++;
-                     }
-
-                     // Add weight input
-                     if ( weightsSourceId != null )
-                     {
-                        InputLocalOffset input = new InputLocalOffset();
-                        weights2.input = weights2.input.Append(input);
-
-                        input.semantic = "WEIGHT";
-                        input.source = "#" + weightsSourceId;
-                        input.offset = offset++;
-                     }
-
-                     // Add bone weight counts
-                     {
-                        StringBuilder sb = new StringBuilder();
-
-                        foreach ( weightdata weightdata in
-                           weights.weightdata ?? new weightdata[0] )
-                        {
-                           // Note: We could use 'numweights', but bonedata
-                           // contains the actual list of weights, so it is
-                           // safer.
-                           sb.Append(weightdata.bonedata?.Length ?? 0);
-                           sb.Append(' ');
-                        }
-
-                        weights2.vcount = sb.ToString().TrimEnd();
-                     }
-
-                     // Add indices
-                     {
-                        StringBuilder sb = new StringBuilder();
-                        Int32 index = 0;
-
-                        foreach ( weightdata weightdata in
-                           weights.weightdata ?? new weightdata[0] )
-                        {
-                           foreach ( bonedata bonedata in
-                              weightdata.bonedata ?? new bonedata[0] )
-                           {
-                              sb.Append(bonedata.boneindex);
-                              sb.Append(' ');
-                              sb.Append(index++);
-                              sb.Append(' ');
-                           }
-                        }
-
-                        weights2.v = sb.ToString().TrimEnd();
-                     }
+                     // Add to new parent
+                     sNode.Parent.Link(node);
                   }
                }
             }
          }
-
-         foreach ( VisualNode childNode in node.Children )
+         // Convert all other meshes to controllers
+         else if ( node.Mesh != null && node.Parent?.Tag is bone1 bone )
          {
-            AddBoneController(
-               an8,
+            // The mesh is weighted 100% by the parent bone
+            @string[] weightedby = new @string[1]
+            {
+               new @string() { text = bone.name },
+            };
+
+            weights weights = new weights();
+            weights.meshname = node.Mesh.name?.text;
+
+            weights.weightdata = new weightdata[
+               node.Mesh.points?.point?.Length ?? 0];
+
+            weightdata weightdata = new weightdata();
+            weightdata.numweights = 1;
+            weightdata.bonedata = new bonedata[1]
+            {
+               new bonedata() { boneindex = 0, boneweight = 1 },
+            };
+
+            for ( Int32 i = 0; i < weights.weightdata.Length; i++ )
+            {
+               weights.weightdata[i] = weightdata;
+            }
+
+            ConvertToController(
                usedNames,
                library,
                sNode,
-               childNode);
+               weightedby,
+               weights,
+               node);
+
+            // Note: Blender has some trouble importing the geometry and
+            // controllers when they are nested under the bones, so move
+            // them to the same level as the root bone.
+            if ( sNode.Parent != null && node.Parent != null )
+            {
+               // Reset the matrix to the identity (it doesn't seem to matter)
+               node.Matrix = An8.matrix.IDENTITY;
+
+               // Remove from old parent
+               node.Parent.Children.Remove(node);
+
+               // Add to new parent
+               sNode.Parent.Link(node);
+            }
+         }
+         // Otherwise, continue searching the bone hierarchy
+         else
+         {
+            // Note: This list is cloned since the children may be moved. See
+            // the note above about Blender.
+            List<VisualNode> children = new List<VisualNode>(node.Children);
+
+            foreach ( VisualNode childNode in children )
+            {
+               AddBoneController(
+                  an8,
+                  callback,
+                  usedNames,
+                  library,
+                  sNode,
+                  childNode);
+            }
+         }
+      }
+
+      static void ConvertToController(
+         List<String> usedNames,
+         library_controllers library,
+         VisualNode sNode,
+         @string[] weightedby,
+         weights weights,
+         VisualNode mNode)
+      {
+         Dae.V141.controller controller = new Dae.V141.controller();
+         library.controller = library.controller.Append(controller);
+
+         controller.id = MakeUnique(
+            mNode.NodeId,
+            "-controller",
+            usedNames);
+
+         controller.name = controller.id;
+
+         skin skin = new skin();
+         controller.Item = skin;
+
+         skin.source1 = "#" + mNode.GeometryId;
+
+         Double[] bindMatrix =
+            mNode.BindMatrix().GetEnumerator().ToArray();
+
+         skin.bind_shape_matrix =
+            COLLADA.ConvertFromArray(bindMatrix);
+
+         // Convert the geometry node to a controller node
+         mNode.GeometryId = null;
+         mNode.ControllerId = controller.id;
+         mNode.SkeletonId = sNode.NodeId;
+
+         List<VisualNode> boneNodes = sNode.FindAll(
+            v => v.Tag is bone1).ToList();
+
+         // Arrange the bone nodes in the "weighedby" order
+         for ( Int32 i = 0; i < weightedby?.Length; i++ )
+         {
+            String boneName = weightedby[i].text;
+
+            for ( Int32 j = 0; j < boneNodes.Count; j++ )
+            {
+               if ( (boneNodes[j].Tag as bone1)?.name == boneName )
+               {
+                  VisualNode temp = boneNodes[i];
+                  boneNodes[i] = boneNodes[j];
+                  boneNodes[j] = temp;
+                  break;
+               }
+            }
+         }
+
+         // Add source for joints
+         String jointsSourceId = null;
+         {
+            source source = new source();
+            skin.source = skin.source.Append(source);
+
+            source.id = MakeUnique(
+               controller.id,
+               "-joints",
+               usedNames);
+
+            jointsSourceId = source.id;
+
+            Name_array array = new Name_array();
+            source.Item = array;
+
+            array.id = MakeUnique(source.id, "-array", usedNames);
+
+            String[] values = new String[boneNodes.Count];
+
+            for ( Int32 i = 0; i < boneNodes.Count; i++ )
+            {
+               values[i] = boneNodes[i].NodeId;
+            }
+
+            array.count = (UInt64)values.Length;
+            array.Values = values;
+
+            source.technique_common = new sourceTechnique_common();
+
+            accessor accessor = new accessor();
+            source.technique_common.accessor = accessor;
+
+            accessor.source = "#" + array.id;
+            accessor.count = (UInt64)values.Length;
+            accessor.stride = 1;
+
+            // Add joint param
+            {
+               param param = new param();
+               accessor.param = accessor.param.Append(param);
+
+               param.name = "JOINT";
+               param.type = "name";
+            }
+         }
+
+         // Add source for bind poses
+         String bindPosesSourceId = null;
+         {
+            source source = new source();
+            skin.source = skin.source.Append(source);
+
+            source.id = MakeUnique(
+               controller.id,
+               "-transforms",
+               usedNames);
+
+            bindPosesSourceId = source.id;
+
+            float_array array = new float_array();
+            source.Item = array;
+
+            array.id = MakeUnique(source.id, "-array", usedNames);
+
+            Double[] values = new Double[boneNodes.Count * 16];
+            Int32 index = 0;
+
+            foreach ( VisualNode boneNode in boneNodes )
+            {
+               An8.matrix matrix = boneNode.BindMatrix().Inverse();
+
+               foreach ( Double value in matrix.GetEnumerator() )
+               {
+                  values[index++] = value;
+               }
+            }
+
+            array.count = (UInt64)values.Length;
+            array.Values = values;
+
+            source.technique_common = new sourceTechnique_common();
+
+            accessor accessor = new accessor();
+            source.technique_common.accessor = accessor;
+
+            accessor.source = "#" + array.id;
+            accessor.count = (UInt64)values.Length / 16;
+            accessor.stride = 16;
+
+            // Add transform param
+            {
+               param param = new param();
+               accessor.param = accessor.param.Append(param);
+
+               param.name = "TRANSFORM";
+               param.type = "float4x4";
+            }
+         }
+
+         // Add source for weights
+         String weightsSourceId = null;
+         {
+            source source = new source();
+            skin.source = skin.source.Append(source);
+
+            source.id = MakeUnique(
+               controller.id,
+               "-weights",
+               usedNames);
+
+            weightsSourceId = source.id;
+
+            float_array array = new float_array();
+            source.Item = array;
+
+            array.id = MakeUnique(source.id, "-array", usedNames);
+
+            List<Double> values = new List<Double>();
+
+            foreach ( weightdata weightdata in weights.weightdata ??
+               new weightdata[0] )
+            {
+               foreach ( bonedata bonedata in weightdata.bonedata ??
+                  new bonedata[0] )
+               {
+                  values.Add(bonedata.boneweight);
+               }
+            }
+
+            array.count = (UInt64)values.Count;
+            array.Values = values.ToArray();
+
+            source.technique_common = new sourceTechnique_common();
+
+            accessor accessor = new accessor();
+            source.technique_common.accessor = accessor;
+
+            accessor.source = "#" + array.id;
+            accessor.count = (UInt64)values.Count;
+            accessor.stride = 1;
+
+            // Add weight param
+            {
+               param param = new param();
+               accessor.param = accessor.param.Append(param);
+
+               param.name = "WEIGHT";
+               param.type = "float";
+            }
+         }
+
+         // Add joints
+         {
+            skinJoints joints = new skinJoints();
+            skin.joints = joints;
+
+            // Add joint input
+            if ( jointsSourceId != null )
+            {
+               InputLocal input = new InputLocal();
+               joints.input = joints.input.Append(input);
+
+               input.semantic = "JOINT";
+               input.source = "#" + jointsSourceId;
+            }
+
+            // Add bind pose input
+            if ( bindPosesSourceId != null )
+            {
+               InputLocal input = new InputLocal();
+               joints.input = joints.input.Append(input);
+
+               input.semantic = "INV_BIND_MATRIX";
+               input.source = "#" + bindPosesSourceId;
+            }
+         }
+
+         // Add weights
+         {
+            skinVertex_weights weights2 = new skinVertex_weights();
+            skin.vertex_weights = weights2;
+
+            weights2.count = (UInt64)weights.weightdata?.Length;
+
+            UInt64 offset = 0;
+
+            // Add joint input
+            if ( jointsSourceId != null )
+            {
+               InputLocalOffset input = new InputLocalOffset();
+               weights2.input = weights2.input.Append(input);
+
+               input.semantic = "JOINT";
+               input.source = "#" + jointsSourceId;
+               input.offset = offset++;
+            }
+
+            // Add weight input
+            if ( weightsSourceId != null )
+            {
+               InputLocalOffset input = new InputLocalOffset();
+               weights2.input = weights2.input.Append(input);
+
+               input.semantic = "WEIGHT";
+               input.source = "#" + weightsSourceId;
+               input.offset = offset++;
+            }
+
+            // Add bone weight counts
+            {
+               StringBuilder sb = new StringBuilder();
+
+               foreach ( weightdata weightdata in
+                  weights.weightdata ?? new weightdata[0] )
+               {
+                  // Note: We could use 'numweights', but bonedata
+                  // contains the actual list of weights, so it is
+                  // safer.
+                  sb.Append(weightdata.bonedata?.Length ?? 0);
+                  sb.Append(' ');
+               }
+
+               weights2.vcount = sb.ToString().TrimEnd();
+            }
+
+            // Add indices
+            {
+               StringBuilder sb = new StringBuilder();
+               Int32 index = 0;
+
+               foreach ( weightdata weightdata in
+                  weights.weightdata ?? new weightdata[0] )
+               {
+                  foreach ( bonedata bonedata in
+                     weightdata.bonedata ?? new bonedata[0] )
+                  {
+                     sb.Append(bonedata.boneindex);
+                     sb.Append(' ');
+                     sb.Append(index++);
+                     sb.Append(' ');
+                  }
+               }
+
+               weights2.v = sb.ToString().TrimEnd();
+            }
          }
       }
       #endregion
@@ -1891,13 +2052,20 @@ namespace Anim8orTransl8or
          ANIM8OR an8,
          COLLADA dae,
          List<String> usedNames,
-         VisualNode parentNode)
+         VisualNode parentNode,
+         Func<sequence, Boolean> includeSequence = null)
       {
          library_animations library = new library_animations();
          dae.Items = dae.Items.Append(library);
 
          foreach ( sequence sequence in an8.sequence ?? new sequence[0] )
          {
+            // Use a callback to filter out unwanted sequences
+            if ( includeSequence != null && !includeSequence(sequence) )
+            {
+               continue;
+            }
+
             VisualNode fNode = parentNode.Find(
                v => v.Tag is figure f &&
                f.name == sequence.figure?.text);
@@ -2175,14 +2343,26 @@ namespace Anim8orTransl8or
             Double yDegrees = InterpolateAngle(jointangles, "Y", frameNumber);
             Double zDegrees = InterpolateAngle(jointangles, "Z", frameNumber);
 
-            // Anim8or rotates counter-clockwise
-            quaternion quatX = new quaternion(new point(1, 0, 0), xDegrees * Math.PI / 180);
-            quaternion quatY = new quaternion(new point(0, 1, 0), yDegrees * Math.PI / 180);
-            quaternion quatZ = new quaternion(new point(0, 0, 1), zDegrees * Math.PI / 180);
+            // Note: Anim8or rotates counter-clockwise.
+            quaternion quatX = new quaternion(
+               new point(1, 0, 0),
+               xDegrees * Math.PI / 180);
 
-            // Anim8or seems to apply X then Z then Y in sequence mode
+            quaternion quatY = new quaternion(
+               new point(0, 1, 0),
+               yDegrees * Math.PI / 180);
+
+            quaternion quatZ = new quaternion(
+               new point(0, 0, 1),
+               zDegrees * Math.PI / 180);
+
+            // Note: Anim8or seems to apply X then Z then Y in sequence mode.
             quaternion sequenceQuat = quatX.Rotate(quatZ).Rotate(quatY);
-            An8.matrix sequenceMat = new An8.matrix(new point(), sequenceQuat, 1);
+
+            An8.matrix sequenceMat = new An8.matrix(
+               new point(),
+               sequenceQuat,
+               1);
 
             Double time = frameNumber / framesPerSecond;
             An8.matrix matrix = bNode.Matrix.Transform(sequenceMat);

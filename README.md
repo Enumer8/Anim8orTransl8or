@@ -1,11 +1,15 @@
 # Anim8or Transl8or
 Anim8or Transl8or converts ANIM8OR (\*.an8) files into COLLADA (\*.dae) files.
+Download the latest release here:
+https://github.com/Enumer8/Anim8orTransl8or/releases.
 
 (For more information on Anim8or®, please visit http://www.anim8or.com/)
 
-(For more information on COLLADA™, please visit https://www.khronos.org/collada/)
+(For more information on COLLADA™, please visit
+https://www.khronos.org/collada/)
 
-Anim8or Transl8or converts each object, figure, and sequence in an ANIM8OR file into a separate COLLADA file. For instance, the Walk sequence in Cat.an8:
+Anim8or Transl8or converts each object, figure, and sequence in an ANIM8OR file
+into a separate COLLADA file. For instance, the Walk sequence in Cat.an8:
 
 ![Walk Sequence Before](Before.png "Walk Sequence Before")
 
@@ -13,10 +17,25 @@ Becomes Sequence_Walk.dae:
 
 ![Walk Sequence After](After.png "Walk Sequence After")
 
-## Prerequisites
-Anim8or Transl8or requires .NET Framework 4.0. It is most likely already installed on your system if you are using Windows XP or later. Otherwise, it can be installed from here: https://www.microsoft.com/en-us/download/details.aspx?id=17851.
+Anim8or Transl8or's output COLLADA files have been informally tested to
+"mostly" work with Autodesk® 3ds Max® 2019 Student Version
+(https://www.autodesk.com/education/free-software/3ds-max), Blender 2.79b
+(https://www.blender.org/download/), and Microsoft® Visual Studio® Community
+2017's Model Editor
+(https://docs.microsoft.com/en-us/visualstudio/designers/model-editor?view=vs-2017).
+It seems that no two programs have the same level of COLLADA support, and not
+all ANIM8OR features are possible to represent in COLLADA, so Anim8or Transl8or
+has been carefully designed to create a balance (see
+[limitations](#limitations)).
 
-Anim8or Transl8or may also run on other operating systems using Mono (https://www.mono-project.com/), but this is not tested.
+## Prerequisites
+Anim8or Transl8or requires .NET Framework 4.0. It is most likely already
+installed on your system if you are using Windows XP or later. Otherwise, it
+can be installed from here:
+https://www.microsoft.com/en-us/download/details.aspx?id=17851.
+
+Anim8or Transl8or may also run on other operating systems using Mono
+(https://www.mono-project.com/), but this is not tested.
 
 ## Graphical User Interface (GUI)
 1. Double-click Anim8orTransl8or.Gui.exe
@@ -29,7 +48,8 @@ Anim8or Transl8or may also run on other operating systems using Mono (https://ww
 Anim8orTransl8or.Cli.exe input.an8 output\
 ~~~
 
-Note: "input.an8" is the name of the input ANIM8OR (\*.an8) file and "output\\" is the path of the output COLLADA (\*.dae) files.
+Note: "input.an8" is the name of the input ANIM8OR (\*.an8) file and "output\\"
+is the path of the output COLLADA (\*.dae) files.
 
 ## Dynamically Linked Library (DLL)
 ~~~
@@ -58,7 +78,7 @@ namespace User
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         // One An8 file can result in multiple files
+         // One an8 file can result in multiple files
          Directory.CreateDirectory(outFolder);
 
          foreach ( ConverterResult result in Converter.Convert(an8) )
@@ -99,16 +119,71 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
 ## Not Yet Supported
  * ANIM8OR "subdivision", "pathcom", "textcom", "modifier", and "image"
  * ANIM8OR "scene"
- * Configuration/optimization. Everything will be converted as faithfully as possible.
- * Error handling. The program will just crash if it does not like something.
- * Generating ANIM8OR (\*.an8) files.
- * Converting COLLADA (\*.dae) to ANIM8OR (\*.an8).
- * Converting ANIM8OR (\*.an8) to other formats, like \*.gltf and \*.glb.
+ * Multiple materials and two-sided materials
+ * Configuration/optimization
+ * Generating ANIM8OR (\*.an8) files
+ * Converting COLLADA (\*.dae) to ANIM8OR (\*.an8)
+ * Converting ANIM8OR (\*.an8) to other formats (such as \*.gltf and \*.glb)
 
 ## Limitations
 #### Materials
+ANIM8OR allows assigning a different material per face and supports two-sided
+materials. Investigation into what COLLADA supports is still needed. For now,
+Anim8or Transl8or only supports one material per mesh and only one-sided
+materials.
+
 ANIM8OR supports some material parameters that do not seem to be supported by
-COLLADA (at least in a commonly supported way).
+COLLADA (at least in a way that works for most importers). For example, ANIM8OR
+has scalar values that change the percentage of the ambient, diffuse, specular,
+and emissive's effect on the final color. These percentages work with solid
+colors and textures images alike. COLLADA has no way to represent these
+scalars. For solid colors, Anim8or Transl8or simply multiplies the color by the
+scalar and stores the result. For texture images, however, Anim8or Transl8or
+doesn't do anything. A whole new texture image could be created, but that
+doesn't seem practical. It could be added as a setting in the future, though.
+
+COLLADA does support transparency, but there seems to be a disagreement among
+the importers as to what the result should look like. In RGB_ZERO mode, 3DS Max
+interprets 0 as opaque and 1 as invisible (which seems correct). Blender,
+however, interprets 1 as opaque and 0 as invisible (which seems incorrect).
+Model Editor never shows any transparency, so it is not a good tie breaker :).
+In A_ONE mode, 3DS Max does not show any transparency (which seems incorrect),
+and Blender interprets 1 as opaque and 0 as invisible (which seems correct).
+Instead of ignoring transparency all together, A_ONE mode will be used, since
+it seems better to be incorrectly opaque than incorrectly invisible. It could
+be added as a setting in the future, though.
+
+#### Bones
+ANIM8OR supports bones, but COLLADA supports joints. They are almost the same,
+but the main difference is that the length of the end bones (think the tips of
+fingers, toes, tail, etc.) cannot be represented. They will basically look like
+little nubs. There shouldn't be any other detrimental effects. This does mean
+it would be more difficult to create a COLLADA to ANIM8OR converter. For some
+reason, Blender displays the joints as pointing directly up instead of pointing
+towards the parent joint. The joints display as expected in 3DS Max. More
+investigation is needed.
+
+ANIM8OR allows multiple objects to be attached to any bone in the hierarchy.
+COLLADA also seems to supports this, as 3DS Max and Model Viewer work okay.
+However, it seems that Blender has some trouble importing the objects when they
+are nested directly under the joints. For this reason, Anim8or Transl8or moves
+all objects to the same level as the root bone.
+
+#### Key Frames
+ANIM8OR supports animations by creating individual keys for X, Y, and Z
+rotations. These rotations are interpolated independently and seemingly
+combined in the X, Z, Y order. COLLADA might support storing the
+rotations like this (more investigation is needed), but for now Anim8or
+Transl8or creates a complete rotation at every key frame.
+
+The converted animations mostly appear correct in Blender and 3DS Max. By
+default, 3DS Max seems to use the "Euler X Y Z" rotation controller for
+animations. This results in a lot of incorrect rotations and gimbal lock. The
+rotation controller can be changed by clicking
+Animation->Rotation Controllers->Quaternion (TCB). This seems to fix most of
+the issues, but it is still possible for an animation to interpolate the exact
+opposite direction as expected. More investigation is needed. Blender does not
+seem to have any issues.
 
 #### Multiple Objects/Figures/Sequences/Scenes
 ANIM8OR can store completely independent objects, figures, sequences, and
@@ -153,16 +228,16 @@ be problems and incompatibilities. Please enter issues on GitHub
 (https://github.com/Enumer8/Anim8orTransl8or/issues). Please don't enter issues
 about things that are [not supported yet](#not-supported-yet). For the best
 chance at fixing the issue, please attach or link to the ANIM8OR (\*.an8) file
-that causes the problem.
+that causes the problem and carefully explain how to recreate the problem.
 
 ## Contribute
 Anim8or Transl8or is open source software. User contributions are appreciated.
 Please create a pull request on GitHub
 (https://github.com/Enumer8/Anim8orTransl8or/pulls). Please focus on developing
 things that are [not supported yet](#not-supported-yet) and be sure to test
-your changes. Visual Studio 2017 is recommended for development. Otherwise,
-uploading example ANIM8OR files, explaining how to convert something more
-accurately, or creating unit tests are also appreciated.
+your changes. Visual Studio Community 2017 is recommended for development.
+Otherwise, uploading example ANIM8OR files, explaining how to convert something
+more accurately, or creating unit tests are also appreciated.
 
 ## Acknowledgements
  * Thanks, R. Steven Glanville, for making Anim8or!
@@ -170,8 +245,11 @@ accurately, or creating unit tests are also appreciated.
  * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
- * Anim8orTransl8or v0.6.0 (Not Released Yet)
+ * Anim8orTransl8or v0.6.0
    * Added conversion for ANIM8OR "texture" and "material"
+   * Fixed some issues with Blender compatibility
+   * Fixed some issues with sequences getting mixed together
+   * Added warning output to the GUI and CLI
    * Calculation of normals should now exactly match Anim8or v1.00
  * Anim8orTransl8or v0.5.0
    * Multiple COLLADA files are created for one ANIM8OR file

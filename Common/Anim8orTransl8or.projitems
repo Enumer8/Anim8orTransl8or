@@ -13,6 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)An8\Matrix.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)An8\Point.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)An8\Quaternion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)An8\StreamReaderEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)An8\TexCoord.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)An8\V100\ANIM8OR.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />

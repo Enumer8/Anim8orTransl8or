@@ -29,8 +29,19 @@ namespace Anim8orTransl8or.Cli
 {
    class Program
    {
-      static void Main(String[] args)
+      static void AddOutput(String output)
       {
+         Console.WriteLine(output);
+      }
+
+      static Int32 Main(String[] args)
+      {
+         if ( args?.Length != 2 )
+         {
+            AddOutput("Expected two arguments, e.g.: input.an8 output\\");
+            return -1;
+         }
+
          String inFile = args[0];
          String outFolder = args[1];
 
@@ -42,11 +53,12 @@ namespace Anim8orTransl8or.Cli
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 
-         // One An8 file can result in multiple files
+         // One an8 file can result in multiple files
          Directory.CreateDirectory(outFolder);
          String cwd = Path.GetDirectoryName(inFile);
 
-         foreach ( ConverterResult result in Converter.Convert(an8, cwd) )
+         foreach ( ConverterResult result in
+            Converter.Convert(an8, AddOutput, cwd) )
          {
             String outFile = Path.Combine(outFolder, result.FileName);
 
@@ -57,12 +69,18 @@ namespace Anim8orTransl8or.Cli
                   XmlSerializer xml = new XmlSerializer(typeof(COLLADA));
                   xml.Serialize(stream, result.Dae);
                }
+
+               AddOutput($"Created {result.FileName}");
             }
             else if ( result.Png != null )
             {
                result.Png.Save(outFile);
+
+               AddOutput($"Created {result.FileName}");
             }
          }
+
+         return 0;
       }
    }
 }

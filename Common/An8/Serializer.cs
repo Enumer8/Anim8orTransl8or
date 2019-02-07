@@ -40,7 +40,7 @@ namespace Anim8orTransl8or.An8
          Object o = Activator.CreateInstance(mType);
          FieldInfo[] fis = mType.GetFields();
 
-         using ( StreamReader sr = new StreamReader(s) )
+         using ( StreamReaderEx sr = new StreamReaderEx(s) )
          {
             while ( !sr.EndOfStream )
             {
@@ -116,7 +116,7 @@ namespace Anim8orTransl8or.An8
       #region Deserialize
       delegate Boolean CharCondition(Char c);
 
-      static Char AssertChar(StreamReader sr, CharCondition condition)
+      static Char AssertChar(StreamReaderEx sr, CharCondition condition)
       {
          // Note: Don't read yet just in case the condition wants to 'peek'.
          Char c = (Char)sr.Peek();
@@ -128,11 +128,12 @@ namespace Anim8orTransl8or.An8
          }
          else
          {
-            throw new FormatException();
+            throw new InvalidOperationException(
+               $"({sr.Line}, {sr.Column}): Encountered unexpected character: '{c}'");
          }
       }
 
-      static Boolean IsWhiteSpace(StreamReader sr)
+      static Boolean IsWhiteSpace(StreamReaderEx sr)
       {
          return Char.IsWhiteSpace((Char)sr.Peek());
       }
@@ -141,7 +142,7 @@ namespace Anim8orTransl8or.An8
       /// Reads all continguous whitespace.
       /// Note: For simplicity, slash star comments are skipped as well.
       /// </summary>
-      static void ParseWhiteSpace(StreamReader sr)
+      static void ParseWhiteSpace(StreamReaderEx sr)
       {
          while ( IsSlashStarCommentStart(sr) || IsWhiteSpace(sr) )
          {
@@ -156,7 +157,7 @@ namespace Anim8orTransl8or.An8
          }
       }
 
-      static Boolean IsSlashStarCommentStart(StreamReader sr)
+      static Boolean IsSlashStarCommentStart(StreamReaderEx sr)
       {
          return sr.Peek() == '/';
       }
@@ -164,7 +165,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads a C-style comment (e.g. /* and */).
       /// </summary>
-      static String ParseSlashStarComment(StreamReader sr)
+      static String ParseSlashStarComment(StreamReaderEx sr)
       {
          StringBuilder sb = new StringBuilder();
          AssertChar(sr, (Char c) => IsSlashStarCommentStart(sr));
@@ -205,7 +206,7 @@ namespace Anim8orTransl8or.An8
          return sb.ToString();
       }
 
-      static Boolean IsIdentifierStart(StreamReader sr)
+      static Boolean IsIdentifierStart(StreamReaderEx sr)
       {
          return sr.Peek() == '_' || Char.IsLetter((Char)sr.Peek());
       }
@@ -213,7 +214,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads a C-style identifier.
       /// </summary>
-      static String ParseIdentifier(StreamReader sr)
+      static String ParseIdentifier(StreamReaderEx sr)
       {
          StringBuilder sb = new StringBuilder();
          sb.Append(AssertChar(sr, (Char c) => IsIdentifierStart(sr)));
@@ -229,7 +230,7 @@ namespace Anim8orTransl8or.An8
          return sb.ToString();
       }
 
-      static Boolean IsIntStart(StreamReader sr)
+      static Boolean IsIntStart(StreamReaderEx sr)
       {
          return sr.Peek() == '+' ||
                 sr.Peek() == '-' ||
@@ -239,7 +240,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads a C-style int.
       /// </summary>
-      static Int64 ParseInt(StreamReader sr)
+      static Int64 ParseInt(StreamReaderEx sr)
       {
          StringBuilder sb = new StringBuilder();
          sb.Append(AssertChar(sr, (Char c) => IsIntStart(sr)));
@@ -253,7 +254,7 @@ namespace Anim8orTransl8or.An8
          return Int64.Parse(sb.ToString());
       }
 
-      static Boolean IsFloatStart(StreamReader sr)
+      static Boolean IsFloatStart(StreamReaderEx sr)
       {
          return sr.Peek() == '+' ||
                 sr.Peek() == '-' ||
@@ -264,7 +265,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads a C-style float.
       /// </summary>
-      static Double ParseFloat(StreamReader sr)
+      static Double ParseFloat(StreamReaderEx sr)
       {
          StringBuilder sb = new StringBuilder();
          sb.Append(AssertChar(sr, (Char c) => IsFloatStart(sr)));
@@ -284,7 +285,7 @@ namespace Anim8orTransl8or.An8
          return Double.Parse(sb.ToString());
       }
 
-      static Boolean IsStringStart(StreamReader sr)
+      static Boolean IsStringStart(StreamReaderEx sr)
       {
          return sr.Peek() == '\"';
       }
@@ -292,7 +293,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads a C-style string.
       /// </summary>
-      static String ParseString(StreamReader sr)
+      static String ParseString(StreamReaderEx sr)
       {
          StringBuilder sb = new StringBuilder();
          AssertChar(sr, (Char c) => IsStringStart(sr));
@@ -356,7 +357,7 @@ namespace Anim8orTransl8or.An8
          return sb.ToString();
       }
 
-      static Boolean IsTexCoordStart(StreamReader sr)
+      static Boolean IsTexCoordStart(StreamReaderEx sr)
       {
          return sr.Peek() == '(';
       }
@@ -364,7 +365,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 texcoord, e.g. "(1.0 2.0)".
       /// </summary>
-      static texcoord ParseTexCoord(StreamReader sr)
+      static texcoord ParseTexCoord(StreamReaderEx sr)
       {
          texcoord texcoord = new texcoord();
          AssertChar(sr, (Char c) => IsTexCoordStart(sr));
@@ -380,7 +381,7 @@ namespace Anim8orTransl8or.An8
          return texcoord;
       }
 
-      static Boolean IsPointStart(StreamReader sr)
+      static Boolean IsPointStart(StreamReaderEx sr)
       {
          return sr.Peek() == '(';
       }
@@ -388,7 +389,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 point, e.g. "(1.0 2.0 3.0)".
       /// </summary>
-      static point ParsePoint(StreamReader sr)
+      static point ParsePoint(StreamReaderEx sr)
       {
          point point = new point();
          AssertChar(sr, (Char c) => IsPointStart(sr));
@@ -407,7 +408,7 @@ namespace Anim8orTransl8or.An8
          return point;
       }
 
-      static Boolean IsQuaternionStart(StreamReader sr)
+      static Boolean IsQuaternionStart(StreamReaderEx sr)
       {
          return sr.Peek() == '(';
       }
@@ -415,7 +416,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 quaternion, e.g. "(1.0 2.0 3.0 4.0)".
       /// </summary>
-      static quaternion ParseQuaternion(StreamReader sr)
+      static quaternion ParseQuaternion(StreamReaderEx sr)
       {
          quaternion quaternion = new quaternion();
          AssertChar(sr, (Char c) => IsQuaternionStart(sr));
@@ -438,7 +439,7 @@ namespace Anim8orTransl8or.An8
       }
 
       #region Special Case
-      static Boolean IsEdgeStart(StreamReader sr)
+      static Boolean IsEdgeStart(StreamReaderEx sr)
       {
          return sr.Peek() == '(';
       }
@@ -446,7 +447,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 edge, e.g. "(3 7 -1)".
       /// </summary>
-      static V100.edge ParseEdge(StreamReader sr)
+      static V100.edge ParseEdge(StreamReaderEx sr)
       {
          V100.edge edge = new V100.edge();
          AssertChar(sr, (Char c) => IsPointStart(sr));
@@ -468,7 +469,7 @@ namespace Anim8orTransl8or.An8
          return edge;
       }
 
-      static Boolean IsFaceDataStart(StreamReader sr)
+      static Boolean IsFaceDataStart(StreamReaderEx sr)
       {
          return IsIntStart(sr);
       }
@@ -476,7 +477,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 facedata, e.g. "3 4 0 -1 ( (17 2) (85 1) (4087 0) )".
       /// </summary>
-      static V100.facedata ParseFaceData(StreamReader sr)
+      static V100.facedata ParseFaceData(StreamReaderEx sr)
       {
          V100.facedata facedata = new V100.facedata();
          facedata.numpoints = ParseInt(sr);
@@ -531,7 +532,7 @@ namespace Anim8orTransl8or.An8
          return facedata;
       }
 
-      static Boolean IsWeightDataStart(StreamReader sr)
+      static Boolean IsWeightDataStart(StreamReaderEx sr)
       {
          return sr.Peek() == '(';
       }
@@ -539,7 +540,7 @@ namespace Anim8orTransl8or.An8
       /// <summary>
       /// Reads an An8 weightdata, e.g. "(2 (0 0.928) (1 0.072))".
       /// </summary>
-      static V100.weightdata ParseWeightData(StreamReader sr)
+      static V100.weightdata ParseWeightData(StreamReaderEx sr)
       {
          V100.weightdata weightdata = new V100.weightdata();
          AssertChar(sr, (Char c) => IsWeightDataStart(sr));
@@ -575,12 +576,12 @@ namespace Anim8orTransl8or.An8
       }
       #endregion
 
-      static Boolean IsChunkStart(StreamReader sr)
+      static Boolean IsChunkStart(StreamReaderEx sr)
       {
          return sr.Peek() == '{';
       }
 
-      static Object ParseChunk(StreamReader sr, Type t)
+      static Object ParseChunk(StreamReaderEx sr, Type t)
       {
          Object o = Activator.CreateInstance(t);
          FieldInfo[] fis = t.GetFields();
@@ -843,7 +844,7 @@ namespace Anim8orTransl8or.An8
          return o;
       }
 
-      static String ParseUnknownChunk(StreamReader sr)
+      static String ParseUnknownChunk(StreamReaderEx sr)
       {
          StringBuilder sb = new StringBuilder();
          sb.Append(AssertChar(sr, (Char c) => IsChunkStart(sr)));
