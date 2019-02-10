@@ -30,6 +30,7 @@ namespace Anim8orTransl8or
          NodeId = nodeId;
          Matrix = matrix;
          Tag = tag;
+         MaterialIds = new List<String>();
          Children = new List<VisualNode>();
       }
 
@@ -97,7 +98,7 @@ namespace Anim8orTransl8or
       public An8.V100.mesh Mesh;
       public String LightId;
       public String GeometryId;
-      public String MaterialId;
+      public List<String> MaterialIds;
       public String ControllerId;
       public String SkeletonId;
       public VisualNode Parent;

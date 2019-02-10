@@ -25,15 +25,15 @@ namespace Anim8orTransl8or
 {
    public class MaterialNode
    {
-      public MaterialNode(@object @object, material material)
+      public MaterialNode(Object scope, material material)
       {
-         Object = @object;
+         Scope = scope;
          Material = material;
       }
 
       public String MaterialId;
       public String EffectId;
-      public @object Object;
+      public Object Scope; // Either null (for global), @object, or figure
       public material Material;
    }
 }

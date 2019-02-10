@@ -307,12 +307,13 @@ namespace Anim8orTransl8or.An8.V100
       public rgb rgb;
 
       /// <summary>
+      /// TODO: Is this deprecated?
       /// <ambiant>, <diffuse>, <specular> and <emissive> chunks describe the
       /// respective colors and constant weights, and if there is a
       /// corresponding texture what it is. Yes, I know <ambiant> is
       /// misspelled.
       /// </summary>
-      public ambiant ambiant;
+      public ambient ambiant;
 
       /// <summary>
       /// <ambiant>, <diffuse>, <specular> and <emissive> chunks describe the
@@ -320,7 +321,7 @@ namespace Anim8orTransl8or.An8.V100
       /// corresponding texture what it is. Yes, I know <ambiant> is
       /// misspelled.
       /// </summary>
-      public ambiant diffuse;
+      public ambient ambient;
 
       /// <summary>
       /// <ambiant>, <diffuse>, <specular> and <emissive> chunks describe the
@@ -328,7 +329,7 @@ namespace Anim8orTransl8or.An8.V100
       /// corresponding texture what it is. Yes, I know <ambiant> is
       /// misspelled.
       /// </summary>
-      public ambiant specular;
+      public ambient diffuse;
 
       /// <summary>
       /// <ambiant>, <diffuse>, <specular> and <emissive> chunks describe the
@@ -336,7 +337,15 @@ namespace Anim8orTransl8or.An8.V100
       /// corresponding texture what it is. Yes, I know <ambiant> is
       /// misspelled.
       /// </summary>
-      public ambiant emissive;
+      public ambient specular;
+
+      /// <summary>
+      /// <ambiant>, <diffuse>, <specular> and <emissive> chunks describe the
+      /// respective colors and constant weights, and if there is a
+      /// corresponding texture what it is. Yes, I know <ambiant> is
+      /// misspelled.
+      /// </summary>
+      public ambient emissive;
 
       /// <summary>
       /// <alpha> is a int-const chunk that sets the overall transparency of
@@ -395,8 +404,8 @@ namespace Anim8orTransl8or.An8.V100
       public Int64 blue;
    }
 
-   #region ambiant
-   public class ambiant
+   #region ambient
+   public class ambient
    {
       /// <summary>
       /// <rgb> is the basc color.

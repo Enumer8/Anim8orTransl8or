@@ -32554,7 +32554,7 @@ namespace Anim8orTransl8or.Dae.V141 {
                 {
                     object o = array[i];
                     double value = (double)o;
-                    text.Append(value.ToString("0.000000", System.Globalization.NumberFormatInfo.InvariantInfo));
+                    text.Append(value.ToString("0.######", System.Globalization.NumberFormatInfo.InvariantInfo));
 
                     if ( i + 1 < array.Count )
                     {

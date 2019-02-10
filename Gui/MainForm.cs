@@ -170,7 +170,10 @@ namespace Anim8orTransl8or.Gui
 
          using ( Stream stream = File.Open(inFile, FileMode.Open) )
          {
-            Serializer deserializer = new Serializer(typeof(ANIM8OR));
+            Serializer deserializer = new Serializer(
+               typeof(ANIM8OR),
+               AddOutput);
+
             an8 = (ANIM8OR)deserializer.Deserialize(stream);
          }
 

@@ -29,10 +29,12 @@ namespace Anim8orTransl8or.An8
    public class Serializer
    {
       Type mType;
+      Action<String> mCallback;
 
-      public Serializer(Type t)
+      public Serializer(Type t, Action<String> callback = null)
       {
          mType = t;
+         mCallback = callback;
       }
 
       public Object Deserialize(Stream s)
@@ -97,6 +99,8 @@ namespace Anim8orTransl8or.An8
 
                if ( !known )
                {
+                  mCallback?.Invoke($"The \"{chunkName}\" chunk is not recognized.");
+
                   String unknownChunk = ParseUnknownChunk(sr);
                   ParseWhiteSpace(sr);
                   continue;
@@ -581,7 +585,7 @@ namespace Anim8orTransl8or.An8
          return sr.Peek() == '{';
       }
 
-      static Object ParseChunk(StreamReaderEx sr, Type t)
+      /*static*/ Object ParseChunk(StreamReaderEx sr, Type t)
       {
          Object o = Activator.CreateInstance(t);
          FieldInfo[] fis = t.GetFields();
@@ -834,6 +838,8 @@ namespace Anim8orTransl8or.An8
 
             if ( !known )
             {
+               mCallback?.Invoke($"The \"{chunkName}\" chunk is not recognized.");
+
                String unknownChunk = ParseUnknownChunk(sr);
                ParseWhiteSpace(sr);
                continue;

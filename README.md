@@ -20,8 +20,9 @@ Becomes Sequence_Walk.dae:
 Anim8or Transl8or's output COLLADA files have been informally tested to
 "mostly" work with Autodesk® 3ds Max® 2019 Student Version
 (https://www.autodesk.com/education/free-software/3ds-max), Blender 2.79b
-(https://www.blender.org/download/), and Microsoft® Visual Studio® Community
-2017's Model Editor
+(https://www.blender.org/download/), Unity Personal 2018.3.5
+(https://store.unity.com/download?ref=personal) and Microsoft® Visual Studio®
+Community 2017's Model Editor
 (https://docs.microsoft.com/en-us/visualstudio/designers/model-editor?view=vs-2017).
 It seems that no two programs have the same level of COLLADA support, and not
 all ANIM8OR features are possible to represent in COLLADA, so Anim8or Transl8or
@@ -117,57 +118,63 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
  * ANIM8OR "sequence" converts to COLLADA "animation"
 
 ## Not Yet Supported
- * ANIM8OR "subdivision", "pathcom", "textcom", "modifier", and "image"
+ * ANIM8OR "subdivision", "pathcom", "textcom", "modifier", "image", and "morphtarget"
  * ANIM8OR "scene"
- * Multiple materials and two-sided materials
+ * Two-sided materials
+ * Bone degrees of freedom
  * Configuration/optimization
+ * Generating COLLADA (\*.dae) files that conform to version 1.5 of the specification
+ * Generating zipped COLLADA (\*.zae) files
  * Generating ANIM8OR (\*.an8) files
  * Converting COLLADA (\*.dae) to ANIM8OR (\*.an8)
  * Converting ANIM8OR (\*.an8) to other formats (such as \*.gltf and \*.glb)
 
 ## Limitations
 #### Materials
-ANIM8OR allows assigning a different material per face and supports two-sided
-materials. Investigation into what COLLADA supports is still needed. For now,
-Anim8or Transl8or only supports one material per mesh and only one-sided
-materials.
+ANIM8OR supports two-sided materials. COLLADA does not natively support this,
+but it would be possible to create a duplicate face with a reversed normal. It
+could be added as a setting in the future.
 
 ANIM8OR supports some material parameters that do not seem to be supported by
 COLLADA (at least in a way that works for most importers). For example, ANIM8OR
-has scalar values that change the percentage of the ambient, diffuse, specular,
-and emissive's effect on the final color. These percentages work with solid
-colors and textures images alike. COLLADA has no way to represent these
-scalars. For solid colors, Anim8or Transl8or simply multiplies the color by the
-scalar and stores the result. For texture images, however, Anim8or Transl8or
-doesn't do anything. A whole new texture image could be created, but that
-doesn't seem practical. It could be added as a setting in the future, though.
+has weights that change the percentage of the ambient, diffuse, specular,
+and emissive's effect on the final color. These weights work with solid colors
+and textures images alike. COLLADA has no way to represent these weights. For
+solid colors, Anim8or Transl8or simply multiplies the color by the weight and
+stores the result. For texture images, however, Anim8or Transl8or doesn't do
+anything. A whole new texture image could be created, but that doesn't seem
+practical. It could be added as a setting in the future, though. ANIM8OR also
+supports brilliance and phong size parameters. It is not clear if or how they
+relate to COLLADA's shininess, reflective, reflectivity, and
+index_of_refraction. Anim8or Transl8or assumes phong size is shininess and
+ignores brilliance.
 
-COLLADA does support transparency, but there seems to be a disagreement among
-the importers as to what the result should look like. In RGB_ZERO mode, 3DS Max
-interprets 0 as opaque and 1 as invisible (which seems correct). Blender,
-however, interprets 1 as opaque and 0 as invisible (which seems incorrect).
-Model Editor never shows any transparency, so it is not a good tie breaker :).
-In A_ONE mode, 3DS Max does not show any transparency (which seems incorrect),
-and Blender interprets 1 as opaque and 0 as invisible (which seems correct).
-Instead of ignoring transparency all together, A_ONE mode will be used, since
-it seems better to be incorrectly opaque than incorrectly invisible. It could
-be added as a setting in the future, though.
+###### Blender Specific
+COLLADA support transparency, but Blender seems to interpret it incorrectly. In
+RGB_ZERO mode, 3DS Max interprets 0 as opaque and 1 as invisible (which seems
+correct). Unity agrees, and Model Editor never shows any transparency, so it
+doesn't matter. Blender, however, interprets 1 as opaque and 0 as invisible
+(which seems incorrect). Unfortunately, Blender users will have to manually fix
+the transparency until Blender is updated.
 
 #### Bones
+ANIM8OR supports setting the degrees of freedom for each bone. More
+investigation into what COLLADA supports is needed.
+
 ANIM8OR supports bones, but COLLADA supports joints. They are almost the same,
 but the main difference is that the length of the end bones (think the tips of
 fingers, toes, tail, etc.) cannot be represented. They will basically look like
-little nubs. There shouldn't be any other detrimental effects. This does mean
-it would be more difficult to create a COLLADA to ANIM8OR converter. For some
-reason, Blender displays the joints as pointing directly up instead of pointing
-towards the parent joint. The joints display as expected in 3DS Max. More
-investigation is needed.
+little nubs. There shouldn't be any other detrimental effects.
 
-ANIM8OR allows multiple objects to be attached to any bone in the hierarchy.
-COLLADA also seems to supports this, as 3DS Max and Model Viewer work okay.
-However, it seems that Blender has some trouble importing the objects when they
-are nested directly under the joints. For this reason, Anim8or Transl8or moves
-all objects to the same level as the root bone.
+ANIM8OR allows multiple objects to be attached to any bone in the skeleton. To
+maximize compatibility, all objects will be converted to controllers and moved
+to the same level as the root joint in the COLLADA file.
+
+###### Blender Specific
+When importing into Blender, be sure to check the "Fix Leaf Bones" and "Find
+Bone Chains" check boxes. This will help the skeleton look more natural.
+Otherwise, all the bones will be pointing upward. The skeleton displays as
+expected in 3DS Max.
 
 #### Key Frames
 ANIM8OR supports animations by creating individual keys for X, Y, and Z
@@ -176,14 +183,26 @@ combined in the X, Z, Y order. COLLADA might support storing the
 rotations like this (more investigation is needed), but for now Anim8or
 Transl8or creates a complete rotation at every key frame.
 
+COLLADA supports multiple interpolation methods for animations (i.e. LINEAR,
+BEZIER, HERMITE, CARDINAL, and BSPLINE). The ANIM8OR format appears to have
+some undocumented fields that may be intended for the same purpose (the last
+three values in floatkey):
+~~~
+floatkey { 30 -31.291 -8.9978 8.9978 "S" }
+~~~
+However, it is not clear what they means and it doesn't seem possible to change
+them from Anim8or v1.00. For that reason, Anim8or Transl8or sets all
+interpolations to LINEAR.
+
+###### 3DS Max Specific
 The converted animations mostly appear correct in Blender and 3DS Max. By
 default, 3DS Max seems to use the "Euler X Y Z" rotation controller for
-animations. This results in a lot of incorrect rotations and gimbal lock. The
-rotation controller can be changed by clicking
-Animation->Rotation Controllers->Quaternion (TCB). This seems to fix most of
-the issues, but it is still possible for an animation to interpolate the exact
-opposite direction as expected. More investigation is needed. Blender does not
-seem to have any issues.
+animations. This results in a lot of incorrect rotations. The rotation
+controller can be changed by clicking Animation->Rotation
+Controllers->Quaternion (TCB). This seems to fix most of the issues, but it is
+still possible for an animation to interpolate the exact opposite direction as
+expected. More investigation is needed. Blender does not seem to have any
+issues.
 
 #### Multiple Objects/Figures/Sequences/Scenes
 ANIM8OR can store completely independent objects, figures, sequences, and
@@ -245,6 +264,11 @@ more accurately, or creating unit tests are also appreciated.
  * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
+ * Anim8orTransl8or v0.7.0
+   * Added support for multiple textures
+   * Improved material accuracy
+   * Support for "ambient" chunk instead of just "ambiant" chunk
+   * Generated COLLADA file no longer pads zeros
  * Anim8orTransl8or v0.6.0
    * Added conversion for ANIM8OR "texture" and "material"
    * Fixed some issues with Blender compatibility

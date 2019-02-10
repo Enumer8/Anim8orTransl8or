@@ -52,6 +52,16 @@ namespace Anim8orTransl8or
          List<TextureNode> textureNodes = new List<TextureNode>();
          List<MaterialNode> materialNodes = new List<MaterialNode>();
 
+         if ( callback != null && an8?.header?.version?.text != null )
+         {
+            String version = an8.header.version.text;
+
+            if ( version != "1.00" )
+            {
+               callback($"The an8 file is version \"{version}\". Only version \"1.00\" has been tested.");
+            }
+         }
+
          // Create the default lights
          {
             // Note: These defaults and limits were reversed engineered.
@@ -168,6 +178,18 @@ namespace Anim8orTransl8or
             }
          }
 
+         // Create the default material
+         {
+            An8.V100.material defaultMaterial = new An8.V100.material();
+            defaultMaterial.name = " -- default --";
+
+            MaterialNode materialNode = new MaterialNode(
+               null,
+               defaultMaterial);
+
+            materialNodes.Add(materialNode);
+         }
+
          // Create each global material
          foreach ( An8.V100.material material in an8?.material ??
             new An8.V100.material[0] )
@@ -183,6 +205,17 @@ namespace Anim8orTransl8or
                new An8.V100.material[0] )
             {
                MaterialNode materialNode = new MaterialNode(@object, material);
+               materialNodes.Add(materialNode);
+            }
+         }
+
+         // Create each figure local material
+         foreach ( figure figure in an8?.figure ?? new figure[0] )
+         {
+            foreach ( An8.V100.material material in figure?.material ??
+               new An8.V100.material[0] )
+            {
+               MaterialNode materialNode = new MaterialNode(figure, material);
                materialNodes.Add(materialNode);
             }
          }
@@ -394,6 +427,8 @@ namespace Anim8orTransl8or
             TargetableFloat3 color = new TargetableFloat3();
             directional.color = color;
 
+            color.sid = "color";
+
             color.Values = new Double[]
             {
                // Note: These defaults and limits were reversed engineered.
@@ -524,14 +559,14 @@ namespace Anim8orTransl8or
             common_color_or_texture_type emission = ConvertAmbient(
                textureNodes,
                surface?.emissive,
-               "emissive");
+               "emission");
 
             phong.emission = emission;
 
             common_color_or_texture_type ambient = ConvertAmbient(
                textureNodes,
                surface?.lockambientdiffuse == null ?
-                  surface?.ambiant : surface?.diffuse,
+                  surface?.ambient ?? surface?.ambiant : surface?.diffuse,
                "ambient");
 
             phong.ambient = ambient;
@@ -562,8 +597,8 @@ namespace Anim8orTransl8or
 
                value.sid = "shininess";
 
-               // TODO: How to convert roughness to shininess?
-               value.Value = (surface?.phongsize?.text ?? 36) / 8;
+               // TODO: Is shininess the same as phongsize/rough?
+               value.Value = surface?.phongsize?.text ?? 36;
 
                shininess.Item = value;
             }
@@ -610,19 +645,20 @@ namespace Anim8orTransl8or
                reflectivity.Item = value;
             }
 
+            Double opacity = 1 - (surface?.alpha?.text ?? 255).Limit(0, 255) /
+               255.0;
+
             // Transparent
+            if ( opacity > 0 )
             {
                common_transparent_type transparent =
                   new common_transparent_type();
 
                phong.transparent = transparent;
 
-               // TODO: In RGB_ZERO mode, Autodesk interprets 0 as opaque and 1
-               // as invisible. Blender interprets 1 as opaque and 0 as
-               // invisible. In A_ONE mode, Autodesk doesn't enable
-               // transparency and Blender interprets 1 as opaque and 0 as
-               // invisible. There doesn't seem to be a good option here...
-               transparent.opaque = fx_opaque_enum.A_ONE;
+               // Note: In RGB_ZERO mode, Blender seemingly incorrectly
+               // interprets 1 as opaque and 0 as invisible.
+               transparent.opaque = fx_opaque_enum.RGB_ZERO;
 
                common_color_or_texture_typeColor color =
                   new common_color_or_texture_typeColor();
@@ -631,7 +667,6 @@ namespace Anim8orTransl8or
 
                color.sid = "transparent";
 
-               // TODO: How do we determine these values?
                color.Values = new Double[]
                {
                   1,
@@ -642,6 +677,7 @@ namespace Anim8orTransl8or
             }
 
             // Transparency
+            if ( opacity > 0 )
             {
                common_float_or_param_type transparency =
                   new common_float_or_param_type();
@@ -652,10 +688,7 @@ namespace Anim8orTransl8or
                   new common_float_or_param_typeFloat();
 
                value.sid = "transparency";
-
-               // TODO: See previous comment about A_ONE mode.
-               value.Value = (surface?.alpha?.text ?? 255).Limit(0, 255) /
-                  255.0;
+               value.Value = opacity;
 
                transparency.Item = value;
             }
@@ -664,7 +697,7 @@ namespace Anim8orTransl8or
 
       static common_color_or_texture_type ConvertAmbient(
          List<TextureNode> textureNodes,
-         ambiant ambient,
+         ambient ambient,
          String sid)
       {
          // TODO: What should we do with ambiant.textureparams?
@@ -729,7 +762,7 @@ namespace Anim8orTransl8or
             return 224;
          case "diffuse":
             return 224;
-         case "emissive":
+         case "emission":
             return 0;
          case "specular":
             return 255;
@@ -746,7 +779,7 @@ namespace Anim8orTransl8or
             return 0.3;
          case "diffuse":
             return 0.7;
-         case "emissive":
+         case "emission":
             return 0;
          case "specular":
             return 0.2;
@@ -932,6 +965,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                mesh);
 
@@ -948,6 +982,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                sphere);
 
@@ -964,6 +999,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                cylinder);
 
@@ -979,6 +1015,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                cube);
 
@@ -997,6 +1034,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                subdivision);
 
@@ -1012,6 +1050,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                pathcom);
 
@@ -1027,6 +1066,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                textcom);
 
@@ -1072,6 +1112,7 @@ namespace Anim8orTransl8or
                materialNodes,
                usedNames,
                library,
+               node,
                mesh,
                image);
 
@@ -1099,6 +1140,7 @@ namespace Anim8orTransl8or
          List<MaterialNode> materialNodes,
          List<String> usedNames,
          library_geometries library,
+         VisualNode parent,
          An8.V100.mesh mesh,
          Object tag,
          Double scale = 1)
@@ -1121,21 +1163,6 @@ namespace Anim8orTransl8or
 
          node.Mesh = mesh;
          node.GeometryId = MakeUnique(node.NodeId, "-geometry", usedNames);
-
-         // TODO: How do we support more than one material?
-         if ( mesh.materiallist?.materialname?.Length > 0 )
-         {
-            String materialName = mesh.materiallist.materialname[0]?.text;
-
-            foreach ( MaterialNode materialNode in materialNodes )
-            {
-               if ( materialNode.Material?.name == materialName )
-               {
-                  node.MaterialId = materialNode.MaterialId;
-                  break;
-               }
-            }
-         }
 
          geometry geometry = new geometry();
          library.geometry = library.geometry.Append(geometry);
@@ -1348,15 +1375,116 @@ namespace Anim8orTransl8or
             input.source = "#" + pointsSourceId;
          }
 
+         // Create a map to look up material ID and count by material number
+         SortedDictionary<Int64, Tuple<String, Int32>> materialMap =
+            new SortedDictionary<Int64, Tuple<String, Int32>>();
+
+         // Note: The global material can have the same name as a local
+         // material, so we need to locate the parent object/figure to know
+         // which materials are in scope.
+         @object parentObject = null;
+         figure parentFigure = null;
+
+         while ( parent != null )
+         {
+            if ( parent.Tag is @object @object )
+            {
+               parentObject = @object;
+               break;
+            }
+            else if ( parent.Tag is figure figure )
+            {
+               parentFigure = figure;
+               break;
+            }
+         }
+
+         foreach ( facedata facedata in mesh.faces?.facedata ??
+            new facedata[0] )
+         {
+            Int64 materialNumber = facedata?.matno ?? 0;
+
+            if ( !materialMap.ContainsKey(materialNumber) )
+            {
+               String materialId = materialNodes[0].MaterialId;
+               @string[] materialnames = mesh.materiallist?.materialname;
+
+               if ( materialNumber >= 0 &&
+                  materialNumber < materialnames?.Length )
+               {
+                  String materialname = materialnames[materialNumber]?.text;
+                  Boolean materialFound = false;
+
+                  // First try to find the local object material
+                  if ( parentObject != null )
+                  {
+                     foreach ( MaterialNode materialNode in materialNodes )
+                     {
+                        if ( materialNode.Scope == parentObject &&
+                           materialNode.Material?.name == materialname )
+                        {
+                           materialId = materialNode.MaterialId;
+                           materialFound = true;
+                           break;
+                        }
+                     }
+                  }
+                  // First try to find the local figure material
+                  else if ( parentFigure != null )
+                  {
+                     foreach ( MaterialNode materialNode in materialNodes )
+                     {
+                        if ( materialNode.Scope == parentFigure &&
+                           materialNode.Material?.name == materialname )
+                        {
+                           materialId = materialNode.MaterialId;
+                           materialFound = true;
+                           break;
+                        }
+                     }
+                  }
+
+                  // Then try to find the global material
+                  if ( !materialFound )
+                  {
+                     foreach ( MaterialNode materialNode in materialNodes )
+                     {
+                        if ( materialNode.Scope == null &&
+                           materialNode.Material?.name == materialname )
+                        {
+                           materialId = materialNode.MaterialId;
+                           materialFound = true;
+                           break;
+                        }
+                     }
+                  }
+               }
+
+               materialMap.Add(materialNumber, Tuple.Create(materialId, 1));
+
+               if ( !node.MaterialIds.Contains(materialId) )
+               {
+                  node.MaterialIds.Add(materialId);
+               }
+            }
+            else
+            {
+               // Increment the count
+               Tuple<String, Int32> count = materialMap[materialNumber];
+               count = Tuple.Create(count.Item1, count.Item2 + 1);
+               materialMap[materialNumber] = count;
+            }
+         }
+
          // Add faces
-         if ( mesh.faces?.facedata != null )
+         foreach ( KeyValuePair<Int64, Tuple<String, Int32>> materialItem in
+            materialMap )
          {
             polylist polylist = new polylist();
             mesh2.Items = mesh2.Items.Append(polylist);
 
-            // TODO: Set polylist.material
-
-            polylist.count = (UInt64)mesh.faces.facedata.Length;
+            polylist.material = materialItem.Value.Item1;
+            polylist.count = (UInt64)materialItem.Value.Item2;
 
             UInt64 offset = 0;
 
@@ -1400,6 +1528,12 @@ namespace Anim8orTransl8or
 
                foreach ( facedata facedata in mesh.faces.facedata )
                {
+                  // Filter out faces with different materials
+                  if ( (facedata?.matno ?? 0) != materialItem.Key )
+                  {
+                     continue;
+                  }
+
                   // Note: We could use 'numpoints', but pointdata
                   // contains the actual list of points, so it is safer.
                   sb.Append(facedata.pointdata?.Length ?? 0);
@@ -1415,6 +1549,12 @@ namespace Anim8orTransl8or
 
                foreach ( facedata facedata in mesh.faces.facedata )
                {
+                  // Filter out faces with different materials
+                  if ( (facedata?.matno ?? 0) != materialItem.Key )
+                  {
+                     continue;
+                  }
+
                   pointdata[] pointdata = facedata.pointdata;
 
                   // Note: An8 specifies faces in clockwise order, while
@@ -2475,20 +2615,18 @@ namespace Anim8orTransl8or
 
             i.url = "#" + visualNode.GeometryId;
 
-            if ( visualNode.MaterialId != null )
-            {
-               bind_material bind_material = new bind_material();
-               i.bind_material = bind_material;
+            bind_material bind_material = new bind_material();
+            i.bind_material = bind_material;
 
+            foreach ( String materialId in visualNode.MaterialIds )
+            {
                instance_material instance_material = new instance_material();
 
-               bind_material.technique_common = new instance_material[]
-               {
-                  instance_material,
-               };
+               bind_material.technique_common =
+                  bind_material.technique_common.Append(instance_material);
 
-               instance_material.symbol = visualNode.MaterialId;
-               instance_material.target = "#" + visualNode.MaterialId;
+               instance_material.symbol = materialId;
+               instance_material.target = "#" + materialId;
             }
          }
 
@@ -2504,20 +2642,18 @@ namespace Anim8orTransl8or
                i.skeleton = new String[] { "#" + visualNode.SkeletonId };
             }
 
-            if ( visualNode.MaterialId != null )
-            {
-               bind_material bind_material = new bind_material();
-               i.bind_material = bind_material;
+            bind_material bind_material = new bind_material();
+            i.bind_material = bind_material;
 
+            foreach ( String materialId in visualNode.MaterialIds )
+            {
                instance_material instance_material = new instance_material();
 
-               bind_material.technique_common = new instance_material[]
-               {
-                  instance_material,
-               };
+               bind_material.technique_common =
+                  bind_material.technique_common.Append(instance_material);
 
-               instance_material.symbol = visualNode.MaterialId;
-               instance_material.target = "#" + visualNode.MaterialId;
+               instance_material.symbol = materialId;
+               instance_material.target = "#" + materialId;
             }
          }
 
