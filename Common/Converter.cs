@@ -1397,6 +1397,8 @@ namespace Anim8orTransl8or
                parentFigure = figure;
                break;
             }
+
+            parent = parent.Parent;
          }
 
          foreach ( facedata facedata in mesh.faces?.facedata ??
@@ -2215,10 +2217,12 @@ namespace Anim8orTransl8or
 
             if ( bNode != null )
             {
-               List<jointangle> jointAngles = new List<jointangle>(
-                  sequence.jointangle ?? new jointangle[0]);
-
-               AddBoneAnimation(an8, usedNames, library, bNode, jointAngles);
+               AddBoneAnimation(
+                  an8,
+                  usedNames,
+                  library,
+                  bNode,
+                  sequence);
             }
          }
       }
@@ -2228,17 +2232,12 @@ namespace Anim8orTransl8or
          List<String> usedNames,
          library_animations library,
          VisualNode node,
-         List<jointangle> jointangles)
+         sequence sequence)
       {
          if ( node.Tag is bone1 bone )
          {
-            SortedDictionary<Double, An8.matrix> frames =
-               CalculateKeyFrames(
-                  an8,
-                  node,
-                  jointangles.FindAll(j => j.bone == bone.name));
-
-            jointangles.RemoveAll(j => j.bone == bone.name);
+            SortedDictionary<Double, Tuple<String, An8.matrix>> frames =
+               CalculateKeyFrames(an8, node, sequence);
 
             animation animation = new animation();
             library.animation = library.animation.Append(animation);
@@ -2262,7 +2261,8 @@ namespace Anim8orTransl8or
                Double[] values = new Double[frames.Count];
                Int32 index = 0;
 
-               foreach ( KeyValuePair<Double, An8.matrix> frame in frames )
+               foreach ( KeyValuePair<Double, Tuple<String, An8.matrix>> frame
+                  in frames )
                {
                   values[index++] = frame.Key;
                }
@@ -2306,9 +2306,10 @@ namespace Anim8orTransl8or
                Double[] values = new Double[frames.Count * 16];
                Int32 index = 0;
 
-               foreach ( KeyValuePair<Double, An8.matrix> frame in frames )
+               foreach ( KeyValuePair<Double, Tuple<String, An8.matrix>> frame
+                  in frames )
                {
-                  foreach ( Double value in frame.Value.GetEnumerator() )
+                  foreach ( Double value in frame.Value.Item2.GetEnumerator() )
                   {
                      values[index++] = value;
                   }
@@ -2357,10 +2358,10 @@ namespace Anim8orTransl8or
                String[] values = new String[frames.Count];
                Int32 index = 0;
 
-               foreach ( KeyValuePair<Double, An8.matrix> frame in frames )
+               foreach ( KeyValuePair<Double, Tuple<String, An8.matrix>> frame
+                  in frames )
                {
-                  // TODO: Support more than just linear
-                  values[index++] = "LINEAR";
+                  values[index++] = frame.Value.Item1;
                }
 
                array.count = (UInt64)values.Length;
@@ -2439,62 +2440,90 @@ namespace Anim8orTransl8or
 
          foreach ( VisualNode childNode in node.Children )
          {
-            AddBoneAnimation(an8, usedNames, library, childNode, jointangles);
+            AddBoneAnimation(an8, usedNames, library, childNode, sequence);
          }
       }
 
-      static SortedDictionary<Double, An8.matrix> CalculateKeyFrames(
+      static SortedDictionary<Double, Tuple<String, An8.matrix>> CalculateKeyFrames(
          ANIM8OR an8,
          VisualNode bNode,
-         List<jointangle> jointangles)
+         sequence sequence)
       {
-         SortedDictionary<Double, An8.matrix> frames =
-            new SortedDictionary<Double, An8.matrix>();
+         SortedDictionary<Double, Tuple<String, An8.matrix>> frames =
+            new SortedDictionary<Double, Tuple<String, An8.matrix>>();
 
-         List<Double> frameNumbers = new List<Double>();
+         List<Double> keyFrames = new List<Double>();
 
-         foreach ( jointangle jointangle in jointangles )
+         String boneName = (bNode.Tag as bone1)?.name;
+         const Int64 minFrame = 0;
+         Int64 maxFrame = sequence?.frames?.text ?? 0;
+
+         foreach ( jointangle j in sequence?.jointangle ?? new jointangle[0] )
          {
-            foreach ( floatkey key in jointangle.track?.floatkey ??
-               new floatkey[0] )
+            if ( j?.bone == boneName )
             {
-               if ( !frameNumbers.Contains(key.frame) )
+               foreach ( floatkey f in j?.track?.floatkey ?? new floatkey[0] )
                {
-                  frameNumbers.Add(key.frame);
+                  if ( f?.frame >= minFrame &&
+                     f.frame < maxFrame &&
+                     !keyFrames.Contains(f.frame) )
+                  {
+                     keyFrames.Add(f.frame);
+                  }
                }
             }
          }
 
-         frameNumbers.Sort();
+         keyFrames.Sort();
 
          Double framesPerSecond = 24;
 
-         if ( an8.environment?.limitplayback != null )
+         if ( an8.environment?.limitplayback != null &&
+            an8.environment.framerate != null )
          {
-            if ( an8.environment.framerate != null )
-            {
-               framesPerSecond = an8.environment.framerate.text;
-            }
+            framesPerSecond = an8.environment.framerate.text;
          }
 
-         foreach ( Double frameNumber in frameNumbers )
+         for ( Int32 i = 0; i < keyFrames.Count; i++ )
          {
-            Double xDegrees = InterpolateAngle(jointangles, "X", frameNumber);
-            Double yDegrees = InterpolateAngle(jointangles, "Y", frameNumber);
-            Double zDegrees = InterpolateAngle(jointangles, "Z", frameNumber);
+            Double keyFrame = keyFrames[i];
+
+            floatkey xKey = An8FloatKey.Calculate(
+               sequence,
+               null,
+               boneName,
+               "X",
+               keyFrame,
+               null);
+
+            floatkey yKey = An8FloatKey.Calculate(
+               sequence,
+               null,
+               boneName,
+               "Y",
+               keyFrame,
+               null);
+
+            floatkey zKey = An8FloatKey.Calculate(
+               sequence,
+               null,
+               boneName,
+               "Z",
+               keyFrame,
+               null);
 
             // Note: Anim8or rotates counter-clockwise.
             quaternion quatX = new quaternion(
                new point(1, 0, 0),
-               xDegrees * Math.PI / 180);
+               xKey.value * Math.PI / 180);
 
             quaternion quatY = new quaternion(
                new point(0, 1, 0),
-               yDegrees * Math.PI / 180);
+               yKey.value * Math.PI / 180);
 
             quaternion quatZ = new quaternion(
                new point(0, 0, 1),
-               zDegrees * Math.PI / 180);
+               zKey.value * Math.PI / 180);
 
             // Note: Anim8or seems to apply X then Z then Y in sequence mode.
             quaternion sequenceQuat = quatX.Rotate(quatZ).Rotate(quatY);
@@ -2504,58 +2533,64 @@ namespace Anim8orTransl8or
                sequenceQuat,
                1);
 
-            Double time = frameNumber / framesPerSecond;
+            Double time = keyFrame / framesPerSecond;
+            // TODO: Support LINEAR and HERMITE
+            String interpolation = "HERMITE";
             An8.matrix matrix = bNode.Matrix.Transform(sequenceMat);
 
-            frames.Add(time, matrix);
+            frames.Add(time, Tuple.Create(interpolation, matrix));
+
+            // TODO: This doesn't actually solve the problem, since the
+            // rotation still goes in the wrong way.
+            // If the change in angle between two keys is greater than or equal
+            // to 180, then insert a key in between to make sure the rotation
+            // is unambigious.
+            #region
+            //if ( i < keyFrames.Count - 1 )
+            //{
+            //   Double nextKeyFrame = keyFrames[i + 1];
+
+            //   floatkey nextXKey = An8FloatKey.Calculate(
+            //      sequence,
+            //      null,
+            //      boneName,
+            //      "X",
+            //      nextKeyFrame,
+            //      null);
+
+            //   floatkey nextYKey = An8FloatKey.Calculate(
+            //      sequence,
+            //      null,
+            //      boneName,
+            //      "Y",
+            //      nextKeyFrame,
+            //      null);
+
+            //   floatkey nextZKey = An8FloatKey.Calculate(
+            //      sequence,
+            //      null,
+            //      boneName,
+            //      "Z",
+            //      nextKeyFrame,
+            //      null);
+
+            //   Int32 stepsNeeded = (Int32)Math.Max(Math.Max(
+            //      An8FloatKey.Difference(xKey.value, nextXKey.value),
+            //      An8FloatKey.Difference(yKey.value, nextYKey.value)),
+            //      An8FloatKey.Difference(zKey.value, nextZKey.value)) / 180;
+
+            //   for ( Int32 j = stepsNeeded; j >= 1; j-- )
+            //   {
+            //      Double insertedFrameNumber = keyFrame + (nextKeyFrame -
+            //         keyFrame) * j / (stepsNeeded + 1);
+
+            //      keyFrames.Insert(i + 1, insertedFrameNumber);
+            //   }
+            //}
+            #endregion
          }
 
          return frames;
-      }
-
-      static Double InterpolateAngle(
-         List<jointangle> jointangles,
-         String axis,
-         Double time)
-      {
-         jointangle jointangle = jointangles.Find(j => j.axis == axis);
-         floatkey start = null, end = null;
-
-         foreach ( floatkey key in jointangle?.track?.floatkey ??
-            new floatkey[0] )
-         {
-            if ( key.frame <= time &&
-               (start == null || start.frame < key.frame) )
-            {
-               start = key;
-            }
-
-            if ( key.frame >= time &&
-               (end == null || end.frame > key.frame) )
-            {
-               end = key;
-            }
-         }
-
-         if ( start == null )
-         {
-            if ( end == null )
-            {
-               return 0; // no key frames for this axis?
-            }
-            else
-            {
-               return end.value; // only an end angle
-            }
-         }
-         else if ( end == null || end == start )
-         {
-            return start.value; // only a start angle
-         }
-         else
-         {
-            return (end.value - start.value) / (end.frame - start.frame);
-         }
       }
       #endregion
 
@@ -2696,8 +2731,7 @@ namespace Anim8orTransl8or
          String suffix,
          List<String> usedNames)
       {
-         // TODO: Autodesk seems to have problems with spaces. Should spaces
-         // be allowed?
+         // Note: 3ds Max seems to have problems with spaces.
          name = Regex.Replace(name ?? "Unnamed", @"\s+", "_");
 
          Int32 number = 0;

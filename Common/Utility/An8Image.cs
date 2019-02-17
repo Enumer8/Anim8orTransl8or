@@ -31,7 +31,7 @@ namespace Anim8orTransl8or.Utility
       /// </summary>
       /// <param name="i">the image</param>
       /// <param name="callback">the callback for warnings</param>
-      /// <returns>the converted mesh</returns>
+      /// <returns>the calculated mesh</returns>
       internal static mesh Calculate(image i, Action<String> callback = null)
       {
          mesh m = new mesh();

@@ -122,6 +122,7 @@ Note: Just add a reference to Anim8orTransl8or.dll to your .NET project.
  * ANIM8OR "scene"
  * Two-sided materials
  * Bone degrees of freedom
+ * ANIM8OR "C" and "T" floatkey modifiers
  * Configuration/optimization
  * Generating COLLADA (\*.dae) files that conform to version 1.5 of the specification
  * Generating zipped COLLADA (\*.zae) files
@@ -151,7 +152,7 @@ ignores brilliance.
 
 ###### Blender Specific
 COLLADA support transparency, but Blender seems to interpret it incorrectly. In
-RGB_ZERO mode, 3DS Max interprets 0 as opaque and 1 as invisible (which seems
+RGB_ZERO mode, 3ds Max interprets 0 as opaque and 1 as invisible (which seems
 correct). Unity agrees, and Model Editor never shows any transparency, so it
 doesn't matter. Blender, however, interprets 1 as opaque and 0 as invisible
 (which seems incorrect). Unfortunately, Blender users will have to manually fix
@@ -174,29 +175,31 @@ to the same level as the root joint in the COLLADA file.
 When importing into Blender, be sure to check the "Fix Leaf Bones" and "Find
 Bone Chains" check boxes. This will help the skeleton look more natural.
 Otherwise, all the bones will be pointing upward. The skeleton displays as
-expected in 3DS Max.
+expected in 3ds Max.
 
 #### Key Frames
 ANIM8OR supports animations by creating individual keys for X, Y, and Z
 rotations. These rotations are interpolated independently and seemingly
 combined in the X, Z, Y order. COLLADA might support storing the
 rotations like this (more investigation is needed), but for now Anim8or
-Transl8or creates a complete rotation at every key frame.
+Transl8or creates a complete rotation at every key frame. This helps ensure
+maximum compatibility.
 
-COLLADA supports multiple interpolation methods for animations (i.e. LINEAR,
-BEZIER, HERMITE, CARDINAL, and BSPLINE). The ANIM8OR format appears to have
-some undocumented fields that may be intended for the same purpose (the last
-three values in floatkey):
-~~~
-floatkey { 30 -31.291 -8.9978 8.9978 "S" }
-~~~
-However, it is not clear what they means and it doesn't seem possible to change
-them from Anim8or v1.00. For that reason, Anim8or Transl8or sets all
-interpolations to LINEAR.
+COLLADA supports multiple interpolation methods for animations (e.g. LINEAR,
+HERMITE, BEZIER, etc.). The ANIM8OR format appears to have some undocumented
+fields that may be intended for the same purpose. It doesn't seem possible to
+change them from Anim8or v1.00, but it seems that a floatkey modifier "S" is
+approximately like COLLADA's HERMITE. Also, the floatkey modifier "C" is
+approximately like COLLADA's LINEAR. The floatkey modifier "T" seems to scale a
+"S"-like curve and then step change at the end. There does not seem to be a
+good parallel in COLLADA. Reverse engineering Anim8or's behavior shows that
+there are some strange special cases that don't follow the approximate rules
+above. For the above reasons, Anim8or Transl8or uses HERMITE interpolation for
+all key frames. Some day the accuracy could be improved.
 
-###### 3DS Max Specific
-The converted animations mostly appear correct in Blender and 3DS Max. By
-default, 3DS Max seems to use the "Euler X Y Z" rotation controller for
+###### 3ds Max Specific
+The converted animations mostly appear correct in Blender and 3ds Max. By
+default, 3ds Max seems to use the "Euler X Y Z" rotation controller for
 animations. This results in a lot of incorrect rotations. The rotation
 controller can be changed by clicking Animation->Rotation
 Controllers->Quaternion (TCB). This seems to fix most of the issues, but it is
@@ -266,7 +269,8 @@ more accurately, or creating unit tests are also appreciated.
 ## Change log
  * Anim8orTransl8or v0.7.0
    * Added support for multiple textures
-   * Improved material accuracy
+   * Change animation interpolation from LINEAR to HERMITE
+   * Improved material detection accuracy
    * Support for "ambient" chunk instead of just "ambiant" chunk
    * Generated COLLADA file no longer pads zeros
  * Anim8orTransl8or v0.6.0

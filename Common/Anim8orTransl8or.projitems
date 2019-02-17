@@ -26,6 +26,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cube.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Cylinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Image.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\An8FloatKey.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Normals.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8PathCom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utility\An8Sphere.cs" />

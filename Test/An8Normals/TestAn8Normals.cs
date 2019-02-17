@@ -66,6 +66,8 @@ namespace Anim8orTransl8or.Test
             expected,
             (String s) => warnings++);
 
+         Assert.IsTrue(warnings == 0);
+
          CompareMeshes(expected, actual);
       }
    }

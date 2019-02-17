@@ -33,7 +33,7 @@ namespace Anim8orTransl8or.Utility
       /// </summary>
       /// <param name="c">the cube</param>
       /// <param name="callback">the callback for warnings</param>
-      /// <returns>the converted mesh</returns>
+      /// <returns>the calculated mesh</returns>
       internal static mesh Calculate(cube c, Action<String> callback = null)
       {
          mesh m = new mesh();

@@ -31,7 +31,7 @@ namespace Anim8orTransl8or.Utility
       /// </summary>
       /// <param name="t">the textcom</param>
       /// <param name="callback">the callback for warnings</param>
-      /// <returns>the converted mesh</returns>
+      /// <returns>the calculated mesh</returns>
       internal static mesh Calculate(textcom t, Action<String> callback = null)
       {
          mesh m = new mesh();

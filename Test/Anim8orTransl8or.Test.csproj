@@ -60,6 +60,7 @@
     <Compile Include="An8Cube\TestAn8Cube.cs" />
     <Compile Include="An8Cylinder\TestAn8Cylinder.cs" />
     <Compile Include="An8Image\TestAn8Image.cs" />
+    <Compile Include="An8FloatKey\TestAn8FloatKey.cs" />
     <Compile Include="An8\TestMatrix.cs" />
     <Compile Include="An8\TestPoint.cs" />
     <Compile Include="An8\TestQuaternion.cs" />

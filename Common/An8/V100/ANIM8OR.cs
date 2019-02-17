@@ -1790,20 +1790,38 @@ namespace Anim8orTransl8or.An8.V100
       public Double value;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing.
+      /// TODO: This was undocumented at the time of writing. Is this a
+      /// derivative of the spline in the forward direction?
       /// </summary>
-      public Double value2;
+      public Double derivative1;
 
       /// <summary>
-      /// TODO: This was undocumented at the time of writing.
+      /// TODO: This was undocumented at the time of writing. Is this a
+      /// derivative of the spline in the backwards direction?
       /// </summary>
-      public Double value3;
+      public Double derivative2;
 
       /// <summary>
       /// <$string> is a string used to modify the behavior of this knot. It is
       /// currently ignored.
+      /// TODO: Is this really ignored anymore? Are "C" (corner), "S" (smooth),
+      /// and "T" (step/threshold) supported?
       /// </summary>
       public String modifier;
+
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing. It appears to
+      /// only be used in "T" mode.
+      /// </summary>
+      public step step;
+   }
+
+   public class step
+   {
+      /// <summary>
+      /// TODO: This was undocumented at the time of writing.
+      /// </summary>
+      public Double value;
    }
    #endregion
 
