@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -39,19 +39,19 @@ namespace Anim8orTransl8or.Test
       [TestMethod]
       public void Not_Smooth()
       {
-         CompareNormals(@"..\..\An8Normals\Normals_Fully_Smooth.an8");
+         CompareNormals(@"..\..\..\An8Normals\Normals_Fully_Smooth.an8");
       }
 
       [TestMethod]
       public void Partially_Smooth()
       {
-         CompareNormals(@"..\..\An8Normals\Normals_Partially_Smooth.an8");
+         CompareNormals(@"..\..\..\An8Normals\Normals_Partially_Smooth.an8");
       }
 
       [TestMethod]
       public void Fully_Smooth()
       {
-         CompareNormals(@"..\..\An8Normals\Normals_Fully_Smooth.an8");
+         CompareNormals(@"..\..\..\An8Normals\Normals_Fully_Smooth.an8");
       }
 
       static void CompareNormals(String normalFile)

@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -19,8 +19,8 @@
 // IN THE SOFTWARE.
 
 using Anim8orTransl8or.Dae.V141;
+using SixLabors.ImageSharp;
 using System;
-using System.Drawing;
 
 namespace Anim8orTransl8or
 {
@@ -38,6 +38,6 @@ namespace Anim8orTransl8or
       public An8Mode Mode;
       public String FileName;
       public COLLADA Dae;
-      public Bitmap Png;
+      public Image Png;
    }
 }

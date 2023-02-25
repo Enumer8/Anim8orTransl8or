@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,6 +21,7 @@
 using Anim8orTransl8or.An8;
 using Anim8orTransl8or.An8.V100;
 using Anim8orTransl8or.Dae.V141;
+using SixLabors.ImageSharp;
 using System;
 using System.IO;
 using System.Xml.Serialization;
@@ -77,7 +78,7 @@ namespace Anim8orTransl8or.Cli
             }
             else if ( result.Png != null )
             {
-               result.Png.Save(outFile);
+               result.Png.SaveAsPng(outFile);
 
                AddOutput($"Created {result.FileName}");
             }

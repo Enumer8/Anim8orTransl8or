@@ -18,11 +18,11 @@ Becomes Sequence_Walk.dae:
 ![Walk Sequence After](After.png "Walk Sequence After")
 
 Anim8or Transl8or's output COLLADA files have been informally tested to
-"mostly" work with Autodesk® 3ds Max® 2019 Student Version
+"mostly" work with Autodesk® 3ds Max® 2019 and 2023 Student Version
 (https://www.autodesk.com/education/free-software/3ds-max), Blender 2.79b
 (https://www.blender.org/download/), Unity Personal 2018.3.5
 (https://store.unity.com/download?ref=personal) and Microsoft® Visual Studio®
-Community 2017's Model Editor
+Community 2017 and 2022's Model Editor
 (https://docs.microsoft.com/en-us/visualstudio/designers/model-editor?view=vs-2017).
 It seems that no two programs have the same level of COLLADA support, and not
 all ANIM8OR features are possible to represent in COLLADA, so Anim8or Transl8or
@@ -30,13 +30,13 @@ has been carefully designed to create a balance (see
 [limitations](#limitations)).
 
 ## Prerequisites
-Anim8or Transl8or requires .NET Framework 4.0. It is most likely already
-installed on your system if you are using Windows XP or later. Otherwise, it
+As of release 0.7.1, Anim8or Transl8or requires .NET 6.0. It
 can be installed from here:
-https://www.microsoft.com/en-us/download/details.aspx?id=17851.
+https://dotnet.microsoft.com/en-us/download/dotnet/6.0.
 
-Anim8or Transl8or may also run on other operating systems using Mono
-(https://www.mono-project.com/), but this is not tested.
+Anim8or Transl8or's GUI will most likely only run on Windows. The CLI should be
+able to run on Windows, macOS, and Linux (everywhere that .NET 6.0 can run), but
+this is not tested.
 
 ## Graphical User Interface (GUI)
 1. Double-click Anim8orTransl8or.Gui.exe
@@ -45,6 +45,12 @@ Anim8or Transl8or may also run on other operating systems using Mono
 1. Click Convert
 
 ## Command Line Interface (CLI)
+(Cross-platform)
+~~~
+dotnet Anim8orTransl8or.Cli.dll input.an8 output\
+~~~
+
+(Windows specific)
 ~~~
 Anim8orTransl8or.Cli.exe input.an8 output\
 ~~~
@@ -267,6 +273,8 @@ more accurately, or creating unit tests are also appreciated.
  * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
+ * Anim8orTransl8or v0.7.1
+   * Upgraded to .NET 6.0 for cross-platform compatibility
  * Anim8orTransl8or v0.7.0
    * Added support for multiple textures
    * Change animation interpolation from LINEAR to HERMITE

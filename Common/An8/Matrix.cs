@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -124,7 +124,7 @@ namespace Anim8orTransl8or.An8
       {
       }
 
-      public String ToString()
+      public override String ToString()
       {
          StringBuilder sb0 = new StringBuilder("--", 192);
          StringBuilder sb1 = new StringBuilder("| ", 32);

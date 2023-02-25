@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -52,32 +52,32 @@ namespace Anim8orTransl8or.Test
          Assert.IsTrue(warnings > 0);
 
          CompareCubes(
-            @"..\..\An8Cube\Cube_Edge_Case.an8",
-            @"..\..\An8Cube\Cube_Edge_Case_Mesh.an8");
+            @"..\..\..\An8Cube\Cube_Edge_Case.an8",
+            @"..\..\..\An8Cube\Cube_Edge_Case_Mesh.an8");
       }
 
       [TestMethod]
       public void X1_Y1_Z1()
       {
          CompareCubes(
-            @"..\..\An8Cube\Cube_X1_Y1_Z1.an8",
-            @"..\..\An8Cube\Cube_X1_Y1_Z1_Mesh.an8");
+            @"..\..\..\An8Cube\Cube_X1_Y1_Z1.an8",
+            @"..\..\..\An8Cube\Cube_X1_Y1_Z1_Mesh.an8");
       }
 
       [TestMethod]
       public void X2_Y3_Z5()
       {
          CompareCubes(
-            @"..\..\An8Cube\Cube_X2_Y3_Z5.an8",
-            @"..\..\An8Cube\Cube_X2_Y3_Z5_Mesh.an8");
+            @"..\..\..\An8Cube\Cube_X2_Y3_Z5.an8",
+            @"..\..\..\An8Cube\Cube_X2_Y3_Z5_Mesh.an8");
       }
 
       [TestMethod]
       public void X13_Y11_Z7()
       {
          CompareCubes(
-            @"..\..\An8Cube\Cube_X13_Y11_Z7.an8",
-            @"..\..\An8Cube\Cube_X13_Y11_Z7_Mesh.an8");
+            @"..\..\..\An8Cube\Cube_X13_Y11_Z7.an8",
+            @"..\..\..\An8Cube\Cube_X13_Y11_Z7_Mesh.an8");
       }
 
       static void CompareCubes(String cubeFile, String meshFile)

@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -40,13 +40,13 @@ namespace Anim8orTransl8or.Test
       [TestMethod]
       public void Simple()
       {
-         CompareWeights(@"..\..\An8Weights\Weights_Simple.an8");
+         CompareWeights(@"..\..\..\An8Weights\Weights_Simple.an8");
       }
 
       [TestMethod]
       public void Complex()
       {
-         CompareWeights(@"..\..\An8Weights\Weights_Complex.an8");
+         CompareWeights(@"..\..\..\An8Weights\Weights_Complex.an8");
       }
 
       static void CompareWeights(String weightFile)

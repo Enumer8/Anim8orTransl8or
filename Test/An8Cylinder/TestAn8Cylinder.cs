@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -50,56 +50,56 @@ namespace Anim8orTransl8or.Test
          Assert.IsTrue(warnings > 0);
 
          CompareCylinders(
-            @"..\..\An8Cylinder\Cylinder_Edge_Case.an8",
-            @"..\..\An8Cylinder\Cylinder_Edge_Case_Mesh.an8");
+            @"..\..\..\An8Cylinder\Cylinder_Edge_Case.an8",
+            @"..\..\..\An8Cylinder\Cylinder_Edge_Case_Mesh.an8");
       }
 
       [TestMethod]
       public void Lon3_Lat1()
       {
          CompareCylinders(
-            @"..\..\An8Cylinder\Cylinder_Lon3_Lat1.an8",
-            @"..\..\An8Cylinder\Cylinder_Lon3_Lat1_Mesh.an8");
+            @"..\..\..\An8Cylinder\Cylinder_Lon3_Lat1.an8",
+            @"..\..\..\An8Cylinder\Cylinder_Lon3_Lat1_Mesh.an8");
       }
 
       [TestMethod]
       public void Lon4_Lat5()
       {
          CompareCylinders(
-            @"..\..\An8Cylinder\Cylinder_Lon4_Lat5.an8",
-            @"..\..\An8Cylinder\Cylinder_Lon4_Lat5_Mesh.an8");
+            @"..\..\..\An8Cylinder\Cylinder_Lon4_Lat5.an8",
+            @"..\..\..\An8Cylinder\Cylinder_Lon4_Lat5_Mesh.an8");
       }
 
       [TestMethod]
       public void Lon6_Lat6()
       {
          CompareCylinders(
-            @"..\..\An8Cylinder\Cylinder_Lon6_Lat6.an8",
-            @"..\..\An8Cylinder\Cylinder_Lon6_Lat6_Mesh.an8");
+            @"..\..\..\An8Cylinder\Cylinder_Lon6_Lat6.an8",
+            @"..\..\..\An8Cylinder\Cylinder_Lon6_Lat6_Mesh.an8");
       }
 
       [TestMethod]
       public void Lon11_Lat7()
       {
          CompareCylinders(
-            @"..\..\An8Cylinder\Cylinder_Lon11_Lat7.an8",
-            @"..\..\An8Cylinder\Cylinder_Lon11_Lat7_Mesh.an8");
+            @"..\..\..\An8Cylinder\Cylinder_Lon11_Lat7.an8",
+            @"..\..\..\An8Cylinder\Cylinder_Lon11_Lat7_Mesh.an8");
       }
 
       [TestMethod]
       public void Lon4_Lat2()
       {
          CompareCylinders(
-            @"..\..\An8Cylinder\Cone_Lon4_Lat2.an8",
-            @"..\..\An8Cylinder\Cone_Lon4_Lat2_Mesh.an8");
+            @"..\..\..\An8Cylinder\Cone_Lon4_Lat2.an8",
+            @"..\..\..\An8Cylinder\Cone_Lon4_Lat2_Mesh.an8");
       }
 
       [TestMethod]
       public void Lon5_Lat2()
       {
          CompareCylinders(
-            @"..\..\An8Cylinder\Cone_Lon5_Lat2.an8",
-            @"..\..\An8Cylinder\Cone_Lon5_Lat2_Mesh.an8");
+            @"..\..\..\An8Cylinder\Cone_Lon5_Lat2.an8",
+            @"..\..\..\An8Cylinder\Cone_Lon5_Lat2_Mesh.an8");
       }
 
       static void CompareCylinders(String cylinderFile, String meshFile)

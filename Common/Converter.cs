@@ -1,4 +1,4 @@
-﻿// Copyright © 2018 Contingent Games.
+﻿// Copyright © 2023 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -22,9 +22,11 @@ using Anim8orTransl8or.An8;
 using Anim8orTransl8or.An8.V100;
 using Anim8orTransl8or.Dae.V141;
 using Anim8orTransl8or.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -138,35 +140,28 @@ namespace Anim8orTransl8or
                textureNode.FileNames.Add(
                   MakeUnique($"Texture_{texture?.name}", ".png", fileNames));
 
-               Bitmap png;
+               Image png;
 
                try
                {
-                  png = new Bitmap(Path.Combine(cwd, file?.text));
+                  png = Image.Load(Path.Combine(cwd, file?.text));
 
                   if ( texture?.invert != null )
                   {
-                     png.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                     png.Mutate(x =>
+                     {
+                         _ = x.Flip(FlipMode.Vertical);
+                     });
                   }
                }
                catch
                {
-                  png = new Bitmap(16, 16);
+                  png = new Image<Rgba32>(16, 16);
 
-                  Color color = Color.FromArgb(224, 224, 224);
-
-                  using ( Graphics gfx = Graphics.FromImage(png) )
+                  png.Mutate(x =>
                   {
-                     using ( SolidBrush brush = new SolidBrush(color) )
-                     {
-                        gfx.FillRectangle(brush, 0, 0, png.Width, png.Height);
-                     }
-                  }
-               }
-
-               foreach ( Int32 id in png.PropertyIdList )
-               {
-                  png.RemovePropertyItem(id);
+                      _ = x.BackgroundColor(new Rgba32(224, 224, 224));
+                  });
                }
 
                yield return new ConverterResult()

@@ -1,43 +1,8 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2DB0C056-954B-4C55-84F4-CFCADDF1A73F}</ProjectGuid>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Anim8orTransl8or.Test</RootNamespace>
-    <AssemblyName>Anim8orTransl8or.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
-    <IsCodedUITest>False</IsCodedUITest>
-    <TestProjectType>UnitTest</TestProjectType>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Properties\Anim8orTransl8or.ico</ApplicationIcon>
@@ -48,95 +13,17 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>Properties\Key.snk.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.XML" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="An8Cube\TestAn8Cube.cs" />
-    <Compile Include="An8Cylinder\TestAn8Cylinder.cs" />
-    <Compile Include="An8Image\TestAn8Image.cs" />
-    <Compile Include="An8FloatKey\TestAn8FloatKey.cs" />
-    <Compile Include="An8\TestMatrix.cs" />
-    <Compile Include="An8\TestPoint.cs" />
-    <Compile Include="An8\TestQuaternion.cs" />
-    <Compile Include="An8Normals\TestAn8Normals.cs" />
-    <Compile Include="An8PathCom\TestAn8PathCom.cs" />
-    <Compile Include="An8Sphere\TestAn8Sphere.cs" />
-    <Compile Include="An8Subdivision\TestAn8Subdivision.cs" />
-    <Compile Include="An8TextCom\TestAn8TextCom.cs" />
-    <Compile Include="An8Weights\TestAn8Weights.cs" />
-    <Compile Include="An8\TestTexCoord.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestBase.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="An8Cube\Cube_Edge_Case.an8" />
-    <None Include="An8Cube\Cube_Edge_Case_Mesh.an8" />
-    <None Include="An8Cube\Cube_X13_Y11_Z7.an8" />
-    <None Include="An8Cube\Cube_X13_Y11_Z7_Mesh.an8" />
-    <None Include="An8Cube\Cube_X1_Y1_Z1.an8" />
-    <None Include="An8Cube\Cube_X1_Y1_Z1_Mesh.an8" />
-    <None Include="An8Cube\Cube_X2_Y3_Z5.an8" />
-    <None Include="An8Cube\Cube_X2_Y3_Z5_Mesh.an8" />
-    <None Include="An8Cylinder\Cone_Lon4_Lat2.an8" />
-    <None Include="An8Cylinder\Cone_Lon4_Lat2_Mesh.an8" />
-    <None Include="An8Cylinder\Cone_Lon5_Lat2.an8" />
-    <None Include="An8Cylinder\Cone_Lon5_Lat2_Mesh.an8" />
-    <None Include="An8Cylinder\Cylinder_Edge_Case.an8" />
-    <None Include="An8Cylinder\Cylinder_Edge_Case_Mesh.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon11_Lat7.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon11_Lat7_Mesh.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon3_Lat1.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon3_Lat1_Mesh.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon4_Lat5.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon4_Lat5_Mesh.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon6_Lat6.an8" />
-    <None Include="An8Cylinder\Cylinder_Lon6_Lat6_Mesh.an8" />
-    <None Include="An8Normals\Normals_Fully_Smooth.an8" />
-    <None Include="An8Normals\Normals_Not_Smooth.an8" />
-    <None Include="An8Normals\Normals_Partially_Smooth.an8" />
-    <None Include="An8Sphere\Geo_1.an8" />
-    <None Include="An8Sphere\Geo_1_Mesh.an8" />
-    <None Include="An8Sphere\Geo_2.an8" />
-    <None Include="An8Sphere\Geo_2_Mesh.an8" />
-    <None Include="An8Sphere\Geo_6.an8" />
-    <None Include="An8Sphere\Geo_6_Mesh.an8" />
-    <None Include="An8Sphere\Geo_Edge_Case.an8" />
-    <None Include="An8Sphere\Geo_Edge_Case_Mesh.an8" />
-    <None Include="An8Sphere\Sphere_Edge_Case.an8" />
-    <None Include="An8Sphere\Sphere_Edge_Case2.an8" />
-    <None Include="An8Sphere\Sphere_Edge_Case2_Mesh.an8" />
-    <None Include="An8Sphere\Sphere_Edge_Case3.an8" />
-    <None Include="An8Sphere\Sphere_Edge_Case3_Mesh.an8" />
-    <None Include="An8Sphere\Sphere_Edge_Case_Mesh.an8" />
-    <None Include="An8Sphere\Sphere_Lon11_Lat7.an8" />
-    <None Include="An8Sphere\Sphere_Lon11_Lat7_Mesh.an8" />
-    <None Include="An8Sphere\Sphere_Lon3_Lat2.an8" />
-    <None Include="An8Sphere\Sphere_Lon3_Lat2_Mesh.an8" />
-    <None Include="An8Sphere\Sphere_Lon4_Lat6.an8" />
-    <None Include="An8Sphere\Sphere_Lon4_Lat6_Mesh.an8" />
-    <None Include="An8Weights\Weights_Complex.an8" />
-    <None Include="An8Weights\Weights_Simple.an8" />
-    <None Include="Properties\Key.snk.pfx" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
   <ItemGroup>
     <Content Include="Properties\Anim8orTransl8or.ico" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.0.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.0.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
+  </ItemGroup>
   <Import Project="..\common\Anim8orTransl8or.projitems" Label="Shared" />
-  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.props'))" />
-    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.targets'))" />
-  </Target>
-  <Import Project="..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.targets" Condition="Exists('..\packages\MSTest.TestAdapter.1.3.2\build\net45\MSTest.TestAdapter.targets')" />
 </Project>

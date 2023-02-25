@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.106
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Anim8orTransl8or", "common\Anim8orTransl8or.shproj", "{DE6326B0-D5AB-48BF-830A-8BC52917F9EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anim8orTransl8or.Cli", "Cli\Anim8orTransl8or.Cli.csproj", "{886104A7-EAB6-4C70-91BF-D811281664FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anim8orTransl8or.Cli", "Cli\Anim8orTransl8or.Cli.csproj", "{886104A7-EAB6-4C70-91BF-D811281664FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anim8orTransl8or.Dll", "Dll\Anim8orTransl8or.Dll.csproj", "{3F2A2F20-40D9-40AF-B0D9-80405519810C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anim8orTransl8or.Dll", "Dll\Anim8orTransl8or.Dll.csproj", "{3F2A2F20-40D9-40AF-B0D9-80405519810C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anim8orTransl8or.Gui", "Gui\Anim8orTransl8or.Gui.csproj", "{E162958C-9954-4D50-9B78-C162674EE5C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anim8orTransl8or.Gui", "Gui\Anim8orTransl8or.Gui.csproj", "{E162958C-9954-4D50-9B78-C162674EE5C2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BE2C387D-917B-4448-8F84-79744E564875}"
 	ProjectSection(SolutionItems) = preProject
@@ -18,16 +18,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anim8orTransl8or.Test", "Test\Anim8orTransl8or.Test.csproj", "{2DB0C056-954B-4C55-84F4-CFCADDF1A73F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anim8orTransl8or.Test", "Test\Anim8orTransl8or.Test.csproj", "{2DB0C056-954B-4C55-84F4-CFCADDF1A73F}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		common\Anim8orTransl8or.projitems*{2db0c056-954b-4c55-84f4-cfcaddf1a73f}*SharedItemsImports = 4
-		common\Anim8orTransl8or.projitems*{3f2a2f20-40d9-40af-b0d9-80405519810c}*SharedItemsImports = 4
-		common\Anim8orTransl8or.projitems*{886104a7-eab6-4c70-91bf-d811281664fd}*SharedItemsImports = 4
-		common\Anim8orTransl8or.projitems*{de6326b0-d5ab-48bf-830a-8bc52917f9ef}*SharedItemsImports = 13
-		common\Anim8orTransl8or.projitems*{e162958c-9954-4d50-9b78-c162674ee5c2}*SharedItemsImports = 4
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -55,5 +48,12 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1F0E6ED2-9068-4DEE-BFE3-AE5DDD1CE22D}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		common\Anim8orTransl8or.projitems*{2db0c056-954b-4c55-84f4-cfcaddf1a73f}*SharedItemsImports = 5
+		common\Anim8orTransl8or.projitems*{3f2a2f20-40d9-40af-b0d9-80405519810c}*SharedItemsImports = 5
+		common\Anim8orTransl8or.projitems*{886104a7-eab6-4c70-91bf-d811281664fd}*SharedItemsImports = 5
+		common\Anim8orTransl8or.projitems*{de6326b0-d5ab-48bf-830a-8bc52917f9ef}*SharedItemsImports = 13
+		common\Anim8orTransl8or.projitems*{e162958c-9954-4d50-9b78-c162674ee5c2}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
