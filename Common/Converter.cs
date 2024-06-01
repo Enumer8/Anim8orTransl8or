@@ -2530,7 +2530,7 @@ namespace Anim8orTransl8or
 
             Double time = keyFrame / framesPerSecond;
             // TODO: Support LINEAR and HERMITE
-            String interpolation = "HERMITE";
+            String interpolation = "LINEAR";
             An8.matrix matrix = bNode.Matrix.Transform(sequenceMat);
 
             frames.Add(time, Tuple.Create(interpolation, matrix));

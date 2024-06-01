@@ -3,11 +3,11 @@
   <asset>
     <contributor>
       <author>Anim8or v1.00</author>
-      <authoring_tool>Anim8orTransl8or.Cli v0.7.1</authoring_tool>
+      <authoring_tool>Anim8orTransl8or.Gui v0.7.2</authoring_tool>
       <comments />
     </contributor>
-    <created>2023-02-25T14:26:42.2437804-06:00</created>
-    <modified>2023-02-25T14:26:42.2437804-06:00</modified>
+    <created>2024-06-01T14:18:52.9503719-05:00</created>
+    <modified>2024-06-01T14:18:52.9503719-05:00</modified>
     <unit />
   </asset>
   <library_lights>

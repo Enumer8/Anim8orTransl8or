@@ -3,11 +3,11 @@
   <asset>
     <contributor>
       <author>Anim8or v1.00</author>
-      <authoring_tool>Anim8orTransl8or.Cli v0.7.1</authoring_tool>
+      <authoring_tool>Anim8orTransl8or.Gui v0.7.2</authoring_tool>
       <comments />
     </contributor>
-    <created>2023-02-25T14:26:43.1853038-06:00</created>
-    <modified>2023-02-25T14:26:43.1853038-06:00</modified>
+    <created>2024-06-01T14:18:54.1226463-05:00</created>
+    <modified>2024-06-01T14:18:54.1226463-05:00</modified>
     <unit />
   </asset>
   <library_lights>
@@ -225,7 +225,7 @@
         </technique_common>
       </source>
       <source id="BackBase-animation-interpolations">
-        <Name_array id="BackBase-animation-interpolations-array" count="2">HERMITE HERMITE</Name_array>
+        <Name_array id="BackBase-animation-interpolations-array" count="2">LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="2" source="#BackBase-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -257,7 +257,7 @@
         </technique_common>
       </source>
       <source id="RightHip-animation-interpolations">
-        <Name_array id="RightHip-animation-interpolations-array" count="2">HERMITE HERMITE</Name_array>
+        <Name_array id="RightHip-animation-interpolations-array" count="2">LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="2" source="#RightHip-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -289,7 +289,7 @@
         </technique_common>
       </source>
       <source id="RightUpperLeg-animation-interpolations">
-        <Name_array id="RightUpperLeg-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="RightUpperLeg-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#RightUpperLeg-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -321,7 +321,7 @@
         </technique_common>
       </source>
       <source id="RightLowerLeg-animation-interpolations">
-        <Name_array id="RightLowerLeg-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="RightLowerLeg-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#RightLowerLeg-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -353,7 +353,7 @@
         </technique_common>
       </source>
       <source id="RightFoot-animation-interpolations">
-        <Name_array id="RightFoot-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="RightFoot-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#RightFoot-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -385,7 +385,7 @@
         </technique_common>
       </source>
       <source id="LeftHip-animation-interpolations">
-        <Name_array id="LeftHip-animation-interpolations-array" count="2">HERMITE HERMITE</Name_array>
+        <Name_array id="LeftHip-animation-interpolations-array" count="2">LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="2" source="#LeftHip-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -417,7 +417,7 @@
         </technique_common>
       </source>
       <source id="LeftUpperLeg-animation-interpolations">
-        <Name_array id="LeftUpperLeg-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="LeftUpperLeg-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#LeftUpperLeg-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -449,7 +449,7 @@
         </technique_common>
       </source>
       <source id="LeftLowerLeg-animation-interpolations">
-        <Name_array id="LeftLowerLeg-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="LeftLowerLeg-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#LeftLowerLeg-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -481,7 +481,7 @@
         </technique_common>
       </source>
       <source id="LeftFoot-animation-interpolations">
-        <Name_array id="LeftFoot-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="LeftFoot-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#LeftFoot-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -513,7 +513,7 @@
         </technique_common>
       </source>
       <source id="TailBone-animation-interpolations">
-        <Name_array id="TailBone-animation-interpolations-array" count="2">HERMITE HERMITE</Name_array>
+        <Name_array id="TailBone-animation-interpolations-array" count="2">LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="2" source="#TailBone-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -545,7 +545,7 @@
         </technique_common>
       </source>
       <source id="Tail1-animation-interpolations">
-        <Name_array id="Tail1-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="Tail1-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#Tail1-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -577,7 +577,7 @@
         </technique_common>
       </source>
       <source id="Tail2-animation-interpolations">
-        <Name_array id="Tail2-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="Tail2-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#Tail2-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -609,7 +609,7 @@
         </technique_common>
       </source>
       <source id="Tail3-animation-interpolations">
-        <Name_array id="Tail3-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="Tail3-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#Tail3-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -641,7 +641,7 @@
         </technique_common>
       </source>
       <source id="FrontBase-animation-interpolations">
-        <Name_array id="FrontBase-animation-interpolations-array" count="2">HERMITE HERMITE</Name_array>
+        <Name_array id="FrontBase-animation-interpolations-array" count="2">LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="2" source="#FrontBase-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -673,7 +673,7 @@
         </technique_common>
       </source>
       <source id="RightShoulder-animation-interpolations">
-        <Name_array id="RightShoulder-animation-interpolations-array" count="2">HERMITE HERMITE</Name_array>
+        <Name_array id="RightShoulder-animation-interpolations-array" count="2">LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="2" source="#RightShoulder-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -705,7 +705,7 @@
         </technique_common>
       </source>
       <source id="RightUpperArm-animation-interpolations">
-        <Name_array id="RightUpperArm-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="RightUpperArm-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#RightUpperArm-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -737,7 +737,7 @@
         </technique_common>
       </source>
       <source id="RightLowerArm-animation-interpolations">
-        <Name_array id="RightLowerArm-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="RightLowerArm-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#RightLowerArm-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -769,7 +769,7 @@
         </technique_common>
       </source>
       <source id="RightHand-animation-interpolations">
-        <Name_array id="RightHand-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="RightHand-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#RightHand-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -801,7 +801,7 @@
         </technique_common>
       </source>
       <source id="LeftShoulder-animation-interpolations">
-        <Name_array id="LeftShoulder-animation-interpolations-array" count="2">HERMITE HERMITE</Name_array>
+        <Name_array id="LeftShoulder-animation-interpolations-array" count="2">LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="2" source="#LeftShoulder-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -833,7 +833,7 @@
         </technique_common>
       </source>
       <source id="LeftUpperArm-animation-interpolations">
-        <Name_array id="LeftUpperArm-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="LeftUpperArm-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#LeftUpperArm-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -865,7 +865,7 @@
         </technique_common>
       </source>
       <source id="LeftLowerArm-animation-interpolations">
-        <Name_array id="LeftLowerArm-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="LeftLowerArm-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#LeftLowerArm-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -897,7 +897,7 @@
         </technique_common>
       </source>
       <source id="LeftHand-animation-interpolations">
-        <Name_array id="LeftHand-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="LeftHand-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#LeftHand-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -929,7 +929,7 @@
         </technique_common>
       </source>
       <source id="Neck-animation-interpolations">
-        <Name_array id="Neck-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="Neck-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#Neck-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />
@@ -961,7 +961,7 @@
         </technique_common>
       </source>
       <source id="Head-animation-interpolations">
-        <Name_array id="Head-animation-interpolations-array" count="3">HERMITE HERMITE HERMITE</Name_array>
+        <Name_array id="Head-animation-interpolations-array" count="3">LINEAR LINEAR LINEAR</Name_array>
         <technique_common>
           <accessor count="3" source="#Head-animation-interpolations-array">
             <param name="INTERPOLATION" type="name" />

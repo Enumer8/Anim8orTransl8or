@@ -273,6 +273,8 @@ more accurately, or creating unit tests are also appreciated.
  * Thanks, ThinMatrix, for a great reference for COLLADA files (https://www.youtube.com/watch?v=z0jb1OBw45I)
 
 ## Change log
+ * Anim8orTransl8or v0.7.2
+   * Reverted animation interpolation back to LINEAR from HERMITE. For some reason, it doesn't work in Blender.
  * Anim8orTransl8or v0.7.1
    * Upgraded to .NET 6.0 for cross-platform compatibility
  * Anim8orTransl8or v0.7.0
