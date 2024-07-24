@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Contingent Games.
+﻿// Copyright © 2024 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,9 @@ using Anim8orTransl8or.An8.V100;
 using Anim8orTransl8or.Dae.V141;
 using SixLabors.ImageSharp;
 using System;
+using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Xml.Serialization;
 
 namespace Anim8orTransl8or.Cli
@@ -37,6 +39,9 @@ namespace Anim8orTransl8or.Cli
 
       static Int32 Main(String[] args)
       {
+         Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+         Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+
          if ( args?.Length != 2 )
          {
             AddOutput("Expected two arguments, e.g.: input.an8 output\\");

@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Contingent Games.
+﻿// Copyright © 2024 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -19,6 +19,8 @@
 // IN THE SOFTWARE.
 
 using System;
+using System.Globalization;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Anim8orTransl8or.Gui
@@ -31,6 +33,9 @@ namespace Anim8orTransl8or.Gui
       [STAThread]
       static void Main()
       {
+         Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+         Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+
          Application.EnableVisualStyles();
          Application.SetHighDpiMode(HighDpiMode.SystemAware);
          Application.SetCompatibleTextRenderingDefault(false);

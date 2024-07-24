@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Contingent Games.
+﻿// Copyright © 2024 Contingent Games.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -19,7 +19,6 @@
 // IN THE SOFTWARE.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
 namespace Anim8orTransl8or.Test
 {
